@@ -1,0 +1,25 @@
+{
+  "name": "ai-built-recipe-app",
+  "version": "1.0.0",
+  "description": "Recipe application with Express backend and React frontend",
+  "main": "index.js",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "backend": "nodemon backend/src/server.js",
+    "frontend": "cd frontend && npm start",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "stop": "killall node"
+  },
+  "keywords": [
+    "recipe",
+    "express",
+    "react"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.0.1",
+    "nodemon": "^2.0.22"
+  }
+}
