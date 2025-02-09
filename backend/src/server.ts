@@ -1,7 +1,11 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
+import passport from 'passport';
+import cookieSession from 'cookie-session';
 import config from './config/server-config';
+import './config/passport';
+import authRoutes from './routes/auth';
 
 interface CustomError extends Error {
   status?: number;
@@ -19,6 +23,40 @@ function createApp(): Express {
   }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Cookie Session configuration
+  app.use(
+    cookieSession({
+      name: 'session',
+      keys: [process.env.COOKIE_KEY || 'recipe-app-auth-cookie-2024'],
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'lax',
+    })
+  );
+
+  // Add missing session methods that Passport expects
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (req.session && !req.session.regenerate) {
+      req.session.regenerate = (cb: () => void) => {
+        cb();
+      };
+    }
+    if (req.session && !req.session.save) {
+      req.session.save = (cb: () => void) => {
+        cb();
+      };
+    }
+    next();
+  });
+
+  // Initialize passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Auth routes
+  app.use('/auth', authRoutes);
 
   return app;
 }
