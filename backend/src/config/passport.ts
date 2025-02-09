@@ -1,102 +1,106 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import dotenv from 'dotenv';
 
-// Load environment variables
-dotenv.config();
-
-// User type definition
 export interface User {
   id: string;
   displayName: string;
   email: string;
-  photo?: string;
+  photo: string;
 }
 
-// Extend Express types
+// Extend Express.User interface
 declare global {
   namespace Express {
     interface User {
       id: string;
       displayName: string;
       email: string;
-      photo?: string;
+      photo: string;
     }
   }
 }
 
-// In-memory user store (replace with database in production)
-const users: Map<string, User> = new Map();
+let mockUser: User | undefined;
 
-// Add mock user for development
-if (process.env.NODE_ENV !== 'production') {
-  const mockUser: User = {
+// Create mock user in development mode
+if (process.env.NODE_ENV === 'development') {
+  mockUser = {
     id: 'dev-123',
     displayName: 'Development User',
     email: 'dev@example.com',
-    photo: 'https://via.placeholder.com/150',
+    photo: 'test-photo.jpg',
   };
-  users.set(mockUser.id, mockUser);
 }
 
+export const getMockUser = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return mockUser;
+  }
+  return undefined;
+};
+
+// Configure Google OAuth Strategy
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  const config = {
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.REDIRECT_URL || 'http://localhost:5001/auth/google/callback',
+    scope: ['profile', 'email'],
+    state: true,
+  };
+
+  console.log('Google OAuth Configuration:', {
+    ...config,
+    clientSecret: '[HIDDEN]',
+  });
+
+  passport.use(
+    new GoogleStrategy(
+      config,
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          // Create user object from Google profile
+          const user: User = {
+            id: profile.id,
+            displayName: profile.displayName,
+            email: profile.emails?.[0]?.value || '',
+            photo: profile.photos?.[0]?.value || '',
+          };
+
+          console.log('Created new user from Google profile:', user);
+
+          // In a real app, you would typically:
+          // 1. Check if user exists in database
+          // 2. Create new user if they don't exist
+          // 3. Update existing user if they do exist
+          // 4. Return user object
+
+          return done(null, user);
+        } catch (error) {
+          return done(error as Error);
+        }
+      }
+    )
+  );
+}
+
+// Serialize user for the session
 passport.serializeUser((user: Express.User, done) => {
   done(null, user.id);
 });
 
+// Deserialize user from the session
 passport.deserializeUser((id: string, done) => {
-  const user = users.get(id);
-  if (!user) {
-    done(new Error('User not found'));
-    return;
+  // In development, return mock user
+  if (process.env.NODE_ENV === 'development' && mockUser?.id === id) {
+    return done(null, mockUser);
   }
-  done(null, user);
+
+  // In production, would typically:
+  // 1. Query database for user by ID
+  // 2. Return user if found
+  // 3. Return error if not found
+  done(new Error('User not found'), undefined);
 });
-
-// Configure Google Strategy
-const googleConfig = {
-  clientID: process.env.GOOGLE_CLIENT_ID!,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: process.env.REDIRECT_URL,
-  scope: ['profile', 'email'],
-  state: true, // Enable state parameter for CSRF protection
-};
-
-console.log('Google OAuth Configuration:', {
-  ...googleConfig,
-  clientSecret: '[HIDDEN]',
-});
-
-passport.use(
-  new GoogleStrategy(
-    googleConfig,
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        // Check if user exists
-        let user = users.get(profile.id);
-
-        if (!user) {
-          // Create new user from Google profile
-          user = {
-            id: profile.id,
-            displayName: profile.displayName,
-            email: profile.emails?.[0]?.value ?? '',
-            photo: profile.photos?.[0]?.value,
-          };
-          users.set(profile.id, user);
-          console.log('Created new user from Google profile:', user);
-        }
-
-        return done(null, user);
-      } catch (error) {
-        console.error('Error in Google strategy:', error);
-        return done(error as Error, undefined);
-      }
-    }
-  )
-);
-
-// Export the mock user for development routes
-export const getMockUser = (): User | undefined => 
-  process.env.NODE_ENV !== 'production' ? users.get('dev-123') : undefined;
 
 export default passport;

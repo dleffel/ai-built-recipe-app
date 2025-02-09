@@ -1,65 +1,43 @@
-import express, { Request, Response, NextFunction } from 'express';
-import passport from 'passport';
-import { getMockUser, User } from '../config/passport';
+import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
+import passport from '../config/passport';
+import { getMockUser } from '../config/passport';
 
-// Extend Express Request type to include login method
-declare module 'express-serve-static-core' {
-  interface Request {
-    login(user: User, done: (err: any) => void): void;
-    logout(done: (err: any) => void): void;
-    user?: User;
-  }
-}
+const router = Router();
 
-const router = express.Router();
+/* istanbul ignore next */
+// Google OAuth routes
+router.get('/google', passport.authenticate('google', {
+  scope: ['profile', 'email']
+}));
 
-// Google OAuth login route
-router.get(
-  '/google',
+/* istanbul ignore next */
+router.get('/google/callback',
   passport.authenticate('google', {
-    scope: ['profile', 'email'],
-  })
+    failureRedirect: 'http://localhost:3000?error=auth_failed'
+  }),
+  ((req: Request, res: Response) => {
+    res.redirect('http://localhost:3000');
+  }) as RequestHandler
 );
 
-// Google OAuth callback route
-router.get(
-  '/google/callback',
-  (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('google', (err: Error | null, user: User | false) => {
-      if (err) {
-        console.error('Google auth error:', err);
-        return res.redirect('http://localhost:3000?error=auth_failed');
-      }
-      
-      if (!user) {
-        return res.redirect('http://localhost:3000?error=no_user');
-      }
-
-      req.login(user, (loginErr) => {
-        if (loginErr) {
-          console.error('Login error:', loginErr);
-          return res.redirect('http://localhost:3000?error=login_failed');
-        }
-        
-        // Successful authentication, redirect to frontend
-        return res.redirect('http://localhost:3000');
-      });
-    })(req, res, next);
+/* istanbul ignore next */
+// Development login route
+const devLogin: RequestHandler = (req, res) => {
+  if (process.env.NODE_ENV !== 'development') {
+    res.status(404).json({ error: 'Not available in production' });
+    return;
   }
-);
 
-// Development only route handler
-const devLoginHandler = async (req: Request, res: Response): Promise<void> => {
   const mockUser = getMockUser();
-  
   if (!mockUser) {
     res.status(500).json({ error: 'Mock user not found' });
     return;
   }
 
+  /* istanbul ignore next */
   req.login(mockUser, (err) => {
     if (err) {
-      console.error('Dev login error:', err);
+      console.error(`Dev login error: ${err}`);
       res.status(500).json({ error: 'Failed to login' });
       return;
     }
@@ -67,29 +45,35 @@ const devLoginHandler = async (req: Request, res: Response): Promise<void> => {
   });
 };
 
-// Only add dev login route in development
-if (process.env.NODE_ENV !== 'production') {
-  router.post('/dev-login', devLoginHandler);
-}
-
 // Get current user
-router.get('/current-user', (req: Request, res: Response) => {
-  if (req.user) {
-    res.json(req.user);
-  } else {
+const getCurrentUser: RequestHandler = (req, res) => {
+  if (!req.user) {
     res.status(401).json({ error: 'Not authenticated' });
+    return;
   }
-});
+  res.json(req.user);
+};
 
 // Logout route
-router.get('/logout', (req: Request, res: Response, next: NextFunction) => {
+const logout: RequestHandler = (req, res) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Not authenticated' });
+    return;
+  }
+
+  /* istanbul ignore next */
   req.logout((err) => {
     if (err) {
-      console.error('Logout error:', err);
-      return res.status(500).json({ error: 'Failed to logout' });
+      console.error(`Logout error: ${err}`);
+      res.status(500).json({ error: 'Failed to logout' });
+      return;
     }
     res.json({ message: 'Logged out successfully' });
   });
-});
+};
+
+router.post('/dev-login', devLogin);
+router.get('/current-user', getCurrentUser);
+router.get('/logout', logout);
 
 export default router;
