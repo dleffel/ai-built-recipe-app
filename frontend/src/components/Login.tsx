@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const Login: React.FC = () => {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, checkUser } = useAuth();
 
   const handleGoogleLogin = () => {
     // Redirect to backend Google auth route with the correct callback URL
@@ -12,8 +12,10 @@ const Login: React.FC = () => {
 
   const handleDevLogin = async () => {
     try {
-      await api.post('/auth/dev-login');
-      window.location.reload(); // Reload to update auth state
+      const response = await api.post('/auth/dev-login', {}, { withCredentials: true });
+      if (response.data) {
+        await checkUser(); // Check user state after successful login
+      }
     } catch (error) {
       console.error('Dev login failed:', error);
     }
@@ -22,7 +24,7 @@ const Login: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      window.location.reload(); // Reload to update auth state
+      await checkUser(); // Check user state after logout
     } catch (error) {
       console.error('Logout failed:', error);
     }

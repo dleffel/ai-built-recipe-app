@@ -1,5 +1,9 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 export interface User {
   id: string;
@@ -21,6 +25,8 @@ declare global {
 }
 
 let mockUser: User | undefined;
+// Store Google users in memory (in production this would be a database)
+const googleUsers: Map<string, User> = new Map();
 
 // Create mock user in development mode
 if (process.env.NODE_ENV === 'development') {
@@ -45,8 +51,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: process.env.REDIRECT_URL || 'http://localhost:5001/auth/google/callback',
-    scope: ['profile', 'email'],
-    state: true,
   };
 
   console.log('Google OAuth Configuration:', {
@@ -67,13 +71,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             photo: profile.photos?.[0]?.value || '',
           };
 
+          // Store user in memory
+          googleUsers.set(user.id, user);
           console.log('Created new user from Google profile:', user);
-
-          // In a real app, you would typically:
-          // 1. Check if user exists in database
-          // 2. Create new user if they don't exist
-          // 3. Update existing user if they do exist
-          // 4. Return user object
 
           return done(null, user);
         } catch (error) {
@@ -91,16 +91,19 @@ passport.serializeUser((user: Express.User, done) => {
 
 // Deserialize user from the session
 passport.deserializeUser((id: string, done) => {
-  // In development, return mock user
+  // In development, check for mock user first
   if (process.env.NODE_ENV === 'development' && mockUser?.id === id) {
     return done(null, mockUser);
   }
 
-  // In production, would typically:
-  // 1. Query database for user by ID
-  // 2. Return user if found
-  // 3. Return error if not found
-  done(new Error('User not found'), undefined);
+  // Check for Google user
+  const googleUser = googleUsers.get(id);
+  if (googleUser) {
+    return done(null, googleUser);
+  }
+
+  // User not found
+  return done(null, false);
 });
 
 export default passport;

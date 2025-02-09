@@ -23,12 +23,17 @@ router.get('/google/callback',
 /* istanbul ignore next */
 // Development login route
 const devLogin: RequestHandler = (req, res) => {
+  console.log('Dev login attempt, NODE_ENV:', process.env.NODE_ENV);
+  
   if (process.env.NODE_ENV !== 'development') {
+    console.log('Not in development mode');
     res.status(404).json({ error: 'Not available in production' });
     return;
   }
 
   const mockUser = getMockUser();
+  console.log('Mock user:', mockUser);
+  
   if (!mockUser) {
     res.status(500).json({ error: 'Mock user not found' });
     return;

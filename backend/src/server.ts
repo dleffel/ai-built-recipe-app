@@ -26,6 +26,21 @@ app.use(cookieSession({
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 }));
 
+// Add regenerate and save functions to session
+app.use((req: any, res: Response, next: NextFunction) => {
+  if (req.session && !req.session.regenerate) {
+    req.session.regenerate = (cb: () => void) => {
+      cb();
+    };
+  }
+  if (req.session && !req.session.save) {
+    req.session.save = (cb: () => void) => {
+      cb();
+    };
+  }
+  next();
+});
+
 // Initialize passport and restore authentication state from session
 app.use(passport.initialize());
 app.use(passport.session());
