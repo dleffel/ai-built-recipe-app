@@ -1,45 +1,107 @@
-# Simplified Testing Plan
+# Simplified Testing Strategy
 
-## Frontend Structure
-1. Simplify index.js to basic React initialization
-2. Move complex initialization logic to separate modules
-3. Add coverage exclusions for complex setup code
+## Current Issues
+- Tests are too complex and brittle
+- Too much mocking of internal implementation
+- Focus on coverage numbers rather than value
+- Tests break when implementation details change
 
-## Frontend Tests
-1. Focus on basic component rendering
-   - App component renders correctly
-   - Basic UI elements present
-   - Snapshot testing
-2. Simplified index.js testing
-   - Basic root element check
-   - App component mounting
-3. Exclude complex initialization from coverage
-   - Add /* istanbul ignore next */ comments
-   - Focus coverage on business logic
+## Proposed Approach
 
-## Backend Structure
-1. Keep server.js focused on basic Express setup
-2. Move complex middleware and route handling to separate modules
-3. Add coverage exclusions for initialization code
+### 1. Focus on Key User Flows
+Instead of testing every internal function and state change, focus on key user flows:
+- User can log in with Google
+- User can log out
+- User can see their profile when logged in
+- User can see login page when not logged in
 
-## Backend Tests
-1. Focus on core functionality
-   - Health check endpoint
-   - Basic error handling
-   - Configuration loading
-2. Exclude server initialization from coverage
-   - Add /* istanbul ignore next */ comments
-   - Focus on route and middleware testing
+### 2. Integration Tests Over Unit Tests
+- Test components in context of how they're actually used
+- Minimize mocking to only external dependencies (Google OAuth)
+- Use real AuthContext and API calls in tests where possible
+- Focus on user-visible behavior
 
-## Implementation Steps
-1. Switch to Code mode
-2. Update frontend files:
-   - Simplify index.js
-   - Add coverage exclusions
-   - Update tests
-3. Update backend files:
-   - Add coverage exclusions
-   - Simplify test structure
-4. Run tests without coverage thresholds
+### 3. Simplified Mocking Strategy
+Only mock:
+- External API calls
+- OAuth redirects
+- Environment variables
 
-The goal is to maintain good test coverage of business logic while acknowledging that some initialization code is better left untested or excluded from coverage metrics.
+### 4. Test Structure
+```typescript
+describe('Authentication Flow', () => {
+  it('shows login page when not authenticated')
+  it('can log in with Google')
+  it('shows user profile when authenticated')
+  it('can log out')
+})
+```
+
+### 5. Implementation Plan
+
+1. Create test environment setup:
+```typescript
+// test-utils.ts
+export function renderWithAuth(ui: React.ReactElement) {
+  return render(
+    <AuthProvider>
+      {ui}
+    </AuthProvider>
+  );
+}
+```
+
+2. Mock only necessary external dependencies:
+```typescript
+// setupTests.ts
+const mockApi = {
+  get: jest.fn(),
+  post: jest.fn()
+};
+
+jest.mock('./services/api', () => mockApi);
+```
+
+3. Write integration tests focusing on user flows:
+```typescript
+describe('Authentication', () => {
+  it('shows login page for unauthenticated users', () => {
+    renderWithAuth(<App />);
+    expect(screen.getByText('Sign in with Google')).toBeInTheDocument();
+  });
+
+  it('shows user profile after successful login', async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: { displayName: 'Test User' }
+    });
+    
+    renderWithAuth(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Test User')).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### 6. Benefits
+- Tests are easier to understand and maintain
+- Less likely to break with implementation changes
+- Better test coverage of actual user scenarios
+- Faster test development and maintenance
+- More confidence in test results
+
+### 7. Next Steps
+1. Create test-utils.ts with helper functions
+2. Update setupTests.ts to minimal mocking
+3. Remove complex mocking from existing tests
+4. Rewrite tests focusing on user flows
+5. Add integration tests for key features
+
+### 8. Coverage Goals
+Instead of aiming for arbitrary coverage numbers:
+- 100% coverage of key user flows
+- 100% coverage of critical business logic
+- Acceptance criteria covered by tests
+- Edge cases and error handling tested
+
+This approach will give us more meaningful test coverage while being easier to maintain.

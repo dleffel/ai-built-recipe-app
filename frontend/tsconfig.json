@@ -21,8 +21,9 @@
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
     "noImplicitThis": true,
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "types": ["node", "react", "react-dom", "jest", "@testing-library/jest-dom"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "build", "coverage", "**/*.test.tsx"]
+  "exclude": ["node_modules", "build", "coverage", "**/*.test.ts", "**/*.test.tsx", "src/setupTests.ts"]
 }
