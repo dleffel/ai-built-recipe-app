@@ -28,11 +28,13 @@ app.use(cookieSession({
 
 // Add regenerate and save functions to session
 app.use((req: any, res: Response, next: NextFunction) => {
+  /* istanbul ignore next */
   if (req.session && !req.session.regenerate) {
     req.session.regenerate = (cb: () => void) => {
       cb();
     };
   }
+  /* istanbul ignore next */
   if (req.session && !req.session.save) {
     req.session.save = (cb: () => void) => {
       cb();

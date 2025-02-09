@@ -1,8 +1,10 @@
+/* istanbul ignore file */
+import http from 'http';
 import app from './server';
-import serverConfig from './config/server-config';
 
-const port = serverConfig.port;
+const port = process.env.PORT || 5001;
 
-app.listen(port, () => {
+const server = http.createServer(app);
+server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

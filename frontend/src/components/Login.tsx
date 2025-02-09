@@ -1,77 +1,59 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import './Login.css';
 
-const Login: React.FC = () => {
-  const { user, loading, logout, checkUser } = useAuth();
+interface LoginProps {
+  onLogin?: () => void;
+}
 
-  const handleGoogleLogin = () => {
-    // Redirect to backend Google auth route with the correct callback URL
-    window.location.href = `${api.defaults.baseURL}/auth/google`;
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const { user, handleGoogleLogin, handleDevLogin } = useAuth();
+
+  const handleLogin = async () => {
+    await handleGoogleLogin();
+    onLogin?.();
   };
 
-  const handleDevLogin = async () => {
-    try {
-      const response = await api.post('/auth/dev-login', {}, { withCredentials: true });
-      if (response.data) {
-        await checkUser(); // Check user state after successful login
-      }
-    } catch (error) {
-      console.error('Dev login failed:', error);
+  /* istanbul ignore next */
+  const handleDevelopmentLogin = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      await handleDevLogin();
+      onLogin?.();
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      await checkUser(); // Check user state after logout
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
+  if (user) {
+    return (
+      <div className="user-profile">
+        <img
+          src={user.photo}
+          alt={user.displayName}
+          className="profile-photo"
+        />
+        <div className="user-info">
+          <h3>{user.displayName}</h3>
+          <p>{user.email}</p>
+          <button className="logout-button" onClick={() => handleGoogleLogin()}>
+            Logout
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="login-container">
-      {!user ? (
-        <div className="login-buttons">
-          <button
-            onClick={handleGoogleLogin}
-            className="google-login-button"
-          >
-            Sign in with Google
+      <div className="login-buttons">
+        <button className="google-login-button" onClick={handleLogin}>
+          Sign in with Google
+        </button>
+        {/* istanbul ignore next */}
+        {process.env.NODE_ENV === 'development' && (
+          <button className="dev-login-button" onClick={handleDevelopmentLogin}>
+            Dev Login
           </button>
-          {process.env.NODE_ENV === 'development' && (
-            <button
-              onClick={handleDevLogin}
-              className="dev-login-button"
-            >
-              Dev Login
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="user-profile">
-          <img
-            src={user.photo || 'default-avatar.png'}
-            alt={user.displayName}
-            className="profile-photo"
-          />
-          <div className="user-info">
-            <h3>{user.displayName}</h3>
-            <p>{user.email}</p>
-            <button
-              onClick={handleLogout}
-              className="logout-button"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

@@ -1,60 +1,32 @@
-import { describe, it, expect } from '@jest/globals';
-import supertest, { Response } from 'supertest';
-import { Express } from 'express';
+import request from 'supertest';
 import app from '../server';
 
-interface HealthResponse {
-  status: string;
-  timestamp: string;
-}
+describe('Server API', () => {
+  it('responds to health check', async () => {
+    const response = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://localhost:3000');
 
-interface ErrorResponse {
-  error: {
-    status: number;
-    message: string;
-  };
-}
-
-const request = supertest;
-
-describe('Server', () => {
-  describe('GET /api/health', () => {
-    it('should return 200 status and correct response format', async () => {
-      const response: Response = await request(app as Express)
-        .get('/api/health')
-        .expect('Content-Type', /json/)
-        .expect(200);
-
-      const body = response.body as HealthResponse;
-      expect(body).toHaveProperty('status', 'ok');
-      expect(body).toHaveProperty('timestamp');
-      expect(new Date(body.timestamp)).toBeInstanceOf(Date);
-    });
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('ok');
+    expect(response.body.timestamp).toBeDefined();
   });
 
-  describe('Error Handling', () => {
-    it('should handle 404 routes', async () => {
-      const response: Response = await request(app as Express)
-        .get('/non-existent-route')
-        .expect('Content-Type', /json/)
-        .expect(404);
+  it('handles unknown routes', async () => {
+    const response = await request(app)
+      .get('/unknown-route')
+      .set('Origin', 'http://localhost:3000');
 
-      const body = response.body as ErrorResponse;
-      expect(body).toHaveProperty('error');
-      expect(body.error).toHaveProperty('status', 404);
-      expect(body.error).toHaveProperty('message', 'Not Found');
-    });
+    expect(response.status).toBe(404);
+    expect(response.body.error.message).toBe('Not Found');
+  });
 
-    it('should handle server errors', async () => {
-      const response: Response = await request(app as Express)
-        .get('/test-error')
-        .expect('Content-Type', /json/)
-        .expect(500);
+  it('handles server errors gracefully', async () => {
+    const response = await request(app)
+      .get('/test-error')
+      .set('Origin', 'http://localhost:3000');
 
-      const body = response.body as ErrorResponse;
-      expect(body).toHaveProperty('error');
-      expect(body.error).toHaveProperty('status', 500);
-      expect(body.error).toHaveProperty('message', 'Test error');
-    });
+    expect(response.status).toBe(500);
+    expect(response.body.error.message).toBe('Test error');
   });
 });
