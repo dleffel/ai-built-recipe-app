@@ -1,5 +1,7 @@
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+
 describe('Server Configuration', () => {
-  let originalEnv;
+  let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
     // Store original environment variables
@@ -13,28 +15,28 @@ describe('Server Configuration', () => {
     process.env = originalEnv;
   });
 
-  it('should load default values when env vars are not present', () => {
+  it('should load default values when env vars are not present', async () => {
     // Clear relevant environment variables
     delete process.env.PORT;
     delete process.env.NODE_ENV;
     delete process.env.CORS_ORIGIN;
 
-    const config = require('../config/server-config');
+    const config = (await import('../config/server-config')).default;
 
     expect(config.port).toBe(5001);
     expect(config.nodeEnv).toBe('development');
     expect(config.corsOrigin).toBe('http://localhost:3000');
   });
 
-  it('should use environment variables when provided', () => {
+  it('should use environment variables when provided', async () => {
     // Set test environment variables
     process.env.PORT = '8000';
     process.env.NODE_ENV = 'production';
     process.env.CORS_ORIGIN = 'https://example.com';
 
-    const config = require('../config/server-config');
+    const config = (await import('../config/server-config')).default;
 
-    expect(config.port).toBe('8000');
+    expect(config.port).toBe(8000); // Now expecting a number
     expect(config.nodeEnv).toBe('production');
     expect(config.corsOrigin).toBe('https://example.com');
   });
