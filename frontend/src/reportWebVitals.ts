@@ -1,4 +1,6 @@
-const reportWebVitals = async (onPerfEntry) => {
+import { ReportHandler } from 'web-vitals';
+
+const reportWebVitals = async (onPerfEntry?: ReportHandler): Promise<void> => {
   if (onPerfEntry && typeof onPerfEntry === 'function') {
     try {
       const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
@@ -8,10 +10,9 @@ const reportWebVitals = async (onPerfEntry) => {
       getLCP(onPerfEntry);
       getTTFB(onPerfEntry);
     } catch (error) {
-      console.error('Error loading web-vitals:', error);
+      console.error('Error loading web-vitals:', error instanceof Error ? error.message : 'Unknown error');
     }
   }
-  return Promise.resolve();
 };
 
 export default reportWebVitals;

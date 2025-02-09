@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 
-function App() {
+const App: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header" role="banner">
@@ -13,6 +13,6 @@ function App() {
       </main>
     </div>
   );
-}
+};
 
 export default App;

@@ -1,10 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const config = require('./config/server-config');
+import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import path from 'path';
+import config from './config/server-config';
+
+interface CustomError extends Error {
+  status?: number;
+  stack?: string;
+}
 
 /* istanbul ignore next */
-function createApp() {
+function createApp(): Express {
   const app = express();
 
   // Middleware
@@ -21,19 +26,19 @@ function createApp() {
 const app = createApp();
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Test error endpoint
-app.get('/test-error', (req, res, next) => {
-  const error = new Error('Test error');
+app.get('/test-error', (_req: Request, _res: Response, next: NextFunction) => {
+  const error: CustomError = new Error('Test error');
   error.status = 500;
   next(error);
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err: CustomError, _req: Request, res: Response, _next: NextFunction) => {
   /* istanbul ignore next */
   if (err.stack) {
     console.error(err.stack);
@@ -48,7 +53,7 @@ app.use((err, req, res, next) => {
 });
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({
     error: {
       message: 'Not Found',
@@ -63,13 +68,13 @@ if (config.nodeEnv === 'production') {
   app.use(express.static(path.join(__dirname, '../../frontend/build')));
   
   // Production catch-all route
-  app.get('*', (req, res) => {
+  app.get('*', (_req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../../frontend/build/index.html'));
   });
 }
 
 /* istanbul ignore next */
-function startServer() {
+function startServer(): void {
   app.listen(config.port, () => {
     console.log(`Server running on port ${config.port} in ${config.nodeEnv} mode`);
   });
@@ -81,4 +86,4 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = app;
+export default app;

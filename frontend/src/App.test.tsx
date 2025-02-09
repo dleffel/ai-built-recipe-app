@@ -1,4 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import React from 'react';
+import { render, screen, RenderResult } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { describe, it, expect } from '@jest/globals';
 import App from './App';
 
 describe('App Component', () => {
@@ -17,7 +20,7 @@ describe('App Component', () => {
   });
 
   it('matches snapshot', () => {
-    const { container } = render(<App />);
+    const { container }: RenderResult = render(<App />);
     expect(container).toMatchSnapshot();
   });
 });
