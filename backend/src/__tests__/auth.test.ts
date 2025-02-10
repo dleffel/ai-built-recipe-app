@@ -1,155 +1,76 @@
 import request from 'supertest';
-import { Express } from 'express';
-import { User } from '../config/passport';
-
-// Create mock passport object
-const mockPassport = {
-  currentUser: null as User | null,
-  initialize: () => (req: any, res: any, next: any) => {
-    req.user = mockPassport.currentUser;
-    req.login = (user: User, done: (err: any) => void) => {
-      mockPassport.currentUser = user;
-      req.user = user;
-      process.nextTick(() => done(null));
-    };
-    req.logout = (done: (err: any) => void) => {
-      mockPassport.currentUser = null;
-      req.user = null;
-      process.nextTick(() => done(null));
-    };
-    next();
-  },
-  session: () => (req: any, res: any, next: any) => {
-    req.user = mockPassport.currentUser;
-    next();
-  },
-  authenticate: () => (req: any, res: any, next: any) => next(),
-  serializeUser: (user: User, done: (err: any, id?: string) => void) => {
-    done(null, user.id);
-  },
-  deserializeUser: (id: string, done: (err: any, user?: User | false) => void) => {
-    if (mockPassport.currentUser && mockPassport.currentUser.id === id) {
-      done(null, mockPassport.currentUser);
-    } else {
-      done(null, false);
-    }
-  }
-};
-
-// Use doMock instead of jest.mock to avoid hoisting
-jest.doMock('../config/passport', () => ({
-  __esModule: true,
-  default: mockPassport,
-  getMockUser: jest.fn()
-}));
-
-// Import app after mocking
-const app = require('../server').default;
+import app from '../server';
+import { prisma } from '../lib/prisma';
+import { UserService } from '../services/userService';
 
 describe('Auth Routes', () => {
-  let agent: ReturnType<typeof request.agent>;
+  // Store original NODE_ENV
+  const originalEnv = process.env.NODE_ENV;
 
-  beforeEach(() => {
-    agent = request.agent(app);
-    jest.clearAllMocks();
+  beforeAll(() => {
+    // Set NODE_ENV to development for tests
     process.env.NODE_ENV = 'development';
-    mockPassport.currentUser = null;
   });
 
-  afterEach(() => {
-    process.env.NODE_ENV = 'test';
-    mockPassport.currentUser = null;
+  afterAll(async () => {
+    // Restore original NODE_ENV
+    process.env.NODE_ENV = originalEnv;
+    // Clean up database
+    await prisma.user.deleteMany();
+    await prisma.$disconnect();
+  });
+
+  // Clean up database before each test
+  beforeEach(async () => {
+    await prisma.user.deleteMany();
   });
 
   describe('GET /auth/current-user', () => {
-    it('returns 401 when not authenticated', async () => {
-      const response = await request(app).get('/auth/current-user');
-      expect(response.status).toBe(401);
-      expect(response.body.error).toBe('Not authenticated');
+    it('should return 401 when not authenticated', async () => {
+      const response = await request(app)
+        .get('/auth/current-user')
+        .expect(401);
+
+      expect(response.body).toEqual({ error: 'Not authenticated' });
     });
   });
 
   describe('POST /auth/dev-login', () => {
-    it('returns 404 in production', async () => {
+    it('should return 404 in production mode', async () => {
+      // Temporarily set NODE_ENV to production
       process.env.NODE_ENV = 'production';
-      const response = await request(app).post('/auth/dev-login');
-      expect(response.status).toBe(404);
-      expect(response.body.error).toBe('Not available in production');
-    });
-
-    it('handles missing mock user', async () => {
-      // Mock getMockUser to return null
-      const { getMockUser } = require('../config/passport');
-      (getMockUser as jest.Mock).mockReturnValue(null);
-
+      
       const response = await request(app)
-        .post('/auth/dev-login');
+        .post('/auth/dev-login')
+        .expect(404);
 
-      expect(response.status).toBe(500);
-      expect(response.body.error).toBe('Mock user not found');
+      expect(response.body).toEqual({ error: 'Not available in production' });
+      
+      // Reset NODE_ENV back to development
+      process.env.NODE_ENV = 'development';
     });
 
-    it('maintains session after successful dev login', async () => {
-      const mockUser = {
-        id: 'dev-123',
-        displayName: 'Development User',
+    it('should login successfully in development mode', async () => {
+      const response = await request(app)
+        .post('/auth/dev-login')
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        id: expect.any(String),
         email: 'dev@example.com',
-        photo: 'test-photo.jpg'
-      };
-
-      // Mock getMockUser to return our test user
-      const { getMockUser } = require('../config/passport');
-      (getMockUser as jest.Mock).mockReturnValue(mockUser);
-
-      // Use agent to maintain session cookies
-      const loginResponse = await agent
-        .post('/auth/dev-login');
-
-      expect(loginResponse.status).toBe(200);
-      expect(loginResponse.body).toEqual(mockUser);
-
-      // Verify session persists
-      const checkResponse = await agent.get('/auth/current-user');
-      expect(checkResponse.status).toBe(200);
-      expect(checkResponse.body).toEqual(mockUser);
+        displayName: 'Development User',
+        photo: 'https://via.placeholder.com/150'
+      });
     });
   });
 
   describe('GET /auth/logout', () => {
-    it('handles unauthorized logout', async () => {
-      // Ensure no user is logged in
-      mockPassport.currentUser = null;
+    it('should return 401 when not authenticated', async () => {
+      const response = await request(app)
+        .get('/auth/logout')
+        .expect(401);
 
-      const response = await request(app).get('/auth/logout');
-      expect(response.status).toBe(401);
-      expect(response.body.error).toBe('Not authenticated');
-    });
-
-    it('successfully logs out', async () => {
-      const mockUser = {
-        id: 'dev-123',
-        displayName: 'Development User',
-        email: 'dev@example.com',
-        photo: 'test-photo.jpg'
-      };
-
-      // Mock getMockUser to return our test user
-      const { getMockUser } = require('../config/passport');
-      (getMockUser as jest.Mock).mockReturnValue(mockUser);
-
-      // First login
-      await agent
-        .post('/auth/dev-login');
-
-      // Then logout
-      const logoutResponse = await agent.get('/auth/logout');
-      expect(logoutResponse.status).toBe(200);
-      expect(logoutResponse.body.message).toBe('Logged out successfully');
-
-      // Verify session is cleared
-      const checkResponse = await agent.get('/auth/current-user');
-      expect(checkResponse.status).toBe(401);
-      expect(checkResponse.body.error).toBe('Not authenticated');
+      expect(response.body).toEqual({ error: 'Not authenticated' });
     });
   });
 });

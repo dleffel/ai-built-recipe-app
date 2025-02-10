@@ -22,6 +22,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.log('Image failed to load:', e.currentTarget.src);
+    e.currentTarget.src = 'https://via.placeholder.com/150';
+  };
+
   if (user) {
     return (
       <div className="user-profile">
@@ -29,6 +34,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           src={user.photo}
           alt={user.displayName}
           className="profile-photo"
+          onError={handleImageError}
+          referrerPolicy="no-referrer"
+          crossOrigin="anonymous"
         />
         <div className="user-info">
           <h3>{user.displayName}</h3>
