@@ -1,6 +1,9 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  setupFilesAfterEnv: [
+    '<rootDir>/prisma/jest-setup.ts'
+  ],
   coverageThreshold: {
     global: {
       branches: 80,
