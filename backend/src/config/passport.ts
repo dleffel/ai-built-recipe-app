@@ -8,11 +8,11 @@ import type { User as PrismaUser } from '@prisma/client';
 dotenv.config();
 
 // Define our session user type to match frontend expectations
-interface SessionUser {
+export interface SessionUser {
   id: string;
   email: string;
   displayName: string;
-  photo: string;
+  photoUrl: string;
 }
 
 // Extend Express.User interface
@@ -28,11 +28,11 @@ const mockUser: SessionUser = {
   id: 'dev-123',
   email: 'dev@example.com',
   displayName: 'Development User',
-  photo: 'https://via.placeholder.com/150'
+  photoUrl: 'https://via.placeholder.com/150'
 };
 
 export const getMockUser = () => {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     return mockUser;
   }
   return undefined;
@@ -76,7 +76,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             id: user.id,
             email: user.email,
             displayName: user.displayName || user.email.split('@')[0],
-            photo: user.photoUrl || 'https://via.placeholder.com/150'
+            photoUrl: user.photoUrl || 'https://via.placeholder.com/150'
           };
 
           console.log('Created session user:', sessionUser);
@@ -120,7 +120,7 @@ passport.deserializeUser(async (id: string, done) => {
         id: user.id,
         email: user.email,
         displayName: user.displayName || user.email.split('@')[0],
-        photo: user.photoUrl || 'https://via.placeholder.com/150'
+        photoUrl: user.photoUrl || 'https://via.placeholder.com/150'
       };
 
       console.log('Deserialized session user:', sessionUser);

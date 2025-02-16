@@ -3,10 +3,20 @@ import 'jest';
 
 // Clean up database before each test
 beforeEach(async () => {
-  await prisma.user.deleteMany();
+  // Delete recipes first to handle foreign key constraints
+  //await prisma.recipe.deleteMany();
+  // Then delete users
+  //await prisma.user.deleteMany();
 });
 
-// Disconnect Prisma after all tests are done
+// Clean up database and disconnect after all tests
 afterAll(async () => {
-  await prisma.$disconnect();
+  // Clean up in correct order
+  // await prisma.$transaction(async (tx) => {
+  //   await tx.recipe.deleteMany();
+  //   await tx.user.deleteMany();
+  // });
+
+  //await prisma.$disconnect();
+
 });

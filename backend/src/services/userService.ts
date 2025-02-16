@@ -1,12 +1,20 @@
-import { prisma } from '../lib/prisma';
-import type { User } from '@prisma/client';
+import { prisma as defaultPrisma } from '../lib/prisma';
+import type { User, PrismaClient } from '@prisma/client';
 
 export class UserService {
+  // Allow overriding prisma in tests
+  static prisma: PrismaClient = defaultPrisma;
+
+  // Add method to reset prisma instance (for tests)
+  static resetPrisma() {
+    this.prisma = defaultPrisma;
+  }
+
   /**
    * Find a user by their email address
    */
   static async findByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { email }
     });
   }
@@ -15,7 +23,7 @@ export class UserService {
    * Find a user by their ID
    */
   static async findById(id: string): Promise<User | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { id }
     });
   }
@@ -24,7 +32,7 @@ export class UserService {
    * Find a user by their Google ID
    */
   static async findByGoogleId(googleId: string): Promise<User | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { googleId }
     });
   }
@@ -38,7 +46,7 @@ export class UserService {
     displayName?: string;
     photoUrl?: string;
   }): Promise<User> {
-    return prisma.user.create({
+    return this.prisma.user.create({
       data: {
         ...data,
         lastLoginAt: new Date()
@@ -50,7 +58,7 @@ export class UserService {
    * Update user's last login timestamp
    */
   static async updateLastLogin(id: string): Promise<User> {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id },
       data: { lastLoginAt: new Date() }
     });
@@ -63,7 +71,7 @@ export class UserService {
     displayName?: string;
     photoUrl?: string;
   }): Promise<User> {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id },
       data: {
         ...data,
@@ -98,7 +106,7 @@ export class UserService {
     const existingByEmail = await UserService.findByEmail(profile.email);
     if (existingByEmail) {
       // Update with Google ID and profile if not set
-      return prisma.user.update({
+      return this.prisma.user.update({
         where: { id: existingByEmail.id },
         data: {
           googleId: profile.googleId,
