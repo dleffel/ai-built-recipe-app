@@ -11,7 +11,7 @@ const formatUserResponse = (dbUser: { id: string; email: string }, sessionUser?:
   id: dbUser.id,
   email: dbUser.email,
   displayName: sessionUser?.displayName || dbUser.email.split('@')[0],
-  photo: sessionUser?.photo || 'https://via.placeholder.com/150'
+  photo: sessionUser?.photoUrl || 'https://via.placeholder.com/150'
 });
 
 /* istanbul ignore next */
@@ -50,14 +50,13 @@ router.get('/google/callback',
 const devLogin: RequestHandler = async (req, res) => {
   console.log('Dev login attempt, NODE_ENV:', process.env.NODE_ENV);
   
-  if (process.env.NODE_ENV !== 'development') {
-    console.log('Not in development mode');
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Not in development or test mode');
     res.status(404).json({ error: 'Not available in production' });
     return;
   }
 
   const mockUser = getMockUser();
-  console.log('Mock user:', mockUser);
   
   if (!mockUser) {
     res.status(500).json({ error: 'Mock user not found' });
@@ -65,13 +64,14 @@ const devLogin: RequestHandler = async (req, res) => {
   }
 
   try {
-    // Ensure mock user exists in database
+    // Ensure mock user exists in database and update last login
     const dbUser = await UserService.findOrCreateGoogleUser({
       email: mockUser.email,
       googleId: 'mock-google-id'
     });
 
-    // Use the mock user's session data
+    // Use the mock user's session data with updated ID
+    mockUser.id = dbUser.id;
     req.login(mockUser, (err) => {
       if (err) {
         console.error(`Dev login error: ${err}`);

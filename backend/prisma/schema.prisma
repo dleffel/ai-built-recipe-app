@@ -20,5 +20,30 @@ model User {
   updatedAt   DateTime  @updatedAt
   lastLoginAt DateTime?
 
+  // Relations
+  recipes     Recipe[]
+
   @@map("users")
+}
+
+model Recipe {
+  id           String    @id @default(uuid())
+  title        String
+  description  String?
+  ingredients  String[]  // Array of ingredient strings
+  instructions String
+  servings     Int?
+  prepTime     Int?     // In minutes
+  cookTime     Int?     // In minutes
+  imageUrl     String?
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  // Relations
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@map("recipes")
+  @@index([userId])
 }

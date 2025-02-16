@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieSession from 'cookie-session';
 import passport from './config/passport';
 import authRoutes from './routes/auth';
+import recipeRoutes from './routes/recipes';
 import serverConfig from './config/server-config';
 
 const app = express();
@@ -62,6 +63,9 @@ app.get('/test-error', (req: Request, res: Response, next: NextFunction) => {
 
 // Auth routes
 app.use('/auth', authRoutes);
+
+// Recipe routes
+app.use('/api/recipes', recipeRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

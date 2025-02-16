@@ -1,14 +1,124 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
-import { useAuth } from './context/AuthContext';
+import { RecipeList } from './components/RecipeList';
+import { RecipeDetail } from './components/RecipeDetail';
+import { RecipeForm } from './components/RecipeForm';
+import { Recipe, CreateRecipeDTO } from './types/recipe';
+import { recipeApi } from './services/api';
+
+type View = 'list' | 'detail' | 'create' | 'edit';
+
+interface ViewState {
+  type: View;
+  recipeId?: string;
+}
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
+  const [currentView, setCurrentView] = useState<ViewState>({ type: 'list' });
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+
+  const handleCreateRecipe = async (data: CreateRecipeDTO) => {
+    try {
+      await recipeApi.create(data);
+      setCurrentView({ type: 'list' });
+    } catch (error) {
+      console.error('Error creating recipe:', error);
+    }
+  };
+
+  const handleEditRecipe = async (data: CreateRecipeDTO) => {
+    if (!selectedRecipe) return;
+    
+    try {
+      await recipeApi.update(selectedRecipe.id, data);
+      setCurrentView({ type: 'list' });
+    } catch (error) {
+      console.error('Error updating recipe:', error);
+    }
+  };
+
+  const handleDeleteRecipe = async (recipe: Recipe) => {
+    try {
+      await recipeApi.delete(recipe.id);
+      setCurrentView({ type: 'list' });
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+    }
+  };
+
+  const renderContent = () => {
+    if (!user) {
+      return (
+        <div className="login-message">
+          <p>Please sign in to access your recipes</p>
+        </div>
+      );
+    }
+
+    switch (currentView.type) {
+      case 'detail':
+        if (!selectedRecipe) return null;
+        return (
+          <RecipeDetail
+            recipe={selectedRecipe}
+            onEdit={() => setCurrentView({ type: 'edit' })}
+            onDelete={() => handleDeleteRecipe(selectedRecipe)}
+            onBack={() => setCurrentView({ type: 'list' })}
+          />
+        );
+
+      case 'create':
+        return (
+          <RecipeForm
+            onSubmit={handleCreateRecipe}
+            onCancel={() => setCurrentView({ type: 'list' })}
+          />
+        );
+
+      case 'edit':
+        if (!selectedRecipe) return null;
+        return (
+          <RecipeForm
+            recipe={selectedRecipe}
+            onSubmit={handleEditRecipe}
+            onCancel={() => setCurrentView({ type: 'list' })}
+          />
+        );
+
+      case 'list':
+      default:
+        return (
+          <div className="recipe-container">
+            <div className="recipe-header">
+              <h2>My Recipes</h2>
+              <button
+                onClick={() => setCurrentView({ type: 'create' })}
+                className="create-button"
+              >
+                Create New Recipe
+              </button>
+            </div>
+            <RecipeList
+              onRecipeClick={(recipe) => {
+                setSelectedRecipe(recipe);
+                setCurrentView({ type: 'detail' });
+              }}
+              onRecipeEdit={(recipe) => {
+                setSelectedRecipe(recipe);
+                setCurrentView({ type: 'edit' });
+              }}
+              onRecipeDelete={handleDeleteRecipe}
+            />
+          </div>
+        );
+    }
+  };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   return (
@@ -19,17 +129,8 @@ const AppContent: React.FC = () => {
           <Login />
         </div>
       </header>
-      <main>
-        {user ? (
-          <div className="welcome-message">
-            <p>Welcome to your recipe collection, {user.displayName}!</p>
-            {/* Recipe components will be added here */}
-          </div>
-        ) : (
-          <div className="login-message">
-            <p>Please sign in to access your recipes</p>
-          </div>
-        )}
+      <main className="App-main">
+        {renderContent()}
       </main>
     </div>
   );
