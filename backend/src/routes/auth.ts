@@ -70,15 +70,24 @@ const devLogin: RequestHandler = async (req, res) => {
       googleId: 'mock-google-id'
     });
 
-    // Use the mock user's session data with updated ID
-    mockUser.id = dbUser.id;
-    req.login(mockUser, (err) => {
+    // Cast mockUser to Express.User and update with database ID
+    const user = mockUser as Express.User;
+    user.id = dbUser.id;
+
+    // Format the user response with proper fallbacks
+    const formatted = formatUserResponse(dbUser, user);
+
+    // Update only the display name and photo URL
+    user.displayName = formatted.displayName;
+    user.photoUrl = formatted.photo;
+
+    req.login(user, (err) => {
       if (err) {
         console.error(`Dev login error: ${err}`);
         res.status(500).json({ error: 'Failed to login' });
         return;
       }
-      res.json(mockUser);
+      res.json(user);
     });
   } catch (error) {
     console.error('Dev login database error:', error);
