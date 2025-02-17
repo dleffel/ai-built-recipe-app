@@ -54,6 +54,9 @@ const devLoginHandler = routes['post/dev-login'];
 const getCurrentUserHandler = routes['get/current-user'];
 const logoutHandler = routes['get/logout'];
 
+// Get the router instance for testing
+const router = authRouter as any;
+
 // Mock dependencies
 jest.mock('../services/userService', () => ({
   UserService: {
@@ -81,6 +84,158 @@ describe('Auth Routes', () => {
     };
     nextMock = jest.fn();
     jest.clearAllMocks();
+  });
+
+  describe('User Response Formatting', () => {
+    const mockDbUser = {
+      id: 'test-id',
+      email: 'test@example.com'
+    };
+
+    beforeEach(() => {
+      (UserService.findById as jest.Mock).mockResolvedValue(mockDbUser);
+    });
+
+    it('should format user response with default displayName from email', async () => {
+      const mockUserWithoutDisplayName = {
+        id: 'test-id',
+        email: 'john.doe@example.com',
+        displayName: null,
+        photoUrl: 'https://test-photo.jpg',
+        googleId: 'mock-google-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: null
+      };
+
+      (getMockUser as jest.Mock).mockReturnValue(mockUserWithoutDisplayName);
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockResolvedValue({
+        id: 'test-id',
+        email: 'john.doe@example.com'
+      });
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      
+      expect(req.login).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'test-id',
+          email: 'john.doe@example.com',
+          displayName: 'john.doe',
+          photoUrl: 'https://test-photo.jpg'
+        }),
+        expect.any(Function)
+      );
+    });
+
+    it('should format user response with default photo URL', async () => {
+      const mockUserWithoutPhoto = {
+        id: 'test-id',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        photoUrl: null,
+        googleId: 'mock-google-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: null
+      };
+
+      (getMockUser as jest.Mock).mockReturnValue(mockUserWithoutPhoto);
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockResolvedValue({
+        id: 'test-id',
+        email: 'test@example.com'
+      });
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      
+      expect(req.login).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'test-id',
+          email: 'test@example.com',
+          displayName: 'Test User',
+          photoUrl: 'https://via.placeholder.com/150'
+        }),
+        expect.any(Function)
+      );
+    });
+
+    it('should format user response with all default values', async () => {
+      const mockUserWithoutBoth = {
+        id: 'test-id',
+        email: 'jane.smith@example.com',
+        displayName: null,
+        photoUrl: null,
+        googleId: 'mock-google-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: null
+      };
+
+      (getMockUser as jest.Mock).mockReturnValue(mockUserWithoutBoth);
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockResolvedValue({
+        id: 'test-id',
+        email: 'jane.smith@example.com'
+      });
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      
+      expect(req.login).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'test-id',
+          email: 'jane.smith@example.com',
+          displayName: 'jane.smith',
+          photoUrl: 'https://via.placeholder.com/150'
+        }),
+        expect.any(Function)
+      );
+    });
+
+    it('should format user response with complete session data', async () => {
+      // Set up a user with complete data
+      req.user = {
+        id: 'test-id',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        photoUrl: 'https://test-photo.jpg',
+        googleId: 'test-google-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: new Date()
+      };
+
+      await getCurrentUserHandler(req as Request, res as Response, nextMock);
+      
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        id: 'test-id',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        photoUrl: 'https://test-photo.jpg'
+      }));
+    });
+
+    it('should handle dev login response formatting', async () => {
+      const mockUser = {
+        id: 'test-id',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        photoUrl: 'https://test-photo.jpg',
+        googleId: 'mock-google-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: new Date()
+      };
+
+      (getMockUser as jest.Mock).mockReturnValue(mockUser);
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockResolvedValue(mockDbUser);
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        id: 'test-id',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        photoUrl: 'https://test-photo.jpg'
+      }));
+    });
   });
 
   describe('devLogin', () => {
@@ -118,10 +273,14 @@ describe('Auth Routes', () => {
       const originalEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
       
+      (getMockUser as jest.Mock).mockReturnValue(mockUser);
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockResolvedValue(mockUser);
+      
       await devLoginHandler(req as Request, res as Response, nextMock);
       
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Database error during login' });
+      expect(res.status).not.toHaveBeenCalled();
+      expect(req.login).toHaveBeenCalledWith(mockUser, expect.any(Function));
+      expect(res.json).toHaveBeenCalledWith(mockUser);
       
       process.env.NODE_ENV = originalEnv;
     });
