@@ -30,6 +30,12 @@ export const recipeApi = {
     return response.data;
   },
 
+  // Extract recipe from URL
+  extractFromUrl: async (url: string): Promise<CreateRecipeDTO> => {
+    const response = await api.post<CreateRecipeDTO>('/api/recipes/extract-url', { url });
+    return response.data;
+  },
+
   // Get paginated list of recipes
   list: async (params?: { skip?: number; take?: number }): Promise<RecipeListResponse> => {
     const response = await api.get<RecipeListResponse>('/api/recipes', { params });

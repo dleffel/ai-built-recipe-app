@@ -7,6 +7,36 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.importSection {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.importButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.importButton:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.importButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .field {
   margin-bottom: 1.5rem;
 }
