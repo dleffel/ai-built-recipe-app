@@ -1,5 +1,44 @@
 import { User, Recipe } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { createTestUser, createTestRecipe, cleanupTestData, createTestSessionCookie } from './helpers/testHelpers.test';
+import { RecipeService } from '../services/recipeService';
+// Mock the RecipeService
+jest.mock('../services/recipeService', () => ({
+  RecipeService: {
+    findByUser: jest.fn(),
+    findById: jest.fn(),
+    createRecipe: jest.fn(),
+    updateRecipe: jest.fn(),
+    softDeleteRecipe: jest.fn(),
+    countUserRecipes: jest.fn()
+  }
+}));
+
+// Reset all mocks before each test
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Set up default successful responses
+  (RecipeService.findByUser as jest.Mock).mockResolvedValue([]);
+  (RecipeService.findById as jest.Mock).mockResolvedValue(null);
+  (RecipeService.createRecipe as jest.Mock).mockImplementation(async (userId, data) => ({
+    id: 'test-id',
+    userId,
+    ...data,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isDeleted: false
+  }));
+  (RecipeService.updateRecipe as jest.Mock).mockImplementation(async (id, userId, data) => ({
+    id,
+    userId,
+    ...data,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isDeleted: false
+  }));
+  (RecipeService.softDeleteRecipe as jest.Mock).mockResolvedValue(true);
+});
+jest.mock('../services/recipeService');
 
 // Mock passport before importing app
 const mockPassport = {
@@ -85,6 +124,17 @@ describe('Recipe API Integration Tests', () => {
     };
 
     it('should create a new recipe when authenticated', async () => {
+      // Mock successful creation
+      const createdRecipe = {
+        id: 'test-id',
+        userId: testUser.id,
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isDeleted: false
+      };
+      (RecipeService.createRecipe as jest.Mock).mockResolvedValueOnce(createdRecipe);
+
       const response = await request(app)
         .post('/api/recipes')
         .set('Cookie', authCookie)
@@ -110,7 +160,82 @@ describe('Recipe API Integration Tests', () => {
         .send({});
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toBe('Missing required fields: title, ingredients, and instructions are required');
+    });
+
+    it('should validate partial required fields', async () => {
+      const partialData = {
+        title: 'Test Recipe',
+        // missing ingredients and instructions
+      };
+
+      const response = await request(app)
+        .post('/api/recipes')
+        .set('Cookie', authCookie)
+        .send(partialData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Missing required fields: title, ingredients, and instructions are required');
+    });
+
+    it('should handle Prisma validation errors', async () => {
+      // Mock Prisma error
+      (RecipeService.createRecipe as jest.Mock).mockRejectedValueOnce(
+        new PrismaClientKnownRequestError('Validation error', {
+          code: 'P2002',
+          clientVersion: '2.0.0'
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/recipes')
+        .set('Cookie', authCookie)
+        .send(data);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Invalid recipe data');
+    });
+
+    it('should validate ingredients array', async () => {
+      const invalidData = {
+        ...data,
+        ingredients: 'not an array'
+      };
+
+      // Mock validation error
+      (RecipeService.createRecipe as jest.Mock).mockRejectedValueOnce(
+        new Error('Invalid ingredients')
+      );
+
+      const response = await request(app)
+        .post('/api/recipes')
+        .set('Cookie', authCookie)
+        .send(invalidData);
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBeDefined();
+    });
+
+    it('should validate numeric fields', async () => {
+      const invalidData = {
+        ...data,
+        servings: 'not a number',
+        prepTime: 'not a number',
+        cookTime: 'not a number'
+      };
+
+      // Mock validation error
+      (RecipeService.createRecipe as jest.Mock).mockRejectedValueOnce(
+        new Error('Invalid numeric fields')
+      );
+
+      const response = await request(app)
+        .post('/api/recipes')
+        .set('Cookie', authCookie)
+        .send(invalidData);
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBeDefined();
     });
 
     it('should return 401 when not authenticated', async () => {
@@ -135,6 +260,10 @@ describe('Recipe API Integration Tests', () => {
     });
 
     it('should return user recipes with pagination', async () => {
+      // Mock successful response
+      (RecipeService.findByUser as jest.Mock).mockResolvedValueOnce(recipes);
+      (RecipeService.countUserRecipes as jest.Mock).mockResolvedValueOnce(3);
+
       const response = await request(app)
         .get('/api/recipes')
         .set('Cookie', authCookie)
@@ -146,9 +275,14 @@ describe('Recipe API Integration Tests', () => {
         expect.arrayContaining(recipes.map(r => r.id))
       );
       expect(response.body.pagination).toBeDefined();
+      expect(response.body.pagination.total).toBe(3);
     });
 
     it('should handle pagination correctly', async () => {
+      // Mock paginated response
+      (RecipeService.findByUser as jest.Mock).mockResolvedValueOnce([recipes[1]]);
+      (RecipeService.countUserRecipes as jest.Mock).mockResolvedValueOnce(3);
+
       const response = await request(app)
         .get('/api/recipes')
         .set('Cookie', authCookie)
@@ -157,6 +291,62 @@ describe('Recipe API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.recipes).toHaveLength(1);
       expect(response.body.pagination.total).toBe(3);
+    });
+
+    it('should handle invalid skip parameter', async () => {
+      (RecipeService.findByUser as jest.Mock).mockRejectedValueOnce(
+        new Error('Invalid skip parameter')
+      );
+
+      const response = await request(app)
+        .get('/api/recipes')
+        .set('Cookie', authCookie)
+        .query({ skip: 'invalid', take: 10 });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('Failed to fetch recipes');
+    });
+
+    it('should handle invalid take parameter', async () => {
+      (RecipeService.findByUser as jest.Mock).mockRejectedValueOnce(
+        new Error('Invalid take parameter')
+      );
+
+      const response = await request(app)
+        .get('/api/recipes')
+        .set('Cookie', authCookie)
+        .query({ skip: 0, take: 'invalid' });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('Failed to fetch recipes');
+    });
+
+    it('should handle negative pagination values', async () => {
+      (RecipeService.findByUser as jest.Mock).mockRejectedValueOnce(
+        new Error('Invalid pagination values')
+      );
+
+      const response = await request(app)
+        .get('/api/recipes')
+        .set('Cookie', authCookie)
+        .query({ skip: -1, take: -5 });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('Failed to fetch recipes');
+    });
+
+    it('should handle database errors', async () => {
+      (RecipeService.findByUser as jest.Mock).mockRejectedValueOnce(
+        new Error('Database error')
+      );
+
+      const response = await request(app)
+        .get('/api/recipes')
+        .set('Cookie', authCookie)
+        .query({ skip: 0, take: 10 });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('Failed to fetch recipes');
     });
 
     it('should return 401 when not authenticated', async () => {
@@ -175,6 +365,9 @@ describe('Recipe API Integration Tests', () => {
     });
 
     it('should return recipe by ID', async () => {
+      // Mock successful response
+      (RecipeService.findById as jest.Mock).mockResolvedValueOnce(recipe);
+
       const response = await request(app)
         .get(`/api/recipes/${recipe.id}`)
         .set('Cookie', authCookie);
@@ -185,6 +378,9 @@ describe('Recipe API Integration Tests', () => {
     });
 
     it('should return 404 for non-existent recipe', async () => {
+      // Mock recipe not found
+      (RecipeService.findById as jest.Mock).mockResolvedValueOnce(null);
+
       const response = await request(app)
         .get('/api/recipes/non-existent-id')
         .set('Cookie', authCookie);
@@ -213,6 +409,12 @@ describe('Recipe API Integration Tests', () => {
         description: 'Updated description'
       };
 
+      // Mock successful update
+      (RecipeService.updateRecipe as jest.Mock).mockResolvedValueOnce({
+        ...recipe,
+        ...updateData
+      });
+
       const response = await request(app)
         .put(`/api/recipes/${recipe.id}`)
         .set('Cookie', authCookie)
@@ -224,7 +426,73 @@ describe('Recipe API Integration Tests', () => {
       expect(response.body.ingredients).toEqual(recipe.ingredients);
     });
 
+    it('should validate update data with Prisma error', async () => {
+      const invalidData = {
+        servings: 'not a number',
+        prepTime: 'not a number',
+        cookTime: 'not a number',
+        ingredients: 'not an array'
+      };
+
+      // Mock Prisma validation error
+      (RecipeService.updateRecipe as jest.Mock).mockRejectedValueOnce(
+        new PrismaClientKnownRequestError('Invalid data format', {
+          code: 'P2002',
+          clientVersion: '2.0.0'
+        })
+      );
+
+      const response = await request(app)
+        .put(`/api/recipes/${recipe.id}`)
+        .set('Cookie', authCookie)
+        .send(invalidData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Invalid recipe data');
+    });
+
+    it('should handle generic validation errors', async () => {
+      const invalidData = {
+        servings: 'not a number',
+        prepTime: 'not a number',
+        cookTime: 'not a number'
+      };
+
+      // Mock generic error
+      (RecipeService.updateRecipe as jest.Mock).mockRejectedValueOnce(
+        new Error('Invalid data')
+      );
+
+      const response = await request(app)
+        .put(`/api/recipes/${recipe.id}`)
+        .set('Cookie', authCookie)
+        .send(invalidData);
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('Failed to update recipe');
+    });
+
+    it('should handle database errors during update', async () => {
+      // Mock recipe not found error
+      (RecipeService.updateRecipe as jest.Mock).mockRejectedValueOnce(
+        new Error('Recipe not found or unauthorized')
+      );
+
+      const response = await request(app)
+        .put(`/api/recipes/${recipe.id}`)
+        .set('Cookie', authCookie)
+        .send({ title: 'New Title' });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe('Recipe not found or unauthorized');
+    });
+
     it('should return 404 for non-existent recipe', async () => {
+      // Mock recipe not found
+      (RecipeService.updateRecipe as jest.Mock).mockRejectedValueOnce(
+        new Error('Recipe not found or unauthorized')
+      );
+
       const response = await request(app)
         .put('/api/recipes/non-existent-id')
         .set('Cookie', authCookie)
@@ -251,12 +519,18 @@ describe('Recipe API Integration Tests', () => {
       });
 
       it('should return 404 when updating recipe owned by different user', async () => {
+        // Mock recipe not found error for different user's recipe
+        (RecipeService.updateRecipe as jest.Mock).mockRejectedValueOnce(
+          new Error('Recipe not found or unauthorized')
+        );
+
         const response = await request(app)
           .put(`/api/recipes/${otherUserRecipe.id}`)
           .set('Cookie', authCookie)
           .send({ title: 'New Title' });
 
         expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Recipe not found or unauthorized');
       });
     });
   });
@@ -269,6 +543,11 @@ describe('Recipe API Integration Tests', () => {
     });
 
     it('should soft delete recipe', async () => {
+      // Mock successful delete
+      (RecipeService.softDeleteRecipe as jest.Mock).mockResolvedValueOnce(true);
+      // Mock recipe not found after deletion
+      (RecipeService.findById as jest.Mock).mockResolvedValueOnce(null);
+
       const response = await request(app)
         .delete(`/api/recipes/${recipe.id}`)
         .set('Cookie', authCookie);
@@ -284,12 +563,56 @@ describe('Recipe API Integration Tests', () => {
       expect(getResponse.status).toBe(404);
     });
 
+    it('should handle database errors during delete', async () => {
+      // Mock recipe not found error
+      (RecipeService.softDeleteRecipe as jest.Mock).mockRejectedValueOnce(
+        new Error('Recipe not found or unauthorized')
+      );
+
+      const response = await request(app)
+        .delete(`/api/recipes/${recipe.id}`)
+        .set('Cookie', authCookie);
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe('Recipe not found or unauthorized');
+    });
+
+    describe('when recipe owned by different user', () => {
+      let otherUser: User;
+      let otherUserRecipe: Recipe;
+
+      beforeEach(async () => {
+        otherUser = await createTestUser(2);
+        otherUserRecipe = await createTestRecipe(otherUser, 1);
+      });
+
+      it('should return 404 when deleting recipe owned by different user', async () => {
+        // Mock recipe not found error for different user's recipe
+        (RecipeService.softDeleteRecipe as jest.Mock).mockRejectedValueOnce(
+          new Error('Recipe not found or unauthorized')
+        );
+
+        const response = await request(app)
+          .delete(`/api/recipes/${otherUserRecipe.id}`)
+          .set('Cookie', authCookie);
+
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Recipe not found or unauthorized');
+      });
+    });
+
     it('should return 404 for non-existent recipe', async () => {
+      // Mock recipe not found error
+      (RecipeService.softDeleteRecipe as jest.Mock).mockRejectedValueOnce(
+        new Error('Recipe not found or unauthorized')
+      );
+
       const response = await request(app)
         .delete('/api/recipes/non-existent-id')
         .set('Cookie', authCookie);
 
       expect(response.status).toBe(404);
+      expect(response.body.error).toBe('Recipe not found or unauthorized');
     });
 
     it('should return 401 when not authenticated', async () => {
