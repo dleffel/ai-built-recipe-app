@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { jest, beforeAll, afterAll } from '@jest/globals';
 
-type MockFn = jest.Mock & {
+export type MockFn = jest.Mock & {
   mockResolvedValue: (value: any) => MockFn;
   mockResolvedValueOnce: (value: any) => MockFn;
   mockRejectedValue: (error: any) => MockFn;

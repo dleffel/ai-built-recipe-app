@@ -1,56 +1,293 @@
-import request from 'supertest';
-import app from '../server';
-import { prisma } from '../lib/prisma';
+import { Request, Response } from 'express';
+import { getMockUser } from '../config/passport';
 import { UserService } from '../services/userService';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import passport from 'passport';
+import authRouter from '../routes/auth';
+
+// Mock passport
+jest.mock('passport', () => {
+  const mockAuthenticateMiddleware = (req: Request, res: Response, next: Function) => next();
+  const mockAuthenticate = jest.fn(() => mockAuthenticateMiddleware);
+  return {
+    authenticate: mockAuthenticate,
+    initialize: jest.fn(),
+    session: jest.fn(),
+    use: jest.fn()
+  };
+});
+
+// Mock passport config
+jest.mock('../config/passport', () => ({
+  getMockUser: jest.fn(),
+  __esModule: true,
+  default: jest.requireActual('passport')
+}));
+
+// Extend Express Request to include our User type
+declare global {
+  namespace Express {
+    interface User {
+      id: string;
+      email: string;
+      displayName: string | null;
+      photoUrl: string | null;
+      googleId: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+      lastLoginAt: Date | null;
+    }
+  }
+}
+
+// Get the route handlers directly
+const routes = (authRouter as any).stack
+  .filter((layer: any) => layer.route)
+  .reduce((acc: any, layer: any) => {
+    const path = layer.route.path;
+    const method = Object.keys(layer.route.methods)[0];
+    acc[`${method}${path}`] = layer.route.stack[0].handle;
+    return acc;
+  }, {});
+
+const devLoginHandler = routes['post/dev-login'];
+const getCurrentUserHandler = routes['get/current-user'];
+const logoutHandler = routes['get/logout'];
+
+// Mock dependencies
+jest.mock('../services/userService', () => ({
+  UserService: {
+    findOrCreateGoogleUser: jest.fn(),
+    findById: jest.fn(),
+    updateLastLogin: jest.fn()
+  }
+}));
 
 describe('Auth Routes', () => {
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+  let nextMock: jest.Mock;
 
-  describe('GET /auth/current-user', () => {
-    it('should return 401 when not authenticated', async () => {
-      const response = await request(app)
-        .get('/auth/current-user')
-        .expect(401);
-
-      expect(response.body).toEqual({ error: 'Not authenticated' });
-    });
+  beforeEach(() => {
+    req = {
+      login: jest.fn().mockImplementation((user: Express.User, done: (err: any) => void) => done(null)),
+      logout: jest.fn().mockImplementation((done: (err: any) => void) => done(null)),
+      user: undefined
+    };
+    res = {
+      json: jest.fn(),
+      status: jest.fn().mockReturnThis(),
+      redirect: jest.fn()
+    };
+    nextMock = jest.fn();
+    jest.clearAllMocks();
   });
 
-  describe('POST /auth/dev-login', () => {
-    it('should return 404 in production mode', async () => {
-      // Temporarily set NODE_ENV to production
-      process.env.NODE_ENV = 'production';
-      
-      const response = await request(app)
-        .post('/auth/dev-login')
-        .expect(404);
+  describe('devLogin', () => {
+    const mockUser: Express.User = {
+      id: 'test-id',
+      email: 'test@example.com',
+      displayName: 'Test User',
+      photoUrl: 'test-photo.jpg',
+      googleId: 'mock-google-id',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLoginAt: new Date()
+    };
 
-      expect(response.body).toEqual({ error: 'Not available in production' });
-      
-      // Reset NODE_ENV back to development
+    beforeEach(() => {
       process.env.NODE_ENV = 'development';
+      (getMockUser as jest.Mock).mockReturnValue(mockUser);
     });
 
-    it('should login successfully in development mode', async () => {
-      const response = await request(app)
-        .post('/auth/dev-login')
-        .expect(200);
+    it('should return 404 in production environment', async () => {
+      process.env.NODE_ENV = 'production';
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Not available in production' });
+    });
 
-      expect(response.body).toMatchObject({
-        id: expect.any(String),
-        email: 'dev@example.com',
-        displayName: 'Development User',
-        photoUrl: 'https://via.placeholder.com/150'
+    it('should handle missing mock user', async () => {
+      (getMockUser as jest.Mock).mockReturnValue(null);
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Mock user not found' });
+    });
+
+    it('should handle undefined NODE_ENV', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+      
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Database error during login' });
+      
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('should handle login error', async () => {
+      const loginError = new Error('Login failed');
+      req.login = jest.fn().mockImplementation((user: Express.User, done: (err: any) => void) => done(loginError));
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockResolvedValue(mockUser);
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login' });
+    });
+
+    it('should handle Prisma database error', async () => {
+      const prismaError = new PrismaClientKnownRequestError('Database error', {
+        code: 'P2002',
+        clientVersion: '2.0.0'
       });
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockRejectedValue(prismaError);
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Database error: Database error' });
+    });
+
+    it('should handle generic database error', async () => {
+      const genericError = new Error('Generic error');
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockRejectedValue(genericError);
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Database error during login' });
+    });
+
+    it('should successfully login a user in development mode', async () => {
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockResolvedValue(mockUser);
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(UserService.findOrCreateGoogleUser).toHaveBeenCalledWith({
+        email: mockUser.email,
+        googleId: 'mock-google-id'
+      });
+      expect(req.login).toHaveBeenCalledWith(mockUser, expect.any(Function));
+      expect(res.json).toHaveBeenCalledWith(mockUser);
+    });
+
+    it('should handle missing email in mock user', async () => {
+      const userWithoutEmail = { ...mockUser, email: undefined };
+      (getMockUser as jest.Mock).mockReturnValue(userWithoutEmail);
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockRejectedValue(new Error('Missing email'));
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Database error during login' });
+    });
+
+    it('should handle missing googleId in mock user', async () => {
+      const userWithoutGoogleId = { ...mockUser, googleId: undefined };
+      (getMockUser as jest.Mock).mockReturnValue(userWithoutGoogleId);
+      (UserService.findOrCreateGoogleUser as jest.Mock).mockRejectedValue(new Error('Missing googleId'));
+
+      await devLoginHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Database error during login' });
     });
   });
 
-  describe('GET /auth/logout', () => {
-    it('should return 401 when not authenticated', async () => {
-      const response = await request(app)
-        .get('/auth/logout')
-        .expect(401);
 
-      expect(response.body).toEqual({ error: 'Not authenticated' });
+  describe('getCurrentUser', () => {
+    const mockUser: Express.User = {
+      id: 'test-id',
+      email: 'test@example.com',
+      displayName: 'Test User',
+      photoUrl: 'test-photo.jpg',
+      googleId: 'mock-google-id',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLoginAt: new Date()
+    };
+
+    it('should handle database error when fetching user', async () => {
+      req.user = mockUser;
+      const dbError = new Error('Database error');
+      (UserService.findById as jest.Mock).mockRejectedValue(dbError);
+
+      await getCurrentUserHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Database error' });
+    });
+
+    it('should handle user not found in database', async () => {
+      req.user = mockUser;
+      (UserService.findById as jest.Mock).mockResolvedValue(null);
+
+      await getCurrentUserHandler(req as Request, res as Response, nextMock);
+      expect(req.logout).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'User not found in database' });
+    });
+
+    it('should handle logout error when user not found', async () => {
+      req.user = mockUser;
+      const logoutError = new Error('Logout failed');
+      req.logout = jest.fn().mockImplementation((done: (err: any) => void) => done(logoutError));
+      (UserService.findById as jest.Mock).mockResolvedValue(null);
+
+      await getCurrentUserHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'User not found in database' });
+    });
+
+    it('should successfully return current user', async () => {
+      req.user = mockUser;
+      (UserService.findById as jest.Mock).mockResolvedValue(mockUser);
+
+      await getCurrentUserHandler(req as Request, res as Response, nextMock);
+      expect(UserService.findById).toHaveBeenCalledWith(mockUser.id);
+      expect(res.json).toHaveBeenCalledWith(mockUser);
+    });
+
+    it('should handle no user in session', async () => {
+      req.user = undefined;
+
+      await getCurrentUserHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Not authenticated' });
+    });
+  });
+
+  describe('logout', () => {
+    const mockUser: Express.User = {
+      id: 'test-id',
+      email: 'test@example.com',
+      displayName: 'Test User',
+      photoUrl: 'test-photo.jpg',
+      googleId: 'mock-google-id',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLoginAt: new Date()
+    };
+
+    it('should handle logout error', async () => {
+      req.user = mockUser;
+      const logoutError = new Error('Logout failed');
+      req.logout = jest.fn().mockImplementation((done: (err: any) => void) => done(logoutError));
+
+      await logoutHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to logout' });
+    });
+
+    it('should successfully logout user', async () => {
+      req.user = mockUser;
+
+      await logoutHandler(req as Request, res as Response, nextMock);
+      expect(req.logout).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({ message: 'Logged out successfully' });
+    });
+
+    it('should return 401 when trying to logout without being logged in', async () => {
+      req.user = undefined;
+
+      await logoutHandler(req as Request, res as Response, nextMock);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Not authenticated' });
     });
   });
 });
