@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import { RecipeService, CreateRecipeDTO, UpdateRecipeDTO } from '../services/recipeService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { RecipeExtractionService, URLFetchError, RecipeExtractionError } from '../services/recipeExtractionService';
 
 const router = Router();
 
@@ -11,6 +12,35 @@ const requireAuth: RequestHandler = (req, res, next) => {
     return;
   }
   next();
+};
+
+// Extract recipe from URL
+const extractRecipeFromUrl: RequestHandler = async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) {
+      res.status(400).json({ error: 'URL is required' });
+      return;
+    }
+
+    const recipeData = await RecipeExtractionService.extractRecipeFromUrl(url);
+    res.json(recipeData);
+  } catch (error: unknown) {
+    console.error('Recipe extraction error:', error);
+    if (error instanceof URLFetchError) {
+      res.status(400).json({ error: error.message });
+    } else if (error instanceof RecipeExtractionError) {
+      res.status(422).json({
+        error: error.message,
+        details: error.details
+      });
+    } else {
+      res.status(500).json({
+        error: 'Failed to extract recipe from URL',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 };
 
 // Create recipe
@@ -114,6 +144,7 @@ const deleteRecipe: RequestHandler = async (req, res) => {
 
 // Apply routes with auth middleware
 router.use(requireAuth);
+router.post('/extract-url', extractRecipeFromUrl);
 router.post('/', createRecipe);
 router.get('/', getUserRecipes);
 router.get('/:id', getRecipe);
