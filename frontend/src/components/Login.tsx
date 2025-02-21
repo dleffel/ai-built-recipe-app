@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
@@ -8,6 +8,7 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const { user, handleGoogleLogin, handleDevLogin } = useAuth();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogin = async () => {
     await handleGoogleLogin();
@@ -30,36 +31,91 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   if (user) {
     return (
       <div className="user-profile">
-        <img
-          src={user.photo}
-          alt={user.displayName}
-          className="profile-photo"
-          onError={handleImageError}
-          referrerPolicy="no-referrer"
-          crossOrigin="anonymous"
-        />
-        <div className="user-info">
-          <h3>{user.displayName}</h3>
-          <p>{user.email}</p>
-          <button className="logout-button" onClick={() => handleGoogleLogin()}>
-            Logout
-          </button>
-        </div>
+        {user.photo && (
+          <img
+            src={user.photo}
+            alt={`${user.displayName}'s avatar`}
+            className="user-avatar"
+            onError={handleImageError}
+          />
+        )}
+        <button
+          className={`profile-button ${isDropdownOpen ? 'active' : ''}`}
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          aria-expanded={isDropdownOpen}
+          aria-haspopup="true"
+          aria-label="User menu"
+        >
+          {user.displayName} ▾
+        </button>
+        {isDropdownOpen && (
+          <>
+            <div 
+              className={`dropdown-backdrop ${isDropdownOpen ? 'visible' : ''}`}
+              onClick={() => setIsDropdownOpen(false)}
+              aria-label="Close menu"
+              role="button"
+            />
+            <div 
+              className={`dropdown-menu ${isDropdownOpen ? 'visible' : ''}`}
+              role="menu"
+              aria-label="User menu"
+            >
+              <button 
+                onClick={() => handleGoogleLogin()}
+                role="menuitem"
+              >
+                Sign out
+              </button>
+            </div>
+          </>
+        )}
       </div>
     );
   }
 
   return (
     <div className="login-container">
-      <div className="login-buttons">
-        <button className="google-login-button" onClick={handleLogin}>
-          Sign in with Google
+      <div className="login-button-container">
+        <button
+          className={`login-button ${isDropdownOpen ? 'active' : ''}`}
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          aria-expanded={isDropdownOpen}
+          aria-haspopup="true"
+          aria-label="Sign in menu"
+        >
+          Sign in ▾
         </button>
-        {/* istanbul ignore next */}
-        {process.env.NODE_ENV === 'development' && (
-          <button className="dev-login-button" onClick={handleDevelopmentLogin}>
-            Dev Login
-          </button>
+        {isDropdownOpen && (
+          <>
+            <div 
+              className={`dropdown-backdrop ${isDropdownOpen ? 'visible' : ''}`}
+              onClick={() => setIsDropdownOpen(false)}
+              aria-label="Close menu"
+              role="button"
+            />
+            <div 
+              className={`dropdown-menu ${isDropdownOpen ? 'visible' : ''}`}
+              role="menu"
+              aria-label="Sign in options"
+            >
+              <button 
+                onClick={handleLogin}
+                role="menuitem"
+              >
+                Sign in with Google
+              </button>
+              {/* istanbul ignore next */}
+              {process.env.NODE_ENV === 'development' && (
+                <button 
+                  onClick={handleDevelopmentLogin}
+                  role="menuitem"
+                >
+                  Dev Login
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -124,8 +124,26 @@ const AppContent: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header" role="banner">
-        <h1>Recipe App</h1>
-        <div className="auth-section">
+        <div className="header-content">
+          <div className="header-left">
+            <h1>Recipe App</h1>
+            {currentView.type !== 'list' && (
+              <div className="breadcrumb" role="navigation">
+                <span
+                  onClick={() => setCurrentView({ type: 'list' })}
+                  style={{ cursor: 'pointer' }}
+                >
+                  My Recipes
+                </span>
+                <span>/</span>
+                <span>
+                  {currentView.type === 'detail' ? selectedRecipe?.title :
+                   currentView.type === 'create' ? 'New Recipe' :
+                   currentView.type === 'edit' ? `Edit ${selectedRecipe?.title}` : ''}
+                </span>
+              </div>
+            )}
+          </div>
           <Login />
         </div>
       </header>
