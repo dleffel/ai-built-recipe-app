@@ -96,13 +96,27 @@ describe('RecipeExtractionService Unit Tests', () => {
       ).rejects.toThrow(URLFetchError);
     });
 
-    it('should throw URLFetchError when webpage fetch fails', async () => {
-      // Mock axios to throw a URLFetchError
-      mockedAxios.get.mockRejectedValueOnce(new URLFetchError('Network error'));
+    it('should throw URLFetchError when webpage fetch fails with Axios error', async () => {
+      const axiosError = new Error('Network error');
+      (axiosError as any).isAxiosError = true;
+      mockedAxios.get.mockRejectedValueOnce(axiosError);
+      mockedAxios.isAxiosError.mockReturnValueOnce(true);
 
       await expect(
         RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
       ).rejects.toThrow(URLFetchError);
+    });
+
+    it('should throw original error when webpage fetch fails with non-Axios error', async () => {
+      const customError = new Error('Custom error');
+      mockedAxios.get.mockRejectedValueOnce(customError);
+      mockedAxios.isAxiosError.mockReturnValueOnce(false);
+
+      await expect(
+        RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
+      ).rejects.toThrow('Custom error');
+
+      expect(mockedAxios.isAxiosError).toHaveBeenCalledWith(customError);
     });
 
     it('should throw RecipeExtractionError when GPT response is invalid', async () => {
@@ -190,6 +204,80 @@ describe('RecipeExtractionService Unit Tests', () => {
 
       // Verify we didn't make any HTTP requests
       expect(mockedAxios.get).not.toHaveBeenCalled();
+    });
+
+    it('should handle HTML without main content container', async () => {
+      const htmlWithoutArticle = '<body><p>Some text</p></body>';
+      mockedAxios.get.mockResolvedValueOnce({ data: htmlWithoutArticle });
+
+      const mockOpenAIResponse = {
+        choices: [{
+          message: {
+            content: JSON.stringify(mockGptResponse)
+          }
+        }]
+      };
+
+      const MockOpenAI = require('openai');
+      const mockInstance = MockOpenAI();
+      mockInstance.chat.completions.create.mockResolvedValueOnce(mockOpenAIResponse);
+
+      const result = await RecipeExtractionService.extractRecipeFromUrl(mockValidUrl);
+      expect(result).toEqual(mockGptResponse);
+    });
+
+    it('should throw RecipeExtractionError when GPT returns no response', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockHtmlContent });
+
+      const mockEmptyResponse = {
+        choices: [{ message: { content: null } }]
+      };
+
+      const MockOpenAI = require('openai');
+      const mockInstance = MockOpenAI();
+      mockInstance.chat.completions.create.mockResolvedValueOnce(mockEmptyResponse);
+
+      await expect(
+        RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
+      ).rejects.toThrow(new RecipeExtractionError('No response from GPT'));
+    });
+
+    it('should throw RecipeExtractionError when ingredients are empty after cleaning', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockHtmlContent });
+
+      const mockResponseWithEmptyIngredients = {
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              ...mockGptResponse,
+              ingredients: ['', '  ', '\n'] // Only empty or whitespace ingredients
+            })
+          }
+        }]
+      };
+
+      const MockOpenAI = require('openai');
+      const mockInstance = MockOpenAI();
+      mockInstance.chat.completions.create.mockResolvedValueOnce(mockResponseWithEmptyIngredients);
+
+      await expect(
+        RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
+      ).rejects.toThrow(new RecipeExtractionError('No valid ingredients found'));
+    });
+
+    it('should handle unknown error types in GPT extraction', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockHtmlContent });
+
+      const MockOpenAI = require('openai');
+      const mockInstance = MockOpenAI();
+      mockInstance.chat.completions.create.mockRejectedValueOnce({ 
+        // Non-Error object to test unknown error handling
+        someField: 'some value'
+      });
+
+      await expect(
+        RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
+      ).rejects.toThrow(new RecipeExtractionError('GPT extraction failed: Unknown error'));
     });
   });
 });
