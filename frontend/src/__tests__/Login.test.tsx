@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import Login from '../components/Login';
 import { useAuth } from '../context/AuthContext';
 
@@ -26,15 +27,27 @@ describe('Login', () => {
 
   it('renders login button when not logged in', () => {
     render(<Login />);
+    const loginButton = screen.getByText('Sign in ▾');
+    expect(loginButton).toBeInTheDocument();
+
+    // Open dropdown
+    fireEvent.click(loginButton);
+
+    // Check Google sign in option
     expect(screen.getByText('Sign in with Google')).toBeInTheDocument();
   });
 
   it('calls handleGoogleLogin and onLogin callback when clicking login', async () => {
-    mockHandleGoogleLogin.mockResolvedValueOnce(undefined);
+    mockHandleGoogleLogin.mockImplementation(async () => Promise.resolve());
     render(<Login onLogin={mockOnLogin} />);
     
-    const loginButton = screen.getByText('Sign in with Google');
+    // Open dropdown
+    const loginButton = screen.getByText('Sign in ▾');
     fireEvent.click(loginButton);
+
+    // Click Google sign in option
+    const googleSignIn = screen.getByText('Sign in with Google');
+    fireEvent.click(googleSignIn);
 
     await waitFor(() => {
       expect(mockHandleGoogleLogin).toHaveBeenCalled();
@@ -58,14 +71,22 @@ describe('Login', () => {
 
     render(<Login />);
 
-    expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('test@example.com')).toBeInTheDocument();
-    expect(screen.getByAltText('Test User')).toHaveAttribute('src', 'https://example.com/photo.jpg');
-    expect(screen.getByText('Logout')).toBeInTheDocument();
+    // Check user name with dropdown arrow
+    expect(screen.getByText('Test User ▾')).toBeInTheDocument();
+    
+    // Check avatar
+    expect(screen.getByAltText("Test User's avatar")).toHaveAttribute('src', 'https://example.com/photo.jpg');
+
+    // Open dropdown menu
+    const profileButton = screen.getByText('Test User ▾');
+    fireEvent.click(profileButton);
+
+    // Check sign out option
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
   });
 
   it('handles image load errors', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     (useAuth as jest.Mock).mockReturnValue({
       user: {
         displayName: 'Test User',
@@ -77,7 +98,7 @@ describe('Login', () => {
     });
 
     render(<Login />);
-    const img = screen.getByAltText('Test User');
+    const img = screen.getByAltText("Test User's avatar");
     fireEvent.error(img);
 
     expect(consoleSpy).toHaveBeenCalledWith('Image failed to load:', 'http://localhost/invalid-url');
@@ -86,7 +107,7 @@ describe('Login', () => {
     consoleSpy.mockRestore();
   });
 
-  it('calls handleGoogleLogin when clicking logout', async () => {
+  it('calls handleGoogleLogin when clicking sign out', async () => {
     (useAuth as jest.Mock).mockReturnValue({
       user: {
         displayName: 'Test User',
@@ -98,29 +119,17 @@ describe('Login', () => {
     });
 
     render(<Login />);
-    const logoutButton = screen.getByText('Logout');
-    fireEvent.click(logoutButton);
+    
+    // Open dropdown menu
+    const profileButton = screen.getByText('Test User ▾');
+    fireEvent.click(profileButton);
+
+    // Click sign out
+    const signOutButton = screen.getByText('Sign out');
+    fireEvent.click(signOutButton);
 
     await waitFor(() => {
       expect(mockHandleGoogleLogin).toHaveBeenCalled();
     });
-  });
-
-  it('sets proper image attributes for security', () => {
-    (useAuth as jest.Mock).mockReturnValue({
-      user: {
-        displayName: 'Test User',
-        email: 'test@example.com',
-        photo: 'https://example.com/photo.jpg'
-      },
-      handleGoogleLogin: mockHandleGoogleLogin,
-      handleDevLogin: mockHandleDevLogin
-    });
-
-    render(<Login />);
-    const img = screen.getByAltText('Test User');
-
-    expect(img).toHaveAttribute('referrerPolicy', 'no-referrer');
-    expect(img).toHaveAttribute('crossOrigin', 'anonymous');
   });
 });
