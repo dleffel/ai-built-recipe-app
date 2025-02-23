@@ -42,6 +42,7 @@ describe('RecipeService Unit Tests', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         imageUrl: null,
+        sourceUrl: null,
         ...mockRecipeData,
       };
 
@@ -74,6 +75,7 @@ describe('RecipeService Unit Tests', () => {
         prepTime: null,
         cookTime: null,
         imageUrl: null,
+        sourceUrl: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         ...minimalData,
@@ -110,6 +112,7 @@ describe('RecipeService Unit Tests', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         imageUrl: null,
+        sourceUrl: null,
         ...mockRecipeData,
       };
 
@@ -147,6 +150,7 @@ describe('RecipeService Unit Tests', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           imageUrl: null,
+          sourceUrl: null,
         }
       ];
 
@@ -177,6 +181,7 @@ describe('RecipeService Unit Tests', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           imageUrl: null,
+          sourceUrl: null,
           ...mockRecipeData,
         }
       ];
@@ -208,6 +213,7 @@ describe('RecipeService Unit Tests', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       imageUrl: null,
+      sourceUrl: null,
       ...mockRecipeData,
     };
 
@@ -267,6 +273,7 @@ describe('RecipeService Unit Tests', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       imageUrl: null,
+      sourceUrl: null,
       ...mockRecipeData,
     };
 

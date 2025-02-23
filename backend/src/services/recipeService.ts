@@ -10,6 +10,7 @@ export interface CreateRecipeDTO {
   prepTime?: number;
   cookTime?: number;
   imageUrl?: string;
+  sourceUrl?: string;
 }
 
 export interface UpdateRecipeDTO extends Partial<CreateRecipeDTO> {}
