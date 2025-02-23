@@ -64,8 +64,15 @@ describe('Authentication Flow', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
 
     // Should show login button after loading
-    const loginButton = await screen.findByText('Sign in with Google');
+    const loginButton = await screen.findByText('Sign in ▾');
     expect(loginButton).toBeInTheDocument();
+
+    // Click to open dropdown
+    fireEvent.click(loginButton);
+
+    // Should show Google sign in option
+    const googleSignIn = screen.getByText('Sign in with Google');
+    expect(googleSignIn).toBeInTheDocument();
   });
 
   it('shows login page for unauthenticated users', async () => {
@@ -89,8 +96,15 @@ describe('Authentication Flow', () => {
     );
 
     // Should show login button after loading
-    const loginButton = await screen.findByText('Sign in with Google');
+    const loginButton = await screen.findByText('Sign in ▾');
     expect(loginButton).toBeInTheDocument();
+
+    // Click to open dropdown
+    fireEvent.click(loginButton);
+
+    // Should show Google sign in option
+    const googleSignIn = screen.getByText('Sign in with Google');
+    expect(googleSignIn).toBeInTheDocument();
   });
 
   it('redirects to Google login when clicking sign in', async () => {
@@ -113,9 +127,13 @@ describe('Authentication Flow', () => {
       </AuthProvider>
     );
 
-    // Click login button
-    const loginButton = await screen.findByText('Sign in with Google');
+    // Open dropdown menu
+    const loginButton = await screen.findByText('Sign in ▾');
     fireEvent.click(loginButton);
+
+    // Click Google sign in option
+    const googleSignIn = screen.getByText('Sign in with Google');
+    fireEvent.click(googleSignIn);
 
     // Should redirect to Google auth
     await waitFor(() => {
@@ -143,13 +161,19 @@ describe('Authentication Flow', () => {
       </AuthProvider>
     );
 
-    // Should show user name in profile
-    const userName = await screen.findByText(mockUser.displayName);
+    // Should show user name with dropdown arrow in profile
+    const userName = await screen.findByText(`${mockUser.displayName} ▾`);
     expect(userName).toBeInTheDocument();
 
-    // Should show user info
-    expect(screen.getByText(mockUser.email)).toBeInTheDocument();
-    expect(screen.getByAltText(mockUser.displayName)).toHaveAttribute('src', mockUser.photo);
+    // Should show user avatar
+    expect(screen.getByAltText(`${mockUser.displayName}'s avatar`)).toHaveAttribute('src', mockUser.photo);
+
+    // Open user menu
+    fireEvent.click(userName);
+
+    // Should show sign out option
+    const signOutButton = screen.getByText('Sign out');
+    expect(signOutButton).toBeInTheDocument();
   });
 
   it('handles logout', async () => {
@@ -173,13 +197,17 @@ describe('Authentication Flow', () => {
       </AuthProvider>
     );
 
-    // Wait for user to be loaded and click logout
-    const logoutButton = await screen.findByText('Logout');
-    fireEvent.click(logoutButton);
+    // Wait for user profile to load and open menu
+    const profileButton = await screen.findByText(`${mockUser.displayName} ▾`);
+    fireEvent.click(profileButton);
+
+    // Click sign out button in dropdown
+    const signOutButton = screen.getByText('Sign out');
+    fireEvent.click(signOutButton);
 
     // Wait for state to update and verify login button appears
     await waitFor(() => {
-      expect(screen.getByText('Sign in with Google')).toBeInTheDocument();
+      expect(screen.getByText('Sign in ▾')).toBeInTheDocument();
     });
   });
 
@@ -195,7 +223,7 @@ describe('Authentication Flow', () => {
     );
 
     // Should still show login button when auth check fails
-    const loginButton = await screen.findByText('Sign in with Google');
+    const loginButton = await screen.findByText('Sign in ▾');
     expect(loginButton).toBeInTheDocument();
 
     // Console error should have been called with the error
