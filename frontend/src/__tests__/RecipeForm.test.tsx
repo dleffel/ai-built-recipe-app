@@ -10,7 +10,7 @@ const mockRecipe: Recipe = {
   title: 'Test Recipe',
   description: 'Test description',
   ingredients: ['ingredient 1', 'ingredient 2'],
-  instructions: 'Test instructions',
+  instructions: ['Step 1', 'Step 2'],
   servings: 4,
   prepTime: 30,
   cookTime: 45,
@@ -42,7 +42,8 @@ describe('RecipeForm', () => {
     // Check for required fields
     expect(screen.getByLabelText(/title \*/i)).toBeInTheDocument();
     expect(screen.getByText(/ingredients \*/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/instructions \*/i)).toBeInTheDocument();
+    expect(screen.getByText(/instructions \*/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/step 1/i)).toBeInTheDocument();
 
     // Check for optional fields
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
@@ -62,7 +63,7 @@ describe('RecipeForm', () => {
 
     // Verify required fields have required attribute
     expect(screen.getByLabelText(/title \*/i)).toHaveAttribute('required');
-    expect(screen.getByLabelText(/instructions \*/i)).toHaveAttribute('required');
+    expect(screen.getByPlaceholderText(/step 1/i)).toHaveAttribute('required');
     expect(screen.getByPlaceholderText(/enter an ingredient/i)).toHaveAttribute('required');
 
     // Submit empty form - mockSubmit should not be called due to HTML5 validation
@@ -75,9 +76,9 @@ describe('RecipeForm', () => {
       expect(screen.getByLabelText(/title \*/i)).toHaveValue('Test Recipe');
     });
 
-    fireEvent.change(screen.getByLabelText(/instructions \*/i), { target: { value: 'Test Instructions' } });
+    fireEvent.change(screen.getByPlaceholderText(/step 1/i), { target: { value: 'Test Instructions' } });
     await waitFor(() => {
-      expect(screen.getByLabelText(/instructions \*/i)).toHaveValue('Test Instructions');
+      expect(screen.getByPlaceholderText(/step 1/i)).toHaveValue('Test Instructions');
     });
 
     fireEvent.change(screen.getByPlaceholderText(/enter an ingredient/i), { target: { value: 'Test Ingredient' } });
@@ -92,7 +93,7 @@ describe('RecipeForm', () => {
     await waitFor(() => {
       expect(mockSubmit).toHaveBeenCalledWith(expect.objectContaining({
         title: 'Test Recipe',
-        instructions: 'Test Instructions',
+        instructions: ['Test Instructions'],
         ingredients: ['Test Ingredient']
       }));
     });
@@ -111,8 +112,8 @@ describe('RecipeForm', () => {
     expect(ingredientInputs).toHaveLength(1);
 
     // Remove button should be disabled when only one ingredient
-    const removeButton = screen.getByRole('button', { name: /remove/i });
-    expect(removeButton).toHaveAttribute('disabled');
+    const initialRemoveButtons = screen.getAllByRole('button', { name: /remove/i });
+    expect(initialRemoveButtons[0]).toHaveAttribute('disabled');
 
     // Add another ingredient
     fireEvent.click(screen.getByRole('button', { name: /add ingredient/i }));
@@ -136,9 +137,10 @@ describe('RecipeForm', () => {
     });
     
     // Verify remove button is disabled
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /remove/i })).toHaveAttribute('disabled');
-    });
+    const allRemoveButtons = screen.getAllByRole('button', { name: /remove/i });
+    expect(allRemoveButtons).toHaveLength(2); // One for ingredients, one for instructions
+    expect(allRemoveButtons[0]).toHaveAttribute('disabled');
+    expect(allRemoveButtons[1]).toHaveAttribute('disabled');
   });
 
   it('handles form submission with trimmed values', async () => {
@@ -152,7 +154,7 @@ describe('RecipeForm', () => {
     // Fill out form with whitespace - values should be preserved in inputs
     const titleInput = screen.getByLabelText(/title/i);
     const ingredientInput = screen.getByPlaceholderText(/enter an ingredient/i);
-    const instructionsInput = screen.getByLabelText(/instructions/i);
+    const instructionsInput = screen.getByPlaceholderText(/step 1/i);
     const descriptionInput = screen.getByLabelText(/description/i);
     const imageUrlInput = screen.getByLabelText(/image url/i);
 
@@ -179,8 +181,8 @@ describe('RecipeForm', () => {
     await waitFor(() => {
       expect(mockSubmit).toHaveBeenCalledWith({
         title: 'Test Recipe',
-        ingredients: ['  Test Ingredient  '], // Component doesn't trim ingredients
-        instructions: 'Test Instructions',
+        ingredients: ['Test Ingredient'], // Component trims ingredients
+        instructions: ['Test Instructions'], // Component trims instructions
         description: 'Test Description',
         servings: undefined,
         prepTime: undefined,
@@ -201,7 +203,7 @@ describe('RecipeForm', () => {
     // Get all form inputs
     const titleInput = screen.getByLabelText(/title/i);
     const ingredientInput = screen.getByPlaceholderText(/enter an ingredient/i);
-    const instructionsInput = screen.getByLabelText(/instructions/i);
+    const instructionsInput = screen.getByPlaceholderText(/step 1/i);
     const servingsInput = screen.getByLabelText(/servings/i);
     const prepTimeInput = screen.getByLabelText(/prep time/i);
     const cookTimeInput = screen.getByLabelText(/cook time/i);
@@ -240,7 +242,7 @@ describe('RecipeForm', () => {
       expect(mockSubmit).toHaveBeenCalledWith({
         title: 'Test Recipe',
         ingredients: ['Test Ingredient'],
-        instructions: 'Test Instructions',
+        instructions: ['Test Instructions'],
         description: undefined,
         servings: 2,
         prepTime: 30,
@@ -266,7 +268,7 @@ describe('RecipeForm', () => {
     // Fill out form
     const titleInput = screen.getByLabelText(/title/i);
     const ingredientInput = screen.getByPlaceholderText(/enter an ingredient/i);
-    const instructionsInput = screen.getByLabelText(/instructions/i);
+    const instructionsInput = screen.getByPlaceholderText(/step 1/i);
 
     // Fill required fields
     fireEvent.change(titleInput, { target: { value: 'Test Recipe' } });
@@ -327,7 +329,10 @@ describe('RecipeForm', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/instructions/i)).toHaveValue(mockRecipe.instructions);
+      const instructionInputs = screen.getAllByPlaceholderText(/step \d+/i);
+      mockRecipe.instructions.forEach((instruction, index) => {
+        expect(instructionInputs[index]).toHaveValue(instruction);
+      });
     });
 
     // Verify numeric fields - browser converts values to numbers for type="number" inputs
