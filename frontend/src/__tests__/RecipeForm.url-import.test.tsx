@@ -30,7 +30,8 @@ describe('RecipeForm URL Import Tests', () => {
     servings: 4,
     prepTime: 30,
     cookTime: 45,
-    imageUrl: 'https://example.com/image.jpg'
+    imageUrl: 'https://example.com/image.jpg',
+    sourceUrl: 'https://example.com/recipe'
   };
 
   const mockExistingRecipe: Recipe = {
@@ -88,7 +89,7 @@ describe('RecipeForm URL Import Tests', () => {
     expect(screen.getByLabelText('Recipe URL')).toBeInTheDocument();
   });
 
-  it('populates form with imported recipe data', async () => {
+  it('populates form with imported recipe data including source URL', async () => {
     // Mock successful recipe extraction
     (recipeApi.extractFromUrl as jest.MockedFunction<typeof recipeApi.extractFromUrl>)
       .mockResolvedValueOnce(mockImportedRecipe);
@@ -105,7 +106,7 @@ describe('RecipeForm URL Import Tests', () => {
 
     // Enter URL and submit
     const urlInput = screen.getByLabelText('Recipe URL');
-    await userEvent.type(urlInput, 'https://example.com/recipe');
+    await userEvent.type(urlInput, mockImportedRecipe.sourceUrl!);
     await userEvent.click(screen.getByRole('button', { name: 'Import Recipe' }));
 
     // Verify form is populated with imported data
@@ -136,8 +137,17 @@ describe('RecipeForm URL Import Tests', () => {
       expect(screen.getByDisplayValue(ingredient)).toBeInTheDocument();
     });
 
-    // Verify image URL
+    // Verify image URL and source URL
     expect(screen.getByLabelText(/image url/i)).toHaveValue(mockImportedRecipe.imageUrl);
+
+    // Verify source URL is preserved in form submission
+    await userEvent.click(screen.getByRole('button', { name: /create recipe/i }));
+
+    await waitFor(() => {
+      expect(mockSubmit).toHaveBeenCalledWith(expect.objectContaining({
+        sourceUrl: mockImportedRecipe.sourceUrl
+      }));
+    });
   });
 
   it('handles import errors', async () => {

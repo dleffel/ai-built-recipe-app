@@ -23,6 +23,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   const [prepTime, setPrepTime] = useState(recipe?.prepTime?.toString() || '');
   const [cookTime, setCookTime] = useState(recipe?.cookTime?.toString() || '');
   const [imageUrl, setImageUrl] = useState(recipe?.imageUrl || '');
+  const [sourceUrl, setSourceUrl] = useState(recipe?.sourceUrl || '');
   const [loading, setLoading] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -40,7 +41,6 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     setIngredients(newIngredients);
   };
 
-  // Instruction handlers
   const handleAddInstruction = () => {
     setInstructions([...instructions, '']);
   };
@@ -64,13 +64,13 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     setPrepTime(importedRecipe.prepTime?.toString() || '');
     setCookTime(importedRecipe.cookTime?.toString() || '');
     setImageUrl(importedRecipe.imageUrl || '');
+    setSourceUrl(importedRecipe.sourceUrl || '');
     setShowImportModal(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Remove empty ingredients and instructions
     const filteredIngredients = ingredients
       .map(i => i.trim())
       .filter(i => i.length > 0);
@@ -87,7 +87,8 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
       servings: servings ? parseInt(servings) : undefined,
       prepTime: prepTime ? parseInt(prepTime) : undefined,
       cookTime: cookTime ? parseInt(cookTime) : undefined,
-      imageUrl: imageUrl.trim() || undefined
+      imageUrl: imageUrl.trim() || undefined,
+      sourceUrl: sourceUrl.trim() || undefined
     };
 
     try {
@@ -101,7 +102,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   };
 
   return (
-    <>
+    <div>
       {showImportModal && (
         <URLImportModal
           onImport={recipeApi.extractFromUrl}
@@ -275,6 +276,6 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
           </button>
         </div>
       </form>
-    </>
+    </div>
   );
 };

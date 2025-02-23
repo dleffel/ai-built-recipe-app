@@ -18,26 +18,21 @@ export class RecipeExtractionError extends Error {
   }
 }
 
-export class RecipeExtractionService {
-  private static openai: OpenAI;
-  private static initialized = false;
+class RecipeExtractor {
+  private openai: OpenAI;
 
-  private static initialize() {
-    if (!this.initialized) {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OPENAI_API_KEY environment variable is not set');
-      }
-
-      this.openai = new OpenAI({
-        apiKey: apiKey,
-      });
-
-      this.initialized = true;
+  constructor() {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is not set');
     }
+
+    this.openai = new OpenAI({
+      apiKey: apiKey,
+    });
   }
 
-  private static async fetchWebpage(url: string): Promise<string> {
+  private async fetchWebpage(url: string): Promise<string> {
     try {
       const response = await axios.get(url);
       return response.data;
@@ -49,7 +44,7 @@ export class RecipeExtractionService {
     }
   }
 
-  private static cleanHtml(html: string): string {
+  private cleanHtml(html: string): string {
     const $ = cheerio.load(html);
 
     // Remove script and style tags
@@ -91,24 +86,14 @@ export class RecipeExtractionService {
       }
     });
 
-    // Log the extracted content for debugging
-    console.log('Extracted content length:', structuredContent.length, 'elements');
-    console.log('First few elements:', structuredContent.slice(0, 5));
-    console.log('Last few elements:', structuredContent.slice(-5));
-
     // Join with newlines to preserve structure
-    const processedContent = structuredContent
+    return structuredContent
       .join('\n')
       .replace(/\n{3,}/g, '\n\n'); // Replace excessive newlines with double newlines
-
-    console.log('Final content length:', processedContent.length, 'characters');
-    
-    return processedContent;
   }
 
-  private static async extractRecipeWithGPT(content: string, sourceUrl: string): Promise<CreateRecipeDTO> {
-    try {
-      const prompt = `
+  private async extractRecipeWithGPT(content: string, sourceUrl: string): Promise<CreateRecipeDTO> {
+    const prompt = `
 You are a recipe extraction expert. Your task is to thoroughly extract ALL recipe information from the webpage content and format it as a valid JSON object. It is CRITICAL that you capture EVERY SINGLE INSTRUCTION STEP, even for long, complex recipes.
 
 The JSON object MUST have this exact structure:
@@ -140,154 +125,94 @@ Webpage content:
 ${content}
 `;
 
-      console.log('Sending request to GPT...');
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a recipe extraction expert that outputs only valid JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }  // Ensure JSON response
-      });
-
-      const result = response.choices[0]?.message?.content;
-      if (!result) {
-        throw new RecipeExtractionError('No response from GPT');
-      }
-
-      console.log('GPT Response length:', result?.length);
-      console.log('GPT Response preview (first 500 chars):', result?.slice(0, 500));
-      console.log('GPT Response preview (last 500 chars):', result?.slice(-500));
-
-      try {
-        console.log('Attempting to parse GPT response as JSON...');
-        // Parse JSON with a temporary type that matches potential GPT response
-        interface GPTRecipeResponse {
-          title: string;
-          description?: string;
-          ingredients: string | string[];
-          instructions: string | string[];
-          servings?: number;
-          prepTime?: number;
-          cookTime?: number;
-          imageUrl?: string;
-          sourceUrl?: string;
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a recipe extraction expert that outputs only valid JSON.'
+        },
+        {
+          role: 'user',
+          content: prompt
         }
+      ],
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    });
 
-        const parsedRecipe = JSON.parse(result) as GPTRecipeResponse;
-        
-        // Validate required fields
-        if (!parsedRecipe.title || !parsedRecipe.ingredients || !parsedRecipe.instructions) {
-          throw new RecipeExtractionError(
-            'Missing required recipe fields',
-            `Received: ${JSON.stringify(parsedRecipe, null, 2)}`
-          );
-        }
+    const result = response.choices[0]?.message?.content;
+    if (!result) {
+      throw new RecipeExtractionError('No response from GPT');
+    }
 
-        // Convert to proper DTO format
-        const recipe: CreateRecipeDTO = {
-          title: parsedRecipe.title,
-          description: parsedRecipe.description,
-          ingredients: Array.isArray(parsedRecipe.ingredients)
-            ? parsedRecipe.ingredients
-            : [parsedRecipe.ingredients],
-          instructions: Array.isArray(parsedRecipe.instructions)
-            ? parsedRecipe.instructions
-            : typeof parsedRecipe.instructions === 'string'
-              ? parsedRecipe.instructions.split(/[\n\r]+/).filter(Boolean)
-              : ['No instructions provided'],
-          servings: parsedRecipe.servings,
-          prepTime: parsedRecipe.prepTime,
-          cookTime: parsedRecipe.cookTime,
-          imageUrl: parsedRecipe.imageUrl,
-          sourceUrl: sourceUrl // Always use the original URL
-        };
+    try {
+      const parsedRecipe = JSON.parse(result) as {
+        title: string;
+        description?: string;
+        ingredients: string | string[];
+        instructions: string | string[];
+        servings?: number;
+        prepTime?: number;
+        cookTime?: number;
+        imageUrl?: string;
+      };
 
-        // Clean up ingredients and instructions (remove empty strings and trim)
-        recipe.ingredients = recipe.ingredients
-          .map(i => i.trim())
-          .filter(i => i.length > 0);
-
-        recipe.instructions = recipe.instructions
-          .map(i => i.trim())
-          .filter(i => i.length > 0);
-
-        if (recipe.ingredients.length === 0) {
-          throw new RecipeExtractionError(
-            'No valid ingredients found',
-            `Original ingredients: ${JSON.stringify(recipe.ingredients, null, 2)}`
-          );
-        }
-
-        if (recipe.instructions.length === 0) {
-          throw new RecipeExtractionError(
-            'No valid instructions found',
-            `Original instructions: ${JSON.stringify(recipe.instructions, null, 2)}`
-          );
-        }
-
-        // Check for potentially truncated instructions
-        const lastStep = recipe.instructions[recipe.instructions.length - 1];
-        const stepNumberMatch = lastStep.match(/^(?:Step\s*)?(\d+)[:.]/i);
-        if (stepNumberMatch) {
-          const lastStepNumber = parseInt(stepNumberMatch[1], 10);
-          if (lastStepNumber > recipe.instructions.length) {
-            console.warn(`Warning: Recipe may be truncated. Found step ${lastStepNumber} but only have ${recipe.instructions.length} steps.`);
-            throw new RecipeExtractionError(
-              'Recipe instructions appear to be truncated',
-              `Found reference to step ${lastStepNumber} but only extracted ${recipe.instructions.length} steps. The recipe may be incomplete.`
-            );
-          }
-        }
-
-        // Check for references to later steps
-        const stepsText = recipe.instructions.join(' ');
-        const stepReferences = stepsText.match(/step\s*\d+/gi);
-        if (stepReferences) {
-          const maxStepReferenced = Math.max(...stepReferences.map(ref => {
-            const num = ref.match(/\d+/);
-            return num ? parseInt(num[0], 10) : 0;
-          }));
-          if (maxStepReferenced > recipe.instructions.length) {
-            console.warn(`Warning: Recipe may be truncated. Found reference to step ${maxStepReferenced} but only have ${recipe.instructions.length} steps.`);
-            throw new RecipeExtractionError(
-              'Recipe instructions appear to be truncated',
-              `Found reference to step ${maxStepReferenced} but only extracted ${recipe.instructions.length} steps. The recipe may be incomplete.`
-            );
-          }
-        }
-
-        return recipe;
-      } catch (error) {
-        if (error instanceof RecipeExtractionError) {
-          throw error;
-        }
+      if (!parsedRecipe.title || !parsedRecipe.ingredients || !parsedRecipe.instructions) {
         throw new RecipeExtractionError(
-          'Failed to parse GPT response as recipe',
-          `Response was: ${result}\nError: ${error instanceof Error ? error.message : 'Unknown error'}`
+          'Missing required recipe fields',
+          `Received: ${JSON.stringify(parsedRecipe, null, 2)}`
         );
       }
-    } catch (error: unknown) {
+
+      const recipe: CreateRecipeDTO = {
+        title: parsedRecipe.title,
+        description: parsedRecipe.description,
+        ingredients: Array.isArray(parsedRecipe.ingredients)
+          ? parsedRecipe.ingredients
+          : [parsedRecipe.ingredients],
+        instructions: Array.isArray(parsedRecipe.instructions)
+          ? parsedRecipe.instructions
+          : typeof parsedRecipe.instructions === 'string'
+            ? parsedRecipe.instructions.split(/[\n\r]+/).filter(Boolean)
+            : ['No instructions provided'],
+        servings: parsedRecipe.servings,
+        prepTime: parsedRecipe.prepTime,
+        cookTime: parsedRecipe.cookTime,
+        imageUrl: parsedRecipe.imageUrl,
+        sourceUrl
+      };
+
+      // Clean up ingredients and instructions
+      recipe.ingredients = recipe.ingredients
+        .map(i => i.trim())
+        .filter(i => i.length > 0);
+
+      recipe.instructions = recipe.instructions
+        .map(i => i.trim())
+        .filter(i => i.length > 0);
+
+      if (recipe.ingredients.length === 0) {
+        throw new RecipeExtractionError('No valid ingredients found');
+      }
+
+      if (recipe.instructions.length === 0) {
+        throw new RecipeExtractionError('No valid instructions found');
+      }
+
+      return recipe;
+    } catch (error) {
       if (error instanceof RecipeExtractionError) {
         throw error;
       }
       throw new RecipeExtractionError(
-        `GPT extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : undefined
+        'Failed to parse GPT response as recipe',
+        `Response was: ${result}\nError: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }
 
-  static async extractRecipeFromUrl(url: string): Promise<CreateRecipeDTO> {
-    this.initialize();
-
+  public async extractRecipeFromUrl(url: string): Promise<CreateRecipeDTO> {
     // Basic URL validation
     try {
       new URL(url);
@@ -299,24 +224,10 @@ ${content}
     const html = await this.fetchWebpage(url);
     const cleanedContent = this.cleanHtml(html);
     
-    // Log content details
-    console.log('Raw HTML length:', html.length);
-    console.log('Cleaned content length:', cleanedContent.length);
-    console.log('Content preview (first 500 chars):', cleanedContent.slice(0, 500));
-    console.log('Content preview (last 500 chars):', cleanedContent.slice(-500));
-
     // Extract recipe using GPT-3.5
-    const recipe = await this.extractRecipeWithGPT(cleanedContent, url);
-
-    // Log final recipe details
-    console.log('Extracted recipe details:');
-    console.log('- Title:', recipe.title);
-    console.log('- Number of ingredients:', recipe.ingredients.length);
-    console.log('- Number of instructions:', recipe.instructions.length);
-    console.log('- First instruction:', recipe.instructions[0]);
-    console.log('- Last instruction:', recipe.instructions[recipe.instructions.length - 1]);
-    console.log('- Source URL:', recipe.sourceUrl);
-
-    return recipe;
+    return this.extractRecipeWithGPT(cleanedContent, url);
   }
 }
+
+// Export a singleton instance
+export const RecipeExtractionService = new RecipeExtractor();

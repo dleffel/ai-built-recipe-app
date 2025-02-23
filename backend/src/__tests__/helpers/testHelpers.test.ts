@@ -80,7 +80,7 @@ export const createTestSessionCookie = (userId: string): string[] => {
 
 describe('Test Helpers', () => {
   beforeEach(async () => {
-    //await cleanupTestData();
+    await cleanupTestData();
   });
 
   afterAll(async () => {
