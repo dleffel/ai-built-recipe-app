@@ -140,9 +140,41 @@
   box-sizing: border-box;
 }
 
-.ingredientRow:hover {
+.ingredientRow:hover,
+.instructionRow:hover {
   background: var(--gray-100);
   transform: translateX(4px);
+}
+
+.instructionRow {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  align-items: flex-start;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  background: var(--gray-50);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stepNumber {
+  background: var(--primary-color);
+  color: white;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.instructionRow textarea {
+  flex: 1;
+  min-height: 60px;
 }
 
 .removeButton {

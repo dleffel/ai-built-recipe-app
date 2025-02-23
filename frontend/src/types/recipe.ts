@@ -3,7 +3,7 @@ export interface Recipe {
   title: string;
   description?: string;
   ingredients: string[];
-  instructions: string;
+  instructions: string[];
   servings?: number;
   prepTime?: number;
   cookTime?: number;
@@ -18,7 +18,7 @@ export interface CreateRecipeDTO {
   title: string;
   description?: string;
   ingredients: string[];
-  instructions: string;
+  instructions: string[];
   servings?: number;
   prepTime?: number;
   cookTime?: number;

@@ -18,7 +18,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   const [title, setTitle] = useState(recipe?.title || '');
   const [description, setDescription] = useState(recipe?.description || '');
   const [ingredients, setIngredients] = useState<string[]>(recipe?.ingredients || ['']);
-  const [instructions, setInstructions] = useState(recipe?.instructions || '');
+  const [instructions, setInstructions] = useState<string[]>(recipe?.instructions || ['']);
   const [servings, setServings] = useState(recipe?.servings?.toString() || '');
   const [prepTime, setPrepTime] = useState(recipe?.prepTime?.toString() || '');
   const [cookTime, setCookTime] = useState(recipe?.cookTime?.toString() || '');
@@ -40,6 +40,21 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     setIngredients(newIngredients);
   };
 
+  // Instruction handlers
+  const handleAddInstruction = () => {
+    setInstructions([...instructions, '']);
+  };
+
+  const handleRemoveInstruction = (index: number) => {
+    setInstructions(instructions.filter((_, i) => i !== index));
+  };
+
+  const handleInstructionChange = (index: number, value: string) => {
+    const newInstructions = [...instructions];
+    newInstructions[index] = value;
+    setInstructions(newInstructions);
+  };
+
   const handleImportSuccess = (importedRecipe: CreateRecipeDTO) => {
     setTitle(importedRecipe.title);
     setDescription(importedRecipe.description || '');
@@ -55,14 +70,20 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Remove empty ingredients
-    const filteredIngredients = ingredients.filter(i => i.trim());
+    // Remove empty ingredients and instructions
+    const filteredIngredients = ingredients
+      .map(i => i.trim())
+      .filter(i => i.length > 0);
+
+    const filteredInstructions = instructions
+      .map(i => i.trim())
+      .filter(i => i.length > 0);
 
     const data: CreateRecipeDTO = {
       title: title.trim(),
       description: description.trim() || undefined,
       ingredients: filteredIngredients,
-      instructions: instructions.trim(),
+      instructions: filteredInstructions,
       servings: servings ? parseInt(servings) : undefined,
       prepTime: prepTime ? parseInt(prepTime) : undefined,
       cookTime: cookTime ? parseInt(cookTime) : undefined,
@@ -157,15 +178,34 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="instructions">Instructions *</label>
-          <textarea
-            id="instructions"
-            value={instructions}
-            onChange={e => setInstructions(e.target.value)}
-            placeholder="Step-by-step instructions"
-            rows={6}
-            required
-          />
+          <label>Instructions *</label>
+          {instructions.map((instruction, index) => (
+            <div key={index} className={styles.instructionRow}>
+              <div className={styles.stepNumber}>{index + 1}</div>
+              <textarea
+                value={instruction}
+                onChange={e => handleInstructionChange(index, e.target.value)}
+                placeholder={`Step ${index + 1}`}
+                rows={2}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => handleRemoveInstruction(index)}
+                className={styles.removeButton}
+                disabled={instructions.length === 1}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddInstruction}
+            className={styles.addButton}
+          >
+            Add Step
+          </button>
         </div>
 
         <div className={styles.row}>

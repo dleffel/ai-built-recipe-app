@@ -31,7 +31,7 @@ model Recipe {
   title        String
   description  String?
   ingredients  String[]  // Array of ingredient strings
-  instructions String
+  instructions String[]
   servings     Int?
   prepTime     Int?     // In minutes
   cookTime     Int?     // In minutes

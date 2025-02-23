@@ -95,15 +95,13 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
       <div className={styles.section}>
         <h2>Instructions</h2>
-        <div className={styles.instructions}>
-          {recipe.instructions.split('\n').map((instruction, index) => (
-            instruction.trim() && (
-              <p key={index} className={styles.instruction}>
-                {instruction}
-              </p>
-            )
+        <ol className={styles.instructions}>
+          {recipe.instructions.map((instruction, index) => (
+            <li key={index} className={styles.instruction}>
+              {instruction}
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
 
       <div className={styles.footer}>

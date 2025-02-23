@@ -26,7 +26,7 @@ describe('RecipeForm URL Import Tests', () => {
     title: 'Imported Recipe',
     description: 'Imported description',
     ingredients: ['Imported ingredient 1', 'Imported ingredient 2'],
-    instructions: 'Imported instructions',
+    instructions: ['Imported instructions'],
     servings: 4,
     prepTime: 30,
     cookTime: 45,
@@ -118,7 +118,8 @@ describe('RecipeForm URL Import Tests', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/instructions/i)).toHaveValue(mockImportedRecipe.instructions);
+      const instructionInput = screen.getByPlaceholderText(/step 1/i);
+      expect(instructionInput).toHaveValue(mockImportedRecipe.instructions[0]);
     });
 
     // Verify numeric fields - convert to numbers since input type="number"

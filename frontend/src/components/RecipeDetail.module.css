@@ -138,10 +138,20 @@
 .instructions {
   color: #333;
   line-height: 1.6;
+  list-style-position: outside;
+  padding-left: 2rem;
+  counter-reset: step-counter;
 }
 
 .instruction {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.instruction::marker {
+  color: var(--primary-color, #4a90e2);
+  font-weight: bold;
 }
 
 .instruction:last-child {

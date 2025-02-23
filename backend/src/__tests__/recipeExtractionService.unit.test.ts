@@ -46,7 +46,13 @@ describe('RecipeExtractionService Unit Tests', () => {
     title: 'Chocolate Chip Cookies',
     description: 'Classic homemade cookies',
     ingredients: ['2 cups flour', '1 cup sugar'],
-    instructions: 'Mix ingredients and bake at 350F',
+    instructions: [
+      'Preheat oven to 350F',
+      'Mix dry ingredients',
+      'Mix wet ingredients',
+      'Combine and form cookies',
+      'Bake for 10 minutes'
+    ],
     servings: 12,
     prepTime: 15,
     cookTime: 10
@@ -164,7 +170,7 @@ describe('RecipeExtractionService Unit Tests', () => {
       ).rejects.toThrow(RecipeExtractionError);
     });
 
-    it('should handle non-array ingredients field', async () => {
+    it('should handle non-array ingredients and instructions fields', async () => {
       mockedAxios.get.mockResolvedValueOnce({ data: mockHtmlContent });
 
       const mockResponseWithStringIngredients = {
@@ -172,7 +178,8 @@ describe('RecipeExtractionService Unit Tests', () => {
           message: {
             content: JSON.stringify({
               ...mockGptResponse,
-              ingredients: '2 cups flour, 1 cup sugar' // String instead of array
+              ingredients: '2 cups flour, 1 cup sugar', // String instead of array
+              instructions: 'Mix ingredients and bake at 350F' // String instead of array
             })
           }
         }]
@@ -185,8 +192,13 @@ describe('RecipeExtractionService Unit Tests', () => {
 
       const result = await RecipeExtractionService.extractRecipeFromUrl(mockValidUrl);
 
+      // Verify ingredients are converted to array
       expect(Array.isArray(result.ingredients)).toBe(true);
       expect(result.ingredients.length).toBeGreaterThan(0);
+
+      // Verify instructions are converted to array
+      expect(Array.isArray(result.instructions)).toBe(true);
+      expect(result.instructions.length).toBeGreaterThan(0);
     });
 
     it('should throw error when OpenAI API key is not set', async () => {
@@ -263,6 +275,62 @@ describe('RecipeExtractionService Unit Tests', () => {
       await expect(
         RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
       ).rejects.toThrow(new RecipeExtractionError('No valid ingredients found'));
+    });
+
+    it('should detect truncated instructions based on step numbers', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockHtmlContent });
+
+      const mockResponseWithTruncatedSteps = {
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              ...mockGptResponse,
+              instructions: [
+                'Step 1: Preheat oven',
+                'Step 2: Mix ingredients',
+                'Step 3: Form cookies',
+                'Step 14: Final baking step' // Step 14 but only 4 steps total
+              ]
+            })
+          }
+        }]
+      };
+
+      const MockOpenAI = require('openai');
+      const mockInstance = MockOpenAI();
+      mockInstance.chat.completions.create.mockResolvedValueOnce(mockResponseWithTruncatedSteps);
+
+      await expect(
+        RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
+      ).rejects.toThrow(new RecipeExtractionError('Recipe instructions appear to be truncated'));
+    });
+
+    it('should detect truncated instructions based on step references', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockHtmlContent });
+
+      const mockResponseWithStepReferences = {
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              ...mockGptResponse,
+              instructions: [
+                'Mix dry ingredients',
+                'Mix wet ingredients',
+                'Combine mixtures from step 1 and 2',
+                'Follow step 8 for baking instructions' // Reference to missing step 8
+              ]
+            })
+          }
+        }]
+      };
+
+      const MockOpenAI = require('openai');
+      const mockInstance = MockOpenAI();
+      mockInstance.chat.completions.create.mockResolvedValueOnce(mockResponseWithStepReferences);
+
+      await expect(
+        RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
+      ).rejects.toThrow(new RecipeExtractionError('Recipe instructions appear to be truncated'));
     });
 
     it('should handle unknown error types in GPT extraction', async () => {

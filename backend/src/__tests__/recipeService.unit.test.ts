@@ -27,7 +27,7 @@ describe('RecipeService Unit Tests', () => {
     title: 'Test Recipe',
     description: 'A test recipe description',
     ingredients: ['ingredient 1', 'ingredient 2'],
-    instructions: 'Test instructions',
+    instructions: ['Step 1', 'Step 2'],
     servings: 4,
     prepTime: 30,
     cookTime: 45
@@ -62,7 +62,7 @@ describe('RecipeService Unit Tests', () => {
       const minimalData = {
         title: 'Minimal Recipe',
         ingredients: ['ingredient'],
-        instructions: 'Simple instructions'
+        instructions: ['Simple instruction step']
       };
 
       const expectedRecipe: Recipe = {

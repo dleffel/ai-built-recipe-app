@@ -1,5 +1,7 @@
 import '@testing-library/jest-dom';
 import React from 'react';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import '@testing-library/jest-dom/extend-expect';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { RecipeDetail } from '../components/RecipeDetail';
 import { Recipe } from '../types/recipe';
@@ -9,7 +11,7 @@ const mockRecipe: Recipe = {
   title: 'Test Recipe',
   description: 'Test description',
   ingredients: ['ingredient 1', 'ingredient 2'],
-  instructions: 'Step 1\nStep 2\nStep 3',
+  instructions: ['Step 1', 'Step 2', 'Step 3'],
   servings: 4,
   prepTime: 30,
   cookTime: 45,

@@ -39,7 +39,7 @@ export const createTestRecipe = async (user: User, index: number): Promise<Recip
         title: `Test Recipe ${uniqueId}`,
         description: `Description for test recipe ${uniqueId}`,
         ingredients: [`Ingredient ${uniqueId}-1`, `Ingredient ${uniqueId}-2`],
-        instructions: `Instructions for test recipe ${uniqueId}`,
+        instructions: [`Step 1 for test recipe ${uniqueId}`, `Step 2 for test recipe ${uniqueId}`],
         servings: 4,
         prepTime: 30,
         cookTime: 45,
