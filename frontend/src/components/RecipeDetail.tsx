@@ -56,6 +56,19 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       )}
 
       <div className={styles.metadata}>
+        {recipe.sourceUrl && (
+          <div className={styles.metaItem}>
+            <span className={styles.metaLabel}>Source:</span>
+            <a 
+              href={recipe.sourceUrl}
+              className={styles.sourceLink}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View Original Recipe
+            </a>
+          </div>
+        )}
         {recipe.servings && (
           <div className={styles.metaItem}>
             <span className={styles.metaLabel}>Servings:</span>

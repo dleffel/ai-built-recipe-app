@@ -106,7 +106,7 @@ export class RecipeExtractionService {
     return processedContent;
   }
 
-  private static async extractRecipeWithGPT(content: string): Promise<CreateRecipeDTO> {
+  private static async extractRecipeWithGPT(content: string, sourceUrl: string): Promise<CreateRecipeDTO> {
     try {
       const prompt = `
 You are a recipe extraction expert. Your task is to thoroughly extract ALL recipe information from the webpage content and format it as a valid JSON object. It is CRITICAL that you capture EVERY SINGLE INSTRUCTION STEP, even for long, complex recipes.
@@ -120,7 +120,8 @@ The JSON object MUST have this exact structure:
   "servings": number (optional),
   "prepTime": number (optional, in minutes),
   "cookTime": number (optional, in minutes),
-  "imageUrl": "string (optional)"
+  "imageUrl": "string (optional)",
+  "sourceUrl": "string (optional)"
 }
 
 Rules:
@@ -177,6 +178,7 @@ ${content}
           prepTime?: number;
           cookTime?: number;
           imageUrl?: string;
+          sourceUrl?: string;
         }
 
         const parsedRecipe = JSON.parse(result) as GPTRecipeResponse;
@@ -204,7 +206,8 @@ ${content}
           servings: parsedRecipe.servings,
           prepTime: parsedRecipe.prepTime,
           cookTime: parsedRecipe.cookTime,
-          imageUrl: parsedRecipe.imageUrl
+          imageUrl: parsedRecipe.imageUrl,
+          sourceUrl: sourceUrl // Always use the original URL
         };
 
         // Clean up ingredients and instructions (remove empty strings and trim)
@@ -303,7 +306,7 @@ ${content}
     console.log('Content preview (last 500 chars):', cleanedContent.slice(-500));
 
     // Extract recipe using GPT-3.5
-    const recipe = await this.extractRecipeWithGPT(cleanedContent);
+    const recipe = await this.extractRecipeWithGPT(cleanedContent, url);
 
     // Log final recipe details
     console.log('Extracted recipe details:');
@@ -312,6 +315,7 @@ ${content}
     console.log('- Number of instructions:', recipe.instructions.length);
     console.log('- First instruction:', recipe.instructions[0]);
     console.log('- Last instruction:', recipe.instructions[recipe.instructions.length - 1]);
+    console.log('- Source URL:', recipe.sourceUrl);
 
     return recipe;
   }
