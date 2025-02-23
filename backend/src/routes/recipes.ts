@@ -23,7 +23,14 @@ const extractRecipeFromUrl: RequestHandler = async (req, res) => {
       return;
     }
 
+    console.log('[DEBUG] Extracting recipe from URL:', url);
     const recipeData = await RecipeExtractionService.extractRecipeFromUrl(url);
+    console.log('[DEBUG] Extracted recipe data:', {
+      title: recipeData.title,
+      sourceUrl: recipeData.sourceUrl,
+      hasIngredients: recipeData.ingredients.length > 0,
+      hasInstructions: recipeData.instructions.length > 0
+    });
     res.json(recipeData);
   } catch (error: unknown) {
     console.error('Recipe extraction error:', error);
@@ -47,14 +54,25 @@ const extractRecipeFromUrl: RequestHandler = async (req, res) => {
 const createRecipe: RequestHandler = async (req, res) => {
   try {
     // Add validation
-    const { title, ingredients, instructions } = req.body;
+    const { title, ingredients, instructions, sourceUrl } = req.body;
     if (!title || !ingredients || !instructions) {
       res.status(400).json({ error: 'Missing required fields: title, ingredients, and instructions are required' });
       return;
     }
 
+    console.log('[DEBUG] Creating recipe with data:', {
+      title,
+      sourceUrl,
+      hasIngredients: ingredients.length > 0,
+      hasInstructions: instructions.length > 0
+    });
 
     const recipe = await RecipeService.createRecipe(req.user!.id, req.body);
+    console.log('[DEBUG] Created recipe:', {
+      id: recipe.id,
+      title: recipe.title,
+      sourceUrl: recipe.sourceUrl
+    });
     res.json(recipe);
   } catch (error: unknown) {
     console.error('Create recipe error:', error);
@@ -99,6 +117,11 @@ const getRecipe: RequestHandler = async (req, res) => {
       res.status(404).json({ error: 'Recipe not found' });
       return;
     }
+    console.log('[DEBUG] Retrieved recipe:', {
+      id: recipe.id,
+      title: recipe.title,
+      sourceUrl: recipe.sourceUrl
+    });
     res.json(recipe);
   } catch (error: unknown) {
     console.error('Get recipe error:', error);
