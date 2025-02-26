@@ -26,12 +26,12 @@ describe('Frontend Container Build', () => {
     const content = fs.readFileSync(dockerfile, 'utf8');
     
     // Required Dockerfile configurations
-    expect(content).toContain('FROM node:18-alpine as builder');
+    expect(content).toContain('FROM --platform=linux/amd64 node:18-alpine as builder');
     expect(content).toContain('WORKDIR /app');
     expect(content).toContain('COPY package*.json ./');
     expect(content).toContain('RUN npm ci');
     expect(content).toContain('ENV NODE_ENV=production');
-    expect(content).toContain('FROM nginx:alpine');
+    expect(content).toContain('FROM --platform=linux/amd64 nginx:alpine');
     expect(content).toContain('COPY --from=builder /app/build /usr/share/nginx/html');
     expect(content).toContain('EXPOSE 80');
   });

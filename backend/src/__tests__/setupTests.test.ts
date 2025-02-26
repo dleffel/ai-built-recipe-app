@@ -135,7 +135,7 @@ describe('setupTests', () => {
         const mockRecipe: Recipe = {
           id: 'test-recipe-id',
           userId,
-          title: expect.stringMatching(/^Test Recipe \d+$/), // Match any number of digits
+          title: expect.stringMatching(/^Test Recipe \d+$/), // Match any timestamp-based number
           instructions: ['Test instructions'],
           ingredients: ['ingredient 1', 'ingredient 2'],
           createdAt: new Date(),
@@ -157,7 +157,8 @@ describe('setupTests', () => {
             userId,
             title: expect.stringMatching(/^Test Recipe \d+$/),
             instructions: ['Test instructions'],
-            ingredients: ['ingredient 1', 'ingredient 2']
+            ingredients: ['ingredient 1', 'ingredient 2'],
+            sourceUrl: null
           }
         });
         expect(result).toBe(mockRecipe);
@@ -191,15 +192,16 @@ describe('setupTests', () => {
         };
         mockTx.recipe.create.mockResolvedValue(mockRecipe);
 
-        const result = await TestDataFactory.createRecipe(mockTx as any, userId, customData);
+       const result = await TestDataFactory.createRecipe(mockTx as any, userId, customData);
 
-        expect(mockTx.recipe.create).toHaveBeenCalledWith({
-          data: {
-            userId,
-            ...customData
-          }
-        });
-        expect(result).toBe(mockRecipe);
+       expect(mockTx.recipe.create).toHaveBeenCalledWith({
+         data: {
+           userId,
+           ...customData,
+           sourceUrl: null
+         }
+       });
+       expect(result).toBe(mockRecipe);
       });
     });
   });
