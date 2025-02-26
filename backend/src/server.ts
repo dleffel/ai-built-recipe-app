@@ -5,6 +5,7 @@ import passport from './config/passport';
 import authRoutes from './routes/auth';
 import recipeRoutes from './routes/recipes';
 import serverConfig from './config/server-config';
+import { prisma } from './lib/prisma';
 
 const app = express();
 
@@ -49,11 +50,24 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString()
-  });
+app.get('/api/health', async (req: Request, res: Response) => {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: 'ok',
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      status: 'error',
+      database: 'disconnected',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Test error endpoint

@@ -135,8 +135,8 @@ describe('setupTests', () => {
         const mockRecipe: Recipe = {
           id: 'test-recipe-id',
           userId,
-          title: expect.stringMatching(/^Test Recipe \d+$/),
-          instructions: 'Test instructions',
+          title: expect.stringMatching(/^Test Recipe \d+$/), // Match any number of digits
+          instructions: ['Test instructions'],
           ingredients: ['ingredient 1', 'ingredient 2'],
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -145,6 +145,7 @@ describe('setupTests', () => {
           prepTime: null,
           cookTime: null,
           imageUrl: null,
+          sourceUrl: null,
           isDeleted: false
         };
         mockTx.recipe.create.mockResolvedValue(mockRecipe);
@@ -155,7 +156,7 @@ describe('setupTests', () => {
           data: {
             userId,
             title: expect.stringMatching(/^Test Recipe \d+$/),
-            instructions: 'Test instructions',
+            instructions: ['Test instructions'],
             ingredients: ['ingredient 1', 'ingredient 2']
           }
         });
@@ -170,7 +171,7 @@ describe('setupTests', () => {
         const userId = 'test-user-id';
         const customData = {
           title: 'Custom Recipe',
-          instructions: 'Custom instructions',
+          instructions: ['Custom instructions'],
           ingredients: ['custom ingredient'],
           servings: 4
         };
@@ -185,6 +186,7 @@ describe('setupTests', () => {
           prepTime: null,
           cookTime: null,
           imageUrl: null,
+          sourceUrl: null,
           isDeleted: false
         };
         mockTx.recipe.create.mockResolvedValue(mockRecipe);

@@ -1,0 +1,117 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_FRONTEND: recipe-app-frontend
+  ECR_REPOSITORY_BACKEND: recipe-app-backend
+  APP_RUNNER_SERVICE_FRONTEND: recipe-app-frontend
+  APP_RUNNER_SERVICE_BACKEND: recipe-app-backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          cd frontend && npm ci
+          cd ../backend && npm ci
+
+      - name: Run Tests
+        run: |
+          cd frontend && npm test -- --watchAll=false
+          cd ../backend && npm test
+
+  build-and-deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push frontend image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          cd frontend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:${{ github.sha }} \
+            --build-arg REACT_APP_API_URL=https://api.recipes.dannyleffel.com .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:${{ github.sha }}
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:${{ github.sha }} \
+            $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest
+
+      - name: Build and push backend image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          cd backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:${{ github.sha }} .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:${{ github.sha }}
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:${{ github.sha }} \
+            $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:latest
+
+      - name: Deploy to App Runner
+        run: |
+          # Update frontend service
+          aws apprunner update-service \
+            --service-name ${{ env.APP_RUNNER_SERVICE_FRONTEND }} \
+            --source-configuration '{"ImageRepository": {"ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}", "ImageRepositoryType": "ECR"}}'
+
+          # Update backend service
+          aws apprunner update-service \
+            --service-name ${{ env.APP_RUNNER_SERVICE_BACKEND }} \
+            --source-configuration '{"ImageRepository": {"ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}", "ImageRepositoryType": "ECR"}}'
+
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend
+          npx prisma migrate deploy
+
+      - name: Wait for Deployment
+        run: |
+          # Wait for frontend deployment
+          aws apprunner wait service-updated \
+            --service-name ${{ env.APP_RUNNER_SERVICE_FRONTEND }}
+          
+          # Wait for backend deployment
+          aws apprunner wait service-updated \
+            --service-name ${{ env.APP_RUNNER_SERVICE_BACKEND }}
+
+      - name: Verify Deployment
+        run: |
+          # Check frontend health
+          curl -f https://recipes.dannyleffel.com/health || exit 1
+          
+          # Check backend health
+          curl -f https://api.recipes.dannyleffel.com/health || exit 1

@@ -3,7 +3,7 @@ import { Recipe, CreateRecipeDTO, UpdateRecipeDTO, RecipeListResponse } from '..
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: 'http://localhost:5001', // Backend server URL
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001', // Use environment variable with fallback
   withCredentials: true, // Important for handling cookies/sessions
   headers: {
     'Content-Type': 'application/json',

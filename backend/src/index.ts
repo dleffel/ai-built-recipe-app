@@ -2,7 +2,7 @@
 import http from 'http';
 import app from './server';
 
-const port = process.env.PORT || 5001;
+const port = parseInt(process.env.PORT || '3000', 10);
 
 const server = http.createServer(app);
 server.listen(port, () => {

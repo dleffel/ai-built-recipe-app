@@ -338,7 +338,7 @@ describe('RecipeExtractionService Unit Tests', () => {
 
       const MockOpenAI = require('openai');
       const mockInstance = MockOpenAI();
-      mockInstance.chat.completions.create.mockRejectedValueOnce({ 
+      mockInstance.chat.completions.create.mockRejectedValueOnce({
         // Non-Error object to test unknown error handling
         someField: 'some value'
       });
@@ -346,6 +346,120 @@ describe('RecipeExtractionService Unit Tests', () => {
       await expect(
         RecipeExtractionService.extractRecipeFromUrl(mockValidUrl)
       ).rejects.toThrow(new RecipeExtractionError('GPT extraction failed: Unknown error'));
+    });
+
+    // New tests for HTML cleaning and content selection
+    describe('HTML cleaning and content selection', () => {
+      it('should extract recipe-specific content when available', async () => {
+        const htmlWithRecipeContent = `
+          <div>Header content</div>
+          <div class="recipe-container">
+            <h1>Recipe Title</h1>
+            <div class="ingredients">Ingredient list</div>
+            <div class="instructions">Recipe steps</div>
+          </div>
+          <div>Footer content</div>
+        `;
+        
+        mockedAxios.get.mockResolvedValueOnce({ data: htmlWithRecipeContent });
+        
+        const mockOpenAIResponse = {
+          choices: [{
+            message: {
+              content: JSON.stringify(mockGptResponse)
+            }
+          }]
+        };
+
+        const MockOpenAI = require('openai');
+        const mockInstance = MockOpenAI();
+        mockInstance.chat.completions.create.mockResolvedValueOnce(mockOpenAIResponse);
+
+        const result = await RecipeExtractionService.extractRecipeFromUrl(mockValidUrl);
+        expect(result).toBeDefined();
+        expect(mockInstance.chat.completions.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            messages: expect.arrayContaining([
+              expect.objectContaining({
+                content: expect.stringContaining('Recipe Title')
+              })
+            ])
+          })
+        );
+      });
+
+      it('should handle HTML with comments and script tags', async () => {
+        const htmlWithComments = `
+          <!-- Header comment -->
+          <script>var x = 1;</script>
+          <style>.recipe { color: red; }</style>
+          <div class="recipe">
+            <h1>Recipe Title</h1>
+            <!-- Ingredient section -->
+            <ul>
+              <li>Ingredient 1</li>
+              <li>Ingredient 2</li>
+            </ul>
+          </div>
+          <!-- Footer comment -->
+        `;
+        
+        mockedAxios.get.mockResolvedValueOnce({ data: htmlWithComments });
+        
+        const mockOpenAIResponse = {
+          choices: [{
+            message: {
+              content: JSON.stringify(mockGptResponse)
+            }
+          }]
+        };
+
+        const MockOpenAI = require('openai');
+        const mockInstance = MockOpenAI();
+        mockInstance.chat.completions.create.mockResolvedValueOnce(mockOpenAIResponse);
+
+        const result = await RecipeExtractionService.extractRecipeFromUrl(mockValidUrl);
+        expect(result).toBeDefined();
+        expect(mockInstance.chat.completions.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            messages: expect.arrayContaining([
+              expect.objectContaining({
+                content: expect.not.stringContaining('var x = 1')
+              })
+            ])
+          })
+        );
+      });
+
+      it('should handle recipe with all optional fields', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: mockHtmlContent });
+
+        const fullRecipeResponse = {
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                ...mockGptResponse,
+                description: 'Detailed description',
+                servings: 8,
+                prepTime: 20,
+                cookTime: 30,
+                imageUrl: 'https://example.com/image.jpg'
+              })
+            }
+          }]
+        };
+
+        const MockOpenAI = require('openai');
+        const mockInstance = MockOpenAI();
+        mockInstance.chat.completions.create.mockResolvedValueOnce(fullRecipeResponse);
+
+        const result = await RecipeExtractionService.extractRecipeFromUrl(mockValidUrl);
+        expect(result.description).toBe('Detailed description');
+        expect(result.servings).toBe(8);
+        expect(result.prepTime).toBe(20);
+        expect(result.cookTime).toBe(30);
+        expect(result.imageUrl).toBe('https://example.com/image.jpg');
+      });
     });
   });
 });

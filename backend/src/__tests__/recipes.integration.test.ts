@@ -1,6 +1,13 @@
 import { User, Recipe } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { createTestUser, createTestRecipe, cleanupTestData, createTestSessionCookie } from './helpers/testHelpers.test';
+import {
+  createTestUser,
+  createTestRecipe,
+  cleanupTestData,
+  createTestSessionCookie,
+  createRecipeData,
+  setupRecipeMocks
+} from './helpers/testHelpers.test';
 import { RecipeService } from '../services/recipeService';
 // Mock the RecipeService
 jest.mock('../services/recipeService', () => ({
@@ -96,8 +103,9 @@ describe('Recipe API Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    // Create a test user and session
-    testUser = await createTestUser(1);
+    // Create a test user with index
+    const index = Math.floor(Math.random() * 1000);
+    testUser = await createTestUser(index);
     authCookie = createTestSessionCookie(testUser.id);
 
     // Reset mocks
@@ -251,12 +259,19 @@ describe('Recipe API Integration Tests', () => {
     let recipes: Recipe[];
 
     beforeEach(async () => {
-      // Create test recipes
-      recipes = await Promise.all([
-        createTestRecipe(testUser, 1),
-        createTestRecipe(testUser, 2),
-        createTestRecipe(testUser, 3)
-      ]);
+      // Create test recipes with unique indices
+      const indices = [1, 2, 3].map(i => Math.floor(Math.random() * 1000) + i);
+      
+      // Create recipe data for each index
+      const recipesData = indices.map(index => createRecipeData(testUser, index));
+      
+      // Set up mocks for all recipes
+      setupRecipeMocks(recipesData);
+      
+      // Create the recipes
+      recipes = await Promise.all(
+        indices.map(index => createTestRecipe(testUser, index))
+      );
     });
 
     it('should return user recipes with pagination', async () => {
@@ -361,7 +376,10 @@ describe('Recipe API Integration Tests', () => {
     let recipe: Recipe;
 
     beforeEach(async () => {
-      recipe = await createTestRecipe(testUser, 1);
+      const index = Math.floor(Math.random() * 1000);
+      const recipeData = createRecipeData(testUser, index);
+      setupRecipeMocks([recipeData]);
+      recipe = await createTestRecipe(testUser, index);
     });
 
     it('should return recipe by ID', async () => {
@@ -400,6 +418,8 @@ describe('Recipe API Integration Tests', () => {
     let recipe: Recipe;
 
     beforeEach(async () => {
+      const recipeData = createRecipeData(testUser, 1);
+      setupRecipeMocks([recipeData]);
       recipe = await createTestRecipe(testUser, 1);
     });
 
@@ -514,8 +534,11 @@ describe('Recipe API Integration Tests', () => {
       let otherUserRecipe: Recipe;
 
       beforeEach(async () => {
-        otherUser = await createTestUser(2);
-        otherUserRecipe = await createTestRecipe(otherUser, 1);
+        const otherUserIndex = Math.floor(Math.random() * 1000) + 1000; // Ensure different range
+        otherUser = await createTestUser(otherUserIndex);
+        const otherRecipeData = createRecipeData(otherUser, otherUserIndex + 1);
+        setupRecipeMocks([otherRecipeData]);
+        otherUserRecipe = await createTestRecipe(otherUser, otherUserIndex + 1);
       });
 
       it('should return 404 when updating recipe owned by different user', async () => {
@@ -539,6 +562,8 @@ describe('Recipe API Integration Tests', () => {
     let recipe: Recipe;
 
     beforeEach(async () => {
+      const recipeData = createRecipeData(testUser, 1);
+      setupRecipeMocks([recipeData]);
       recipe = await createTestRecipe(testUser, 1);
     });
 
@@ -583,6 +608,8 @@ describe('Recipe API Integration Tests', () => {
 
       beforeEach(async () => {
         otherUser = await createTestUser(2);
+        const otherRecipeData = createRecipeData(otherUser, 1);
+        setupRecipeMocks([otherRecipeData]);
         otherUserRecipe = await createTestRecipe(otherUser, 1);
       });
 
