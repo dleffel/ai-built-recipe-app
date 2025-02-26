@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Testing
+coverage
+__tests__
+*.test.*
+jest.config.*
+
+# Development
+.git
+.gitignore
+README.md
+*.md
+.env*
+.vscode
+.idea
+
+# Build output
+dist
+
+# Prisma
+prisma/*.db
+prisma/dev.db
+prisma/migrations/*.sql
+
+# Misc
+.DS_Store
+*.log
+logs
+tmp
+pid
+*.pid
+*.seed
+*.pid.lock

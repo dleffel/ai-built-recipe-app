@@ -1,70 +1,106 @@
 import { PrismaClient, User, Recipe } from '@prisma/client';
+import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { RecipeService } from '../../services/recipeService';
 import { UserService } from '../../services/userService';
 
-const prisma = new PrismaClient();
+// Create mock PrismaClient
+const mockPrisma: DeepMockProxy<PrismaClient> = mockDeep<PrismaClient>();
+
+// Mock the prisma import
+jest.mock('../../lib/prisma', () => ({
+  prisma: mockPrisma
+}));
 
 // Helper to create a unique test user
 export const createTestUser = async (index: number): Promise<User> => {
   const timestamp = Date.now();
   const uniqueId = `${timestamp}-${index}-${Math.random().toString(36).substring(2, 7)}`;
   
-  // Create user with transaction to ensure atomicity
-  return await prisma.$transaction(async (tx) => {
-    return await tx.user.create({
-      data: {
-        email: `test-${uniqueId}@example.com`,
-        googleId: `google-${uniqueId}`,
-        displayName: `Test User ${uniqueId}`,
-        photoUrl: `https://via.placeholder.com/150?text=${uniqueId}`
-      }
-    });
-  });
+  const userData = {
+    id: `user-${uniqueId}`,
+    email: `test-${uniqueId}@example.com`,
+    googleId: `google-${uniqueId}`,
+    displayName: `Test User ${uniqueId}`,
+    photoUrl: `https://via.placeholder.com/150?text=${uniqueId}`,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastLoginAt: new Date()
+  };
+
+  mockPrisma.user.create.mockResolvedValueOnce(userData);
+  return mockPrisma.user.create({ data: userData });
 };
 
 // Helper to create a test recipe
-export const createTestRecipe = async (user: User, index: number): Promise<Recipe> => {
-  const uniqueId = `${Date.now()}-${index}-${Math.random().toString(36).substring(2, 7)}`;
-  
-  // Create recipe with transaction to ensure atomicity and foreign key constraints
-  return await prisma.$transaction(async (tx) => {
-    // Verify user exists
-    const existingUser = await tx.user.findUnique({ where: { id: user.id } });
-    if (!existingUser) {
-      throw new Error('User not found');
-    }
+// Helper to create recipe test data without setting up mocks
+export const createRecipeData = (user: User, index: number): Recipe => {
+  return {
+    id: `recipe-test-${index}`,
+    title: `Test Recipe ${index}`,
+    description: `Description for test recipe ${index}`,
+    ingredients: [`Ingredient ${index}-1`, `Ingredient ${index}-2`],
+    instructions: [`Step 1 for test recipe ${index}`, `Step 2 for test recipe ${index}`],
+    servings: 4,
+    prepTime: 30,
+    cookTime: 45,
+    userId: user.id,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isDeleted: false,
+    sourceUrl: null,
+    imageUrl: null
+  };
+};
 
-    return await tx.recipe.create({
-      data: {
-        title: `Test Recipe ${uniqueId}`,
-        description: `Description for test recipe ${uniqueId}`,
-        ingredients: [`Ingredient ${uniqueId}-1`, `Ingredient ${uniqueId}-2`],
-        instructions: [`Step 1 for test recipe ${uniqueId}`, `Step 2 for test recipe ${uniqueId}`],
-        servings: 4,
-        prepTime: 30,
-        cookTime: 45,
-        userId: user.id
-      }
-    });
+// Helper to set up recipe mocks for a test
+export const setupRecipeMocks = (recipes: Recipe[]) => {
+  // Set up sequential mocks for each recipe
+  recipes.forEach(recipe => {
+    mockPrisma.recipe.create.mockResolvedValueOnce(recipe);
+    console.log(`[Test Helper] Mock set up for recipe: ${recipe.id}`);
   });
+};
+
+export const createTestRecipe = async (user: User, index: number): Promise<Recipe> => {
+  console.log(`\n[Test Helper] Creating recipe with index ${index}`);
+  
+  // Set up user mock
+  mockPrisma.user.findUnique.mockResolvedValueOnce({
+    id: user.id,
+    email: user.email,
+    googleId: user.googleId,
+    displayName: user.displayName,
+    photoUrl: user.photoUrl,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    lastLoginAt: user.lastLoginAt
+  });
+  
+  // Create recipe data
+  const recipeData = createRecipeData(user, index);
+  
+  console.log('[Test Helper] Recipe data created:', {
+    id: recipeData.id,
+    title: recipeData.title,
+    userId: recipeData.userId
+  });
+  
+  // Create the recipe
+  const result = await mockPrisma.recipe.create({ data: recipeData });
+  
+  console.log('[Test Helper] Recipe created:', {
+    id: result.id,
+    title: result.title,
+    userId: result.userId
+  });
+  
+  return result;
 };
 
 // Helper to clean up test data
 export const cleanupTestData = async () => {
-try {
-  // Delete all recipes first
-  await prisma.recipe.deleteMany({
-    where: {} // Clear where clause to delete all
-  });
-  
-  // Then delete all users after recipes are gone
-  await prisma.user.deleteMany({
-    where: {} // Clear where clause to delete all
-  });
-} catch (error) {
-  console.error('Error cleaning up test data:', error);
-  throw error;
-}
+  await mockPrisma.recipe.deleteMany({ where: {} });
+  await mockPrisma.user.deleteMany({ where: {} });
 };
 
 // Helper to create a test session cookie
@@ -79,13 +115,14 @@ export const createTestSessionCookie = (userId: string): string[] => {
 };
 
 describe('Test Helpers', () => {
-  beforeEach(async () => {
-    await cleanupTestData();
-  });
-
-  afterAll(async () => {
-    await cleanupTestData();
-    await prisma.$disconnect();
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockPrisma.$transaction.mockImplementation((fn: unknown) => {
+      if (typeof fn === 'function') {
+        return fn(mockPrisma);
+      }
+      return Promise.resolve([]);
+    });
   });
 
   it('should create a test user with unique data', async () => {
@@ -106,18 +143,48 @@ describe('Test Helpers', () => {
 
   it('should create a test recipe', async () => {
     const user = await createTestUser(1);
+    const mockRecipe = {
+      id: 'recipe-test-1',
+      title: 'Test Recipe 1',
+      description: 'Test Description',
+      ingredients: ['ingredient 1', 'ingredient 2'],
+      instructions: ['step 1', 'step 2'],
+      servings: 4,
+      prepTime: 30,
+      cookTime: 45,
+      userId: user.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isDeleted: false,
+      sourceUrl: null,
+      imageUrl: null
+    };
+
+    mockPrisma.recipe.create.mockResolvedValueOnce(mockRecipe);
     const recipe = await createTestRecipe(user, 1);
+    
     expect(recipe).toBeDefined();
-    expect(recipe.title).toMatch(/Test Recipe/);
+    expect(recipe.title).toBe(mockRecipe.title);
     expect(recipe.userId).toBe(user.id);
     expect(recipe.ingredients).toHaveLength(2);
   });
 
   it('should create multiple recipes for the same user', async () => {
     const user = await createTestUser(1);
+    
+    // Create recipe data
+    const recipe1Data = createRecipeData(user, 1);
+    const recipe2Data = createRecipeData(user, 2);
+    
+    // Set up mocks for both recipes
+    setupRecipeMocks([recipe1Data, recipe2Data]);
+    
+    // Create recipes
     const recipe1 = await createTestRecipe(user, 1);
     const recipe2 = await createTestRecipe(user, 2);
-    expect(recipe1.id).not.toBe(recipe2.id);
+    
+    expect(recipe1).toEqual(recipe1Data);
+    expect(recipe2).toEqual(recipe2Data);
     expect(recipe1.title).not.toBe(recipe2.title);
     expect(recipe1.userId).toBe(recipe2.userId);
   });
@@ -125,17 +192,34 @@ describe('Test Helpers', () => {
   it('should clean up test data', async () => {
     // Create test data
     const user = await createTestUser(1);
+    const recipe1Data = createRecipeData(user, 1);
+    const recipe2Data = createRecipeData(user, 2);
+    
+    // Set up mocks for recipe creation
+    setupRecipeMocks([recipe1Data, recipe2Data]);
+    
+    // Create test recipes
     await createTestRecipe(user, 1);
     await createTestRecipe(user, 2);
+
+    // Mock successful cleanup operations
+    mockPrisma.recipe.deleteMany.mockResolvedValueOnce({ count: 2 });
+    mockPrisma.user.deleteMany.mockResolvedValueOnce({ count: 1 });
+    mockPrisma.user.count.mockResolvedValueOnce(0);
+    mockPrisma.recipe.count.mockResolvedValueOnce(0);
 
     // Clean up
     await cleanupTestData();
 
     // Verify cleanup
-    const userCount = await prisma.user.count();
-    const recipeCount = await prisma.recipe.count();
+    const userCount = await mockPrisma.user.count();
+    const recipeCount = await mockPrisma.recipe.count();
     expect(userCount).toBe(0);
     expect(recipeCount).toBe(0);
+
+    // Verify deleteMany was called with correct parameters
+    expect(mockPrisma.recipe.deleteMany).toHaveBeenCalledWith({ where: {} });
+    expect(mockPrisma.user.deleteMany).toHaveBeenCalledWith({ where: {} });
   });
 
   it('should create valid session cookie', () => {

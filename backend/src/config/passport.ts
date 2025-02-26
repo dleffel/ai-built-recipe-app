@@ -15,20 +15,24 @@ export interface SessionUser {
   photoUrl: string;
 }
 
-// Extend Express.User interface
+// Extend Express.User interface to match Prisma User
 declare global {
   namespace Express {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface User extends SessionUser {}
+    interface User extends PrismaUser {}
   }
 }
 
 // Mock user for development
-const mockUser: SessionUser = {
+const mockUser: PrismaUser = {
   id: 'dev-123',
   email: 'dev@example.com',
   displayName: 'Development User',
-  photoUrl: 'https://via.placeholder.com/150'
+  photoUrl: 'https://via.placeholder.com/150',
+  googleId: 'mock-google-id',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  lastLoginAt: new Date()
 };
 
 export const getMockUser = () => {
@@ -71,17 +75,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             photoUrl: profile.photos?.[0]?.value
           });
 
-          // Create session user with profile data
-          const sessionUser: SessionUser = {
-            id: user.id,
-            email: user.email,
-            displayName: user.displayName || user.email.split('@')[0],
-            photoUrl: user.photoUrl || 'https://via.placeholder.com/150'
-          };
+          console.log('Created/found user:', user);
 
-          console.log('Created session user:', sessionUser);
-
-          return done(null, sessionUser);
+          return done(null, user);
         } catch (error) {
           console.error('Error in Google authentication:', error);
           return done(error as Error);
@@ -92,7 +88,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 // Serialize user for the session
-passport.serializeUser((user: Express.User, done) => {
+passport.serializeUser((user, done) => {
   console.log('Serializing user:', user);
   // Only serialize the ID for security
   done(null, user.id);
@@ -114,17 +110,8 @@ passport.deserializeUser(async (id: string, done) => {
     if (user) {
       // Update last login time
       await UserService.updateLastLogin(user.id);
-      
-      // Create session user from database
-      const sessionUser: SessionUser = {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName || user.email.split('@')[0],
-        photoUrl: user.photoUrl || 'https://via.placeholder.com/150'
-      };
-
-      console.log('Deserialized session user:', sessionUser);
-      return done(null, sessionUser);
+      console.log('Deserialized user:', user);
+      return done(null, user);
     }
 
     console.log('User not found in database:', { id });

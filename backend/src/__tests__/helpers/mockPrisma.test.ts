@@ -41,11 +41,12 @@ describe('mockPrisma', () => {
         title: 'Test Recipe',
         description: 'Test Description',
         ingredients: ['ingredient 1'],
-        instructions: 'Test Instructions',
+        instructions: ['Test Instructions'],
         servings: 4,
         prepTime: 30,
         cookTime: 45,
         imageUrl: 'test-image.jpg',
+        sourceUrl: 'test-source.com',
         isDeleted: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -57,7 +58,7 @@ describe('mockPrisma', () => {
           data: {
             title: 'Test Recipe',
             ingredients: ['test'],
-            instructions: 'Test instructions',
+            instructions: ['Test instructions'],
             userId: 'test-user-id'
           }
         });

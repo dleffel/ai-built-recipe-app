@@ -52,8 +52,9 @@ export class TestDataFactory {
   ): Promise<Recipe> {
     const testData = {
       title: `Test Recipe ${Date.now()}`,
-      instructions: 'Test instructions',
+      instructions: ['Test instructions'],
       ingredients: ['ingredient 1', 'ingredient 2'],
+      sourceUrl: null,
       ...data
     };
 

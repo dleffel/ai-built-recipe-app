@@ -23,14 +23,14 @@ router.get('/google', passport.authenticate('google', {
 /* istanbul ignore next */
 router.get('/google/callback',
   passport.authenticate('google', {
-    failureRedirect: 'http://localhost:3000?error=auth_failed'
+    failureRedirect: 'https://recipes.dannyleffel.com?error=auth_failed'
   }),
   async (req: Request, res: Response) => {
     try {
       // Ensure user is properly logged in
       if (!req.user) {
         console.error('No user in request after Google authentication');
-        res.redirect('http://localhost:3000?error=auth_failed');
+        res.redirect('https://recipes.dannyleffel.com?error=auth_failed');
         return;
       }
 
@@ -38,10 +38,10 @@ router.get('/google/callback',
       await UserService.updateLastLogin(req.user.id);
       
       // Redirect to frontend with success
-      res.redirect('http://localhost:3000');
+      res.redirect('https://recipes.dannyleffel.com');
     } catch (error) {
       console.error('Error in Google callback:', error);
-      res.redirect('http://localhost:3000?error=auth_failed');
+      res.redirect('https://recipes.dannyleffel.com?error=auth_failed');
     }
   }
 );
