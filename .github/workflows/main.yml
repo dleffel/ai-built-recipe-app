@@ -94,39 +94,6 @@ jobs:
             $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:latest
 
-      - name: Wait for services to be ready
-        run: |
-          # Function to check service status
-          check_service_status() {
-            local service_arn=$1
-            local status=$(aws apprunner describe-service --service-arn $service_arn --query 'Service.Status' --output text)
-            echo $status
-          }
-
-          # Function to wait for service to be ready
-          wait_for_service() {
-            local service_arn=$1
-            local service_name=$2
-            echo "Waiting for $service_name to be ready..."
-            while true; do
-              local status=$(check_service_status $service_arn)
-              echo "$service_name status: $status"
-              if [ "$status" = "RUNNING" ]; then
-                break
-              elif [ "$status" = "OPERATION_IN_PROGRESS" ]; then
-                echo "Operation in progress, waiting 30 seconds..."
-                sleep 30
-              else
-                echo "Unexpected status: $status"
-                exit 1
-              fi
-            done
-          }
-
-          # Wait for both services to be ready
-          wait_for_service "${{ env.APP_RUNNER_SERVICE_ARN_FRONTEND }}" "Frontend"
-          wait_for_service "${{ env.APP_RUNNER_SERVICE_ARN_BACKEND }}" "Backend"
-
       - name: Deploy to App Runner
         run: |
           # Get current backend configuration
@@ -151,21 +118,3 @@ jobs:
                 }
               }
             }"
-
-      - name: Wait for Deployment
-        run: |
-          # Wait for frontend deployment
-          aws apprunner wait service-operational \
-            --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_FRONTEND }}
-          
-          # Wait for backend deployment
-          aws apprunner wait service-operational \
-            --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_BACKEND }}
-
-      - name: Verify Deployment
-        run: |
-          # Check frontend health
-          curl -f https://recipes.dannyleffel.com/health || exit 1
-          
-          # Check backend health
-          curl -f https://api.recipes.dannyleffel.com/health || exit 1
