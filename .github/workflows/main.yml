@@ -31,6 +31,8 @@ jobs:
           cd ../backend && npm ci
 
       - name: Run Tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           cd frontend && npm test -- --watchAll=false
           cd ../backend && npm test
@@ -89,7 +91,17 @@ jobs:
           # Update backend service
           aws apprunner update-service \
             --service-name ${{ env.APP_RUNNER_SERVICE_BACKEND }} \
-            --source-configuration '{"ImageRepository": {"ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}", "ImageRepositoryType": "ECR"}}'
+            --source-configuration '{
+              "ImageRepository": {
+                "ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}",
+                "ImageRepositoryType": "ECR",
+                "ImageConfiguration": {
+                  "RuntimeEnvironmentVariables": {
+                    "OPENAI_API_KEY": "${{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }'
 
       - name: Run Database Migrations
         env:

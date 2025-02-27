@@ -213,6 +213,11 @@ ${content}
   }
 
   public async extractRecipeFromUrl(url: string): Promise<CreateRecipeDTO> {
+    // Check API key on each call
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is not set');
+    }
+
     // Basic URL validation
     try {
       new URL(url);

@@ -99,8 +99,22 @@ export const createTestRecipe = async (user: User, index: number): Promise<Recip
 
 // Helper to clean up test data
 export const cleanupTestData = async () => {
-  await mockPrisma.recipe.deleteMany({ where: {} });
-  await mockPrisma.user.deleteMany({ where: {} });
+  console.log('[Test Cleanup] Starting data cleanup');
+  
+  // Delete recipes first
+  const recipeResult = await mockPrisma.recipe.deleteMany({ where: {} });
+  console.log('[Test Cleanup] Deleted recipes:', recipeResult);
+  
+  // Then delete users
+  const userResult = await mockPrisma.user.deleteMany({ where: {} });
+  console.log('[Test Cleanup] Deleted users:', userResult);
+  
+  // Verify cleanup
+  const remainingUsers = await mockPrisma.user.count();
+  const remainingRecipes = await mockPrisma.recipe.count();
+  console.log('[Test Cleanup] Remaining data:', { users: remainingUsers, recipes: remainingRecipes });
+  
+  console.log('[Test Cleanup] Cleanup complete');
 };
 
 // Helper to create a test session cookie
@@ -117,6 +131,80 @@ export const createTestSessionCookie = (userId: string): string[] => {
 describe('Test Helpers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up default mock responses
+    mockPrisma.user.count.mockResolvedValue(0);
+    mockPrisma.recipe.count.mockResolvedValue(0);
+    // Track mock data
+    let mockRecipes = new Set<string>();
+    let mockUsers = new Set<string>();
+
+    // Mock recipe create with proper Prisma types
+    mockPrisma.recipe.create.mockImplementation((args) => {
+      const recipe = {
+        ...args.data,
+        id: args.data.id as string, // Assert id is string
+        user: () => mockDeep<any>({ id: args.data.userId as string }) // Assert userId is string
+      };
+      mockRecipes.add(recipe.id);
+      return mockDeep<any>({
+        ...recipe,
+        [Symbol.toStringTag]: 'PrismaPromise'
+      });
+    });
+
+    // Mock user create with proper Prisma types
+    mockPrisma.user.create.mockImplementation((args) => {
+      const user = {
+        ...args.data,
+        id: args.data.id as string, // Assert id is string
+        recipes: () => mockDeep<any>([])
+      };
+      mockUsers.add(user.id);
+      return mockDeep<any>({
+        ...user,
+        [Symbol.toStringTag]: 'PrismaPromise'
+      });
+    });
+
+    // Mock deleteMany with proper Prisma types
+    mockPrisma.recipe.deleteMany.mockReturnValue(
+      mockDeep<any>({
+        [Symbol.toStringTag]: 'PrismaPromise',
+        then: (fn: (val: { count: number }) => any) => {
+          const count = mockRecipes.size;
+          mockRecipes.clear();
+          return fn({ count });
+        }
+      })
+    );
+
+    mockPrisma.user.deleteMany.mockReturnValue(
+      mockDeep<any>({
+        [Symbol.toStringTag]: 'PrismaPromise',
+        then: (fn: (val: { count: number }) => any) => {
+          const count = mockUsers.size;
+          mockUsers.clear();
+          return fn({ count });
+        }
+      })
+    );
+
+    // Mock count operations with proper Prisma types
+    mockPrisma.recipe.count.mockReturnValue(
+      mockDeep<any>({
+        [Symbol.toStringTag]: 'PrismaPromise',
+        then: (fn: (val: number) => any) => fn(mockRecipes.size)
+      })
+    );
+
+    mockPrisma.user.count.mockReturnValue(
+      mockDeep<any>({
+        [Symbol.toStringTag]: 'PrismaPromise',
+        then: (fn: (val: number) => any) => fn(mockUsers.size)
+      })
+    );
+    
     mockPrisma.$transaction.mockImplementation((fn: unknown) => {
       if (typeof fn === 'function') {
         return fn(mockPrisma);
