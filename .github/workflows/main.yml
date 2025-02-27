@@ -9,9 +9,9 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY_FRONTEND: recipe-app-frontend
-  ECR_REPOSITORY_BACKEND: recipe-app-backend
+  ECR_REPOSITORY_BACKEND: recipe-app-api
   APP_RUNNER_SERVICE_FRONTEND: recipe-app-frontend
-  APP_RUNNER_SERVICE_BACKEND: recipe-app-backend
+  APP_RUNNER_SERVICE_BACKEND: recipe-app-api
 
 jobs:
   test:
@@ -48,11 +48,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Debug step to verify GitHub context
+      - name: Debug GitHub Context
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Role ARN: ${{ secrets.AWS_ROLE_ARN }}"
+          echo "OIDC Subject: repo:${{ github.repository }}:ref:${{ github.ref }}"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      # Debug step to verify AWS credentials
+      - name: Verify AWS credentials
+        run: |
+          aws sts get-caller-identity
+          aws iam list-open-id-connect-providers
 
       - name: Login to Amazon ECR
         id: login-ecr
