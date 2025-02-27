@@ -155,11 +155,11 @@ jobs:
       - name: Wait for Deployment
         run: |
           # Wait for frontend deployment
-          aws apprunner wait service-updated \
+          aws apprunner wait service-operational \
             --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_FRONTEND }}
           
           # Wait for backend deployment
-          aws apprunner wait service-updated \
+          aws apprunner wait service-operational \
             --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_BACKEND }}
 
       - name: Verify Deployment
