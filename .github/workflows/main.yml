@@ -10,8 +10,8 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY_FRONTEND: recipe-app-frontend
   ECR_REPOSITORY_BACKEND: recipe-app-api
-  APP_RUNNER_SERVICE_FRONTEND: recipe-app-frontend
-  APP_RUNNER_SERVICE_BACKEND: recipe-app-api
+  APP_RUNNER_SERVICE_ARN_FRONTEND: arn:aws:apprunner:us-east-1:959015000320:service/recipe-app-frontend/a5924d24983b45d387c61f2f6c2e8e4b
+  APP_RUNNER_SERVICE_ARN_BACKEND: arn:aws:apprunner:us-east-1:959015000320:service/recipe-app-api/af3d019dde794fdd92dd619da3d0d357
 
 jobs:
   test:
@@ -62,11 +62,10 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Debug step to verify AWS credentials
+      # Debug step to verify AWS identity
       - name: Verify AWS credentials
         run: |
           aws sts get-caller-identity
-          aws iam list-open-id-connect-providers
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -99,12 +98,12 @@ jobs:
         run: |
           # Update frontend service
           aws apprunner update-service \
-            --service-name ${{ env.APP_RUNNER_SERVICE_FRONTEND }} \
+            --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_FRONTEND }} \
             --source-configuration '{"ImageRepository": {"ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}", "ImageRepositoryType": "ECR"}}'
 
           # Update backend service
           aws apprunner update-service \
-            --service-name ${{ env.APP_RUNNER_SERVICE_BACKEND }} \
+            --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_BACKEND }} \
             --source-configuration '{
               "ImageRepository": {
                 "ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}",
@@ -128,11 +127,11 @@ jobs:
         run: |
           # Wait for frontend deployment
           aws apprunner wait service-updated \
-            --service-name ${{ env.APP_RUNNER_SERVICE_FRONTEND }}
+            --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_FRONTEND }}
           
           # Wait for backend deployment
           aws apprunner wait service-updated \
-            --service-name ${{ env.APP_RUNNER_SERVICE_BACKEND }}
+            --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_BACKEND }}
 
       - name: Verify Deployment
         run: |
