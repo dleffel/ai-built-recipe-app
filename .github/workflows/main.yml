@@ -129,32 +129,28 @@ jobs:
 
       - name: Deploy to App Runner
         run: |
+          # Get current backend configuration
+          CURRENT_CONFIG=$(aws apprunner describe-service --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_BACKEND }} --query 'Service.SourceConfiguration.ImageRepository' --output json)
+          
           # Update frontend service
           aws apprunner update-service \
             --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_FRONTEND }} \
             --source-configuration '{"ImageRepository": {"ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}", "ImageRepositoryType": "ECR"}}'
 
-          # Update backend service
+          # Update backend service with migration command while keeping existing env vars
           aws apprunner update-service \
             --service-arn ${{ env.APP_RUNNER_SERVICE_ARN_BACKEND }} \
-            --source-configuration '{
-              "ImageRepository": {
-                "ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}",
-                "ImageRepositoryType": "ECR",
-                "ImageConfiguration": {
-                  "RuntimeEnvironmentVariables": {
-                    "OPENAI_API_KEY": "${{ secrets.OPENAI_API_KEY }}"
-                  }
+            --source-configuration "{
+              \"ImageRepository\": {
+                \"ImageIdentifier\": \"${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}\",
+                \"ImageRepositoryType\": \"ECR\",
+                \"ImageConfiguration\": {
+                  \"Port\": \"3000\",
+                  \"RuntimeEnvironmentVariables\": $(echo "$CURRENT_CONFIG" | jq '.ImageConfiguration.RuntimeEnvironmentVariables'),
+                  \"StartCommand\": \"npx prisma migrate deploy && node dist/index.js\"
                 }
               }
-            }'
-
-      - name: Run Database Migrations
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          cd backend
-          npx prisma migrate deploy
+            }"
 
       - name: Wait for Deployment
         run: |
