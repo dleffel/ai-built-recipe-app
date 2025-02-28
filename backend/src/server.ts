@@ -77,14 +77,53 @@ app.use('/auth', (req, res, next) => {
   next();
 });
 
-// Add basic session logging
+// Add session compatibility layer for Passport
 app.use((req: any, res: Response, next: NextFunction) => {
   if (req.session) {
-    console.log('Session state:', {
+    // Log initial session state
+    console.log('Session state before:', {
       path: req.path,
       hasSession: !!req.session,
-      sessionKeys: Object.keys(req.session),
-      headers: req.headers
+      sessionKeys: Object.keys(req.session)
+    });
+
+    // Add regenerate method
+    if (!req.session.regenerate) {
+      req.session.regenerate = (callback: (err?: any) => void) => {
+        console.log('Regenerating session');
+        // Store current session data
+        const oldSession = { ...req.session };
+        
+        // Clear session data
+        Object.keys(req.session).forEach(key => {
+          if (key !== 'regenerate' && key !== 'save') {
+            delete req.session[key];
+          }
+        });
+
+        console.log('Session regenerated:', {
+          before: oldSession,
+          after: req.session
+        });
+        
+        callback();
+      };
+    }
+
+    // Add save method
+    if (!req.session.save) {
+      req.session.save = (callback: (err?: any) => void) => {
+        console.log('Saving session:', {
+          sessionData: { ...req.session }
+        });
+        callback();
+      };
+    }
+
+    // Log final session state
+    console.log('Session state after:', {
+      hasSession: !!req.session,
+      sessionKeys: Object.keys(req.session)
     });
   }
   next();
