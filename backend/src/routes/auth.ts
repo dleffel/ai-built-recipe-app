@@ -28,6 +28,14 @@ router.get('/google/callback',
       session: req.session,
       cookies: req.cookies
     });
+
+    // Monitor Set-Cookie header
+    const originalSetHeader = res.setHeader;
+    res.setHeader = function(name: string, value: any) {
+      console.log(`[Callback] Setting header ${name}:`, value);
+      return originalSetHeader.apply(this, [name, value]);
+    };
+
     next();
   },
   passport.authenticate('google', {
@@ -36,6 +44,13 @@ router.get('/google/callback',
   async (req: Request, res: Response) => {
     try {
       console.log('Passport authentication successful, session:', req.session);
+      
+      // Log response headers before any redirects
+      console.log('Response headers before redirect:', {
+        headers: res.getHeaders(),
+        cookies: req.headers.cookie,
+        host: req.headers.host
+      });
       
       // Ensure user is properly logged in
       if (!req.user) {

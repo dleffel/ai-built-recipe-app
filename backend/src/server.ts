@@ -39,7 +39,29 @@ console.log('Cookie session configuration:', {
 // Session middleware
 app.use(cookieSession(cookieConfig));
 
+// Log cookie-session details after middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const originalSetHeader = res.setHeader;
+  res.setHeader = function(name: string, value: any) {
+    console.log(`Setting header ${name}:`, value);
+    return originalSetHeader.apply(this, [name, value]);
+  };
+  
+  // Log cookie details
+  console.log('Cookie-session middleware details:', {
+    sessionId: req.session?.id,
+    cookieHeader: req.headers.cookie,
+    cookieDomain: cookieConfig.domain,
+    host: req.headers.host,
+    secure: cookieConfig.secure,
+    sameSite: cookieConfig.sameSite
+  });
+  
+  next();
+});
+
 // Enhanced logging middleware for all requests
+=======
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log('Request received:', {
     path: req.path,
