@@ -67,13 +67,19 @@ router.get('/google/callback',
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
 
-      // Log state before redirect
-      console.log('State before redirect:', {
+      // Log detailed cookie state before redirect
+      console.log('Cookie state before redirect:', {
         session: req.session,
         user: req.user,
         headers: {
           request: req.headers,
           response: res.getHeaders()
+        },
+        setCookieHeader: res.getHeader('set-cookie'),
+        cookieConfig: {
+          domain: process.env.NODE_ENV === 'production' ? '.recipes.dannyleffel.com' : undefined,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
         }
       });
       
