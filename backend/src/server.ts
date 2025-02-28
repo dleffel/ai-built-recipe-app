@@ -61,7 +61,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Enhanced logging middleware for all requests
-=======
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log('Request received:', {
     path: req.path,
