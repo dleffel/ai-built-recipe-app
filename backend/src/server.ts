@@ -26,9 +26,10 @@ const cookieConfig = {
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
-  domain: process.env.NODE_ENV === 'production' ? '.recipes.dannyleffel.com' : undefined,
+  domain: process.env.NODE_ENV === 'production' ? 'api.recipes.dannyleffel.com' : undefined,
   path: '/',
-  httpOnly: true
+  httpOnly: true,
+  signed: true
 };
 
 console.log('Cookie session configuration:', {
@@ -47,14 +48,24 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     return originalSetHeader.apply(this, [name, value]);
   };
   
-  // Log cookie details
-  console.log('Cookie-session middleware details:', {
+  // Log detailed cookie-session state
+  console.log('Cookie-session detailed state:', {
+    env: process.env.NODE_ENV,
     sessionId: req.session?.id,
     cookieHeader: req.headers.cookie,
-    cookieDomain: cookieConfig.domain,
-    host: req.headers.host,
-    secure: cookieConfig.secure,
-    sameSite: cookieConfig.sameSite
+    cookieConfig: {
+      domain: cookieConfig.domain,
+      secure: cookieConfig.secure,
+      sameSite: cookieConfig.sameSite,
+      path: cookieConfig.path,
+      httpOnly: cookieConfig.httpOnly
+    },
+    request: {
+      host: req.headers.host,
+      origin: req.headers.origin,
+      protocol: req.protocol,
+      secure: req.secure
+    }
   });
   
   next();
