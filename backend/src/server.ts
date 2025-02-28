@@ -27,7 +27,8 @@ const cookieConfig = {
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
   domain: process.env.NODE_ENV === 'production' ? '.recipes.dannyleffel.com' : undefined,
-  path: '/'
+  path: '/',
+  httpOnly: true
 };
 
 console.log('Cookie session configuration:', {
@@ -38,29 +39,96 @@ console.log('Cookie session configuration:', {
 // Session middleware
 app.use(cookieSession(cookieConfig));
 
-// Log all response headers for /auth routes
-app.use('/auth', (req, res, next) => {
-  const originalSend = res.send;
-  res.send = function(...args) {
-    console.log('Response headers for', req.path, ':', res.getHeaders());
-    return originalSend.apply(res, args);
-  };
+// Enhanced logging middleware for all requests
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log('Request received:', {
+    path: req.path,
+    method: req.method,
+    hasSession: !!req.session,
+    sessionId: req.session?.id,
+    cookies: req.headers.cookie
+  });
   next();
 });
 
-// Add regenerate and save functions to session
+// Log request and response for /auth routes
+app.use('/auth', (req, res, next) => {
+  // Log incoming request
+  console.log('Auth request received:', {
+    path: req.path,
+    method: req.method,
+    headers: req.headers,
+    hasSession: !!req.session,
+    sessionId: req.session?.id
+  });
+
+  // Log response when it's finished
+  res.on('finish', () => {
+    console.log('Auth response finished:', {
+      path: req.path,
+      statusCode: res.statusCode,
+      headers: res.getHeaders(),
+      hasSession: !!req.session,
+      sessionId: req.session?.id,
+      sessionContent: req.session
+    });
+  });
+
+  next();
+});
+
+// Add regenerate and save functions to session with logging
 app.use((req: any, res: Response, next: NextFunction) => {
-  /* istanbul ignore next */
-  if (req.session && !req.session.regenerate) {
-    req.session.regenerate = (cb: () => void) => {
-      cb();
-    };
-  }
-  /* istanbul ignore next */
-  if (req.session && !req.session.save) {
-    req.session.save = (cb: () => void) => {
-      cb();
-    };
+  if (req.session) {
+    if (!req.session.regenerate) {
+      req.session.regenerate = (cb: (err?: Error) => void) => {
+        console.log('Session regenerate called:', {
+          path: req.path,
+          sessionId: req.session?.id
+        });
+        
+        // Store current session data
+        const oldData = { ...req.session };
+        
+        // Clear and reinitialize session
+        Object.keys(req.session).forEach(key => {
+          if (key !== 'regenerate' && key !== 'save') {
+            delete req.session[key];
+          }
+        });
+        
+        console.log('Session regenerated:', {
+          path: req.path,
+          oldSessionId: oldData.id,
+          newSessionId: req.session?.id
+        });
+        
+        cb();
+      };
+    }
+
+    if (!req.session.save) {
+      req.session.save = (cb: (err?: Error) => void) => {
+        console.log('Session save called:', {
+          path: req.path,
+          sessionId: req.session?.id,
+          sessionData: { ...req.session }
+        });
+        
+        // Ensure session data is properly set in the store
+        if (req.session.isNew) {
+          req.session.isNew = false;
+        }
+        
+        console.log('Session saved:', {
+          path: req.path,
+          sessionId: req.session?.id,
+          sessionData: { ...req.session }
+        });
+        
+        cb();
+      };
+    }
   }
   next();
 });

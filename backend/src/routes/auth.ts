@@ -47,6 +47,31 @@ router.get('/google/callback',
       // Update last login time
       await UserService.updateLastLogin(req.user.id);
       
+      // Explicitly save session before redirect
+      if (!req.session) {
+        console.error('No session object available');
+        res.redirect('https://recipes.dannyleffel.com?error=session_error');
+        return;
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        req.session!.save((err: Error | null) => {
+          if (err) {
+            console.error('Session save error:', err);
+            reject(err);
+            return;
+          }
+          console.log('Session saved successfully:', {
+            session: req.session,
+            headers: res.getHeaders()
+          });
+          resolve();
+        });
+      });
+
+      // Log final response headers before redirect
+      console.log('Final response headers:', res.getHeaders());
+      
       // Redirect to frontend with success
       res.redirect('https://recipes.dannyleffel.com');
     } catch (error) {
