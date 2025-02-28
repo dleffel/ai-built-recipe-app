@@ -62,6 +62,21 @@ router.get('/google/callback',
       // Update last login time
       await UserService.updateLastLogin(req.user.id);
       
+      // Ensure session is saved before redirect
+      if (req.session) {
+        await new Promise<void>((resolve, reject) => {
+          req.session!.save((err: Error | null) => {
+            if (err) {
+              console.error('Error saving session:', err);
+              reject(err);
+              return;
+            }
+            console.log('Session saved successfully');
+            resolve();
+          });
+        });
+      }
+      
       // Set cache control headers
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       res.setHeader('Pragma', 'no-cache');
