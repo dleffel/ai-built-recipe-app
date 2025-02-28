@@ -19,16 +19,34 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
-app.use(cookieSession({
+// Log cookie configuration
+const cookieConfig = {
   name: 'session',
   keys: [serverConfig.sessionSecret],
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
   secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
   domain: process.env.NODE_ENV === 'production' ? 'api.recipes.dannyleffel.com' : undefined,
   path: '/'
-}));
+};
+
+console.log('Cookie session configuration:', {
+  ...cookieConfig,
+  keys: '[REDACTED]' // Don't log the secret key
+});
+
+// Session middleware
+app.use(cookieSession(cookieConfig));
+
+// Log all response headers for /auth routes
+app.use('/auth', (req, res, next) => {
+  const originalSend = res.send;
+  res.send = function(...args) {
+    console.log('Response headers for', req.path, ':', res.getHeaders());
+    return originalSend.apply(res, args);
+  };
+  next();
+});
 
 // Add regenerate and save functions to session
 app.use((req: any, res: Response, next: NextFunction) => {

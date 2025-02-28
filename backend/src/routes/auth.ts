@@ -22,11 +22,21 @@ router.get('/google', passport.authenticate('google', {
 
 /* istanbul ignore next */
 router.get('/google/callback',
+  (req: Request, res: Response, next: NextFunction) => {
+    console.log('Google callback received:', {
+      headers: req.headers,
+      session: req.session,
+      cookies: req.cookies
+    });
+    next();
+  },
   passport.authenticate('google', {
     failureRedirect: 'https://recipes.dannyleffel.com?error=auth_failed'
   }),
   async (req: Request, res: Response) => {
     try {
+      console.log('Passport authentication successful, session:', req.session);
+      
       // Ensure user is properly logged in
       if (!req.user) {
         console.error('No user in request after Google authentication');
