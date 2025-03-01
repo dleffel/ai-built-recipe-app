@@ -9,6 +9,9 @@ import { prisma } from './lib/prisma';
 
 const app = express();
 
+// Trust proxy - needed for secure cookies behind a proxy
+app.set('trust proxy', 1);
+
 // Enable CORS with credentials
 app.use(cors({
   origin: serverConfig.clientUrl,
