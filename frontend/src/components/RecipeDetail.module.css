@@ -1,37 +1,46 @@
 .container {
-  max-width: 800px;
+  width: var(--content-width);
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0 var(--page-margin);
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .backButton {
+  font-family: var(--font-ui);
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: var(--spacing-2) 0;
   background: none;
   border: none;
-  color: #4a90e2;
-  font-size: 1rem;
+  color: var(--kindle-muted);
+  font-size: var(--font-size-base);
   cursor: pointer;
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-4);
+  border-bottom: 1px solid transparent;
 }
 
 .backButton:hover {
-  color: #357abd;
+  color: var(--kindle-active);
+  border-bottom-color: var(--kindle-active);
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
+  text-align: center;
+  margin-bottom: var(--spacing-6);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--kindle-border);
 }
 
 .title {
   margin: 0;
-  font-size: 2rem;
-  color: #333;
-  flex: 1;
+  font-family: var(--font-content);
+  font-size: 1.75rem;
+  color: var(--kindle-text);
+  font-weight: 600;
+  line-height: var(--line-height-content);
+  padding: 0;
 }
 
 .actions {
@@ -41,175 +50,262 @@
 
 .editButton,
 .deleteButton {
-  padding: 0.5rem 1rem;
+  font-family: var(--font-ui);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: none;
   border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
+  border-bottom: 1px solid transparent;
+  font-size: var(--font-size-base);
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  color: var(--kindle-muted);
 }
 
-.editButton {
-  background-color: #4a90e2;
-  color: white;
-}
-
-.editButton:hover {
-  background-color: #357abd;
-}
-
-.deleteButton {
-  background-color: #e25c5c;
-  color: white;
-}
-
+.editButton:hover,
 .deleteButton:hover {
-  background-color: #d43d3d;
+  color: var(--kindle-active);
+  border-bottom-color: var(--kindle-active);
 }
 
 .imageContainer {
   width: 100%;
   max-height: 400px;
   overflow: hidden;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-5);
 }
 
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: grayscale(100%);
 }
 
 .section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-5);
 }
 
 .section h2 {
-  color: #333;
-  margin-bottom: 1rem;
+  font-family: var(--font-content);
+  color: var(--kindle-text);
+  margin-bottom: var(--spacing-4);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: left;
+  padding-bottom: var(--spacing-2);
 }
 
 .description {
-  font-size: 1.125rem;
-  line-height: 1.6;
-  color: #666;
-  margin-bottom: 2rem;
+  font-family: var(--font-content);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-content);
+  color: var(--kindle-text);
+  margin: var(--spacing-4) 0;
+  text-align: justify;
+  hyphens: auto;
 }
 
 .metadata {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin: var(--spacing-5) 0;
+  padding: var(--spacing-4) 0;
+  border-top: 1px solid var(--kindle-border);
+  border-bottom: 1px solid var(--kindle-border);
 }
 
 .metaItem {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: baseline;
+  gap: var(--spacing-3);
 }
 
 .metaLabel {
-  font-weight: 500;
-  color: #666;
-  font-size: 0.875rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  color: var(--kindle-muted);
+  font-size: var(--font-size-base);
+  min-width: 120px;
 }
 
 .sourceLink {
-  color: #4a90e2;
+  color: var(--kindle-text);
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: var(--font-size-base);
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--spacing-2);
+  border-bottom: 1px solid transparent;
+  font-family: var(--font-ui);
 }
 
 .sourceLink:hover {
-  color: #357abd;
-  text-decoration: underline;
+  color: var(--kindle-active);
+  border-bottom-color: var(--kindle-active);
 }
 
 .sourceLink::after {
-  content: "↗";
-  font-size: 0.75rem;
+  content: "→";
+  font-size: var(--font-size-base);
+  color: currentColor;
 }
 
 .ingredients {
+  font-family: var(--font-content);
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: var(--spacing-6) 0;
+  border-bottom: 1px solid var(--kindle-border);
+  padding-bottom: var(--spacing-4);
 }
 
 .ingredient {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
-  color: #333;
+  padding: var(--spacing-2) 0;
+  color: var(--kindle-text);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-content);
+  position: relative;
+  padding-left: var(--spacing-4);
 }
 
-.ingredient:last-child {
-  border-bottom: none;
+.ingredient::before {
+  content: "•";
+  position: absolute;
+  left: var(--spacing-2);
+  color: var(--kindle-muted);
+  font-family: var(--font-ui);
 }
 
 .instructions {
-  color: #333;
-  line-height: 1.6;
+  font-family: var(--font-content);
+  color: var(--kindle-text);
+  line-height: var(--line-height-content);
   list-style-position: outside;
-  padding-left: 2rem;
+  padding: var(--spacing-4) 0;
   counter-reset: step-counter;
+  margin: var(--spacing-6) 0;
 }
 
 .instruction {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-4);
   position: relative;
-  padding-left: 0.5rem;
+  padding-left: var(--spacing-5);
+  font-size: var(--font-size-base);
+  text-align: left;
+  counter-increment: step-counter;
 }
 
-.instruction::marker {
-  color: var(--primary-color, #4a90e2);
-  font-weight: bold;
+.instruction::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 0;
+  color: var(--kindle-muted);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-base);
 }
 
 .instruction:last-child {
   margin-bottom: 0;
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--kindle-border);
 }
 
 .footer {
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-4);
+  font-family: var(--font-ui);
+  text-align: center;
+  position: relative;
+  border-top: 1px solid var(--kindle-border);
+}
+
+.footer::before {
+  content: "• • •";
+  position: absolute;
+  top: var(--spacing-4);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--kindle-muted);
+  font-size: var(--font-size-base);
+  letter-spacing: 0.75rem;
+  font-family: var(--font-content);
 }
 
 .dates {
   display: flex;
-  justify-content: space-between;
-  color: #666;
-  font-size: 0.875rem;
+  justify-content: center;
+  gap: var(--spacing-4);
+  color: var(--kindle-muted);
+  font-size: var(--font-size-base);
+  font-style: italic;
+  margin-top: var(--spacing-6);
+  font-family: var(--font-content);
 }
 
 @media (max-width: 768px) {
   .container {
-    padding: 1rem;
-  }
-
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .actions {
+    padding: 0 var(--page-margin);
     width: 100%;
   }
 
-  .editButton,
-  .deleteButton {
-    flex: 1;
+  .header {
+    text-align: left;
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-3);
+  }
+
+  .title {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-content);
+    padding: 0;
+  }
+
+  .actions {
+    justify-content: flex-start;
+    gap: var(--spacing-4);
+  }
+
+  .description,
+  .instruction {
+    text-align: left;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-content);
   }
 
   .metadata {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    margin: var(--spacing-4) 0;
+    padding: var(--spacing-3) 0;
+  }
+
+  .metaItem {
+    padding: var(--spacing-2) 0;
+    border-bottom: 1px solid var(--kindle-border);
+  }
+
+  .metaItem:last-child {
+    border-bottom: none;
+  }
+
+  .instructions {
+    padding: var(--spacing-3) 0;
+  }
+
+  .ingredient {
+    padding: var(--spacing-2) 0;
+    padding-left: var(--spacing-4);
+  }
+
+  .dates {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-4);
+  }
+
+  .footer::before {
+    top: var(--spacing-3);
   }
 }

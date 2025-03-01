@@ -1,68 +1,54 @@
 .form {
-  max-width: 800px;
+  max-width: var(--content-width);
   margin: 0 auto;
-  padding: var(--spacing-5);
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--gray-200);
+  padding: var(--spacing-4) var(--page-margin);
+  background: var(--kindle-bg);
   animation: formSlideUp 0.4s ease-out;
   width: 100%;
   box-sizing: border-box;
+  font-family: var(--font-content);
 }
 
 .importSection {
-  margin-bottom: var(--spacing-5);
-  padding: var(--spacing-4);
-  border-radius: var(--radius-md);
-  background: var(--gray-50);
+  margin: var(--spacing-5) 0;
+  padding: var(--spacing-4) 0;
   text-align: center;
-  border: 2px dashed var(--gray-300);
-  transition: all 0.2s ease;
+  border-top: 1px solid var(--kindle-border);
+  border-bottom: 1px solid var(--kindle-border);
   width: 100%;
   box-sizing: border-box;
-}
-
-.importSection:hover {
-  border-color: var(--primary-color);
-  background: var(--gray-100);
-  transform: translateY(-1px);
+  font-family: var(--font-ui);
 }
 
 .importButton {
   padding: var(--spacing-3) var(--spacing-4);
-  background: linear-gradient(to bottom right, var(--secondary-color), var(--secondary-dark));
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
+  background: none;
+  color: var(--kindle-text);
+  border: 1px solid var(--kindle-border);
+  font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
-  box-shadow: var(--shadow-sm);
   min-height: 44px;
   box-sizing: border-box;
+  font-family: var(--font-ui);
 }
 
 .importButton:hover:not(:disabled) {
-  background: linear-gradient(to bottom right, var(--secondary-light), var(--secondary-color));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  color: var(--kindle-active);
 }
 
 .importButton:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--kindle-border);
 }
 
 .importButton:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  background: var(--gray-400);
-  box-shadow: none;
+  color: var(--kindle-muted);
 }
 
 .field {
@@ -76,27 +62,28 @@
   display: block;
   margin-bottom: var(--spacing-2);
   font-weight: 600;
-  color: var(--gray-800);
-  font-size: 1rem;
-  transition: color 0.2s ease;
+  color: var(--kindle-text);
+  font-size: var(--font-size-base);
+  font-family: var(--font-ui);
 }
 
 .field:focus-within label {
-  color: var(--primary-color);
+  color: var(--kindle-active);
 }
 
 .field input,
 .field textarea {
   width: 100%;
-  padding: var(--spacing-3);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  transition: all 0.2s ease-in-out;
-  background-color: white;
-  color: var(--gray-900);
+  padding: var(--spacing-3) 0;
+  border: none;
+  border-bottom: 1px solid var(--kindle-border);
+  font-size: var(--font-size-base);
+  transition: border-color 0.2s ease-in-out;
+  background-color: transparent;
+  color: var(--kindle-text);
   min-height: 44px;
   box-sizing: border-box;
+  font-family: var(--font-content);
 }
 
 .field textarea {
@@ -106,16 +93,13 @@
 
 .field input:hover,
 .field textarea:hover {
-  border-color: var(--gray-400);
-  background-color: var(--gray-50);
+  border-color: var(--kindle-active);
 }
 
 .field input:focus,
 .field textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.15);
-  background-color: white;
+  border-color: var(--kindle-active);
 }
 
 .row {
@@ -127,49 +111,28 @@
   box-sizing: border-box;
 }
 
-.ingredientRow {
-  display: flex;
-  gap: var(--spacing-3);
-  margin-bottom: var(--spacing-3);
-  align-items: flex-start;
-  padding: var(--spacing-3);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  background: var(--gray-50);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.ingredientRow:hover,
-.instructionRow:hover {
-  background: var(--gray-100);
-  transform: translateX(4px);
-}
-
+.ingredientRow,
 .instructionRow {
   display: flex;
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-3);
   align-items: flex-start;
-  padding: var(--spacing-3);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  background: var(--gray-50);
+  padding: var(--spacing-3) 0;
+  border-bottom: 1px solid var(--kindle-border);
   width: 100%;
   box-sizing: border-box;
+  font-family: var(--font-content);
 }
 
 .stepNumber {
-  background: var(--primary-color);
-  color: white;
+  color: var(--kindle-muted);
   width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-weight: bold;
+  font-weight: 600;
+  font-family: var(--font-ui);
 }
 
 .instructionRow textarea {
@@ -178,76 +141,62 @@
 }
 
 .removeButton {
-  padding: var(--spacing-2) var(--spacing-3);
-  background: linear-gradient(to bottom right, var(--error-color), #d32f2f);
-  color: white;
+  padding: var(--spacing-2);
+  background: none;
+  color: var(--kindle-muted);
   border: none;
-  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  font-size: 0.875rem;
-  box-shadow: var(--shadow-sm);
+  transition: color 0.2s ease-in-out;
+  font-size: var(--font-size-base);
   min-height: 44px;
   min-width: 44px;
   box-sizing: border-box;
+  font-family: var(--font-ui);
 }
 
 .removeButton:hover:not(:disabled) {
-  background: linear-gradient(to bottom right, #f44336, var(--error-color));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.removeButton:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  color: var(--kindle-active);
 }
 
 .removeButton:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  background: var(--gray-400);
-  box-shadow: none;
+  color: var(--kindle-border);
 }
 
 .addButton {
   padding: var(--spacing-2) var(--spacing-3);
-  background: linear-gradient(to bottom right, var(--primary-color), var(--primary-dark));
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
+  background: none;
+  color: var(--kindle-text);
+  border: 1px solid var(--kindle-border);
   cursor: pointer;
   margin-top: var(--spacing-3);
-  transition: all 0.2s ease-in-out;
-  font-size: 0.875rem;
+  transition: color 0.2s ease-in-out;
+  font-size: var(--font-size-base);
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
-  box-shadow: var(--shadow-sm);
   min-height: 44px;
   box-sizing: border-box;
+  font-family: var(--font-ui);
 }
 
 .addButton:hover {
-  background: linear-gradient(to bottom right, var(--primary-light), var(--primary-color));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  color: var(--kindle-active);
 }
 
 .addButton:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--kindle-border);
 }
 
 .error {
-  color: var(--error-color);
+  color: var(--kindle-text);
   margin-bottom: var(--spacing-3);
-  padding: var(--spacing-3);
-  background-color: #fdeded;
-  border-radius: var(--radius-md);
-  border: 1px solid #fcd0d0;
-  font-size: 0.875rem;
-  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  padding: var(--spacing-3) 0;
+  font-size: var(--font-size-base);
+  font-family: var(--font-ui);
+  font-style: italic;
+  border-bottom: 1px solid var(--kindle-border);
   width: 100%;
   box-sizing: border-box;
 }
@@ -255,10 +204,10 @@
 .buttons {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-3);
+  gap: var(--spacing-4);
   margin-top: var(--spacing-5);
   padding-top: var(--spacing-4);
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--kindle-border);
   width: 100%;
   box-sizing: border-box;
 }
@@ -266,56 +215,39 @@
 .cancelButton,
 .submitButton {
   padding: var(--spacing-3) var(--spacing-4);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
+  background: none;
+  border: 1px solid var(--kindle-border);
+  font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out;
   min-width: 120px;
   min-height: 44px;
   box-sizing: border-box;
+  font-family: var(--font-ui);
 }
 
 .cancelButton {
-  background: var(--gray-200);
-  color: var(--gray-700);
+  color: var(--kindle-muted);
 }
 
 .cancelButton:hover:not(:disabled) {
-  background: var(--gray-300);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.cancelButton:active:not(:disabled) {
-  transform: translateY(0);
+  color: var(--kindle-active);
 }
 
 .submitButton {
-  background: linear-gradient(to bottom right, var(--primary-color), var(--primary-dark));
-  color: white;
-  box-shadow: var(--shadow-sm);
+  color: var(--kindle-text);
 }
 
 .submitButton:hover:not(:disabled) {
-  background: linear-gradient(to bottom right, var(--primary-light), var(--primary-color));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.submitButton:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  color: var(--kindle-active);
 }
 
 .cancelButton:disabled,
 .submitButton:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  background: var(--gray-400);
-  transform: none;
-  box-shadow: none;
+  color: var(--kindle-border);
 }
 
 @keyframes formSlideUp {
@@ -346,15 +278,27 @@
 
 @media (max-width: 768px) {
   .form {
-    padding: var(--spacing-3);
-    margin: 0;
-    border-radius: var(--radius-md);
+    padding: var(--spacing-3) var(--page-margin);
     width: 100%;
   }
 
   .importSection {
-    padding: var(--spacing-3);
-    margin-bottom: var(--spacing-4);
+    margin: var(--spacing-4) calc(var(--page-margin) * -1);
+    padding: var(--spacing-4) var(--page-margin);
+    text-align: left;
+    background-color: var(--kindle-bg);
+    border-top: 1px solid var(--kindle-border);
+    border-bottom: 1px solid var(--kindle-border);
+  }
+
+  .importButton {
+    width: 100%;
+    justify-content: center;
+    margin-top: var(--spacing-2);
+    padding: var(--spacing-3) 0;
+    border: none;
+    border-bottom: 1px solid var(--kindle-border);
+    font-size: var(--font-size-base);
   }
 
   .row {
@@ -362,46 +306,52 @@
     gap: var(--spacing-3);
   }
 
-  .ingredientRow {
+  .ingredientRow,
+  .instructionRow {
     flex-direction: column;
     gap: var(--spacing-2);
-    padding: var(--spacing-3);
+    padding: var(--spacing-3) 0;
     width: 100%;
   }
 
-  .ingredientRow .field {
+  .field {
     width: 100%;
-  }
-
-  .buttons {
-    flex-direction: column-reverse;
-    gap: var(--spacing-2);
-    margin-top: var(--spacing-4);
-    padding-top: var(--spacing-3);
-    width: 100%;
-  }
-
-  .cancelButton,
-  .submitButton,
-  .addButton,
-  .removeButton,
-  .importButton {
-    width: 100%;
-    min-width: auto;
-    padding: var(--spacing-3);
-    font-size: 1rem;
-    justify-content: center;
   }
 
   .field input,
   .field textarea {
-    padding: var(--spacing-3);
+    padding: var(--spacing-2) 0;
     font-size: 16px; /* Prevents iOS zoom on focus */
     width: 100%;
   }
 
   .field label {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
     margin-bottom: var(--spacing-2);
+  }
+
+  .buttons {
+    flex-direction: column-reverse;
+    gap: var(--spacing-3);
+    margin: var(--spacing-4) calc(var(--page-margin) * -1) 0;
+    padding: var(--spacing-4) var(--page-margin) 0;
+    border-top: 1px solid var(--kindle-border);
+  }
+
+  .cancelButton,
+  .submitButton,
+  .addButton {
+    width: 100%;
+    min-width: auto;
+    padding: var(--spacing-3) 0;
+    justify-content: center;
+    border: none;
+    border-bottom: 1px solid var(--kindle-border);
+    font-size: var(--font-size-base);
+  }
+
+  .removeButton {
+    padding: var(--spacing-2);
+    margin-top: var(--spacing-1);
   }
 }

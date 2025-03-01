@@ -1,55 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+
 :root {
-  --primary-color: #4285f4;
-  --primary-dark: #3367d6;
-  --primary-light: #7aa9f7;
-  --secondary-color: #34a853;
-  --secondary-dark: #2d8544;
-  --secondary-light: #5bc176;
-  --error-color: #ea4335;
-  --gray-50: #fafbfc;
-  --gray-100: #f8f9fa;
-  --gray-200: #e9ecef;
-  --gray-300: #dee2e6;
-  --gray-400: #ced4da;
-  --gray-500: #adb5bd;
-  --gray-600: #6c757d;
-  --gray-700: #495057;
-  --gray-800: #343a40;
-  --gray-900: #212529;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px rgba(16, 24, 40, 0.1);
-  --shadow-lg: 0 8px 16px rgba(16, 24, 40, 0.12);
-  --shadow-xl: 0 12px 24px rgba(16, 24, 40, 0.15);
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Kindle colors - strictly grayscale */
+  --kindle-bg: #F2F2E9;
+  --kindle-text: #2C2C2C;
+  --kindle-muted: #595959;
+  --kindle-border: #D9D9D9;
+  --kindle-active: #4D4D4D;
+  
+  /* Spacing */
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
   --spacing-3: 1rem;
   --spacing-4: 1.5rem;
   --spacing-5: 2rem;
   --spacing-6: 2.5rem;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --max-width: 1200px;
+  
+  /* Typography */
+  --font-content: 'Crimson Pro', 'Bookerly', Georgia, serif;
+  --font-ui: -apple-system, 'Amazon Ember', sans-serif;
+  --line-height-content: 1.8;
+  --font-size-base: 1.125rem;
+  
+  /* Layout */
+  --page-margin: 1.5rem;
+  --content-width: calc(100% - (var(--page-margin) * 2));
+}
+
+/* Kindle paper texture */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--kindle-bg);
+  color: var(--kindle-text);
+  font-family: var(--font-content);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-content);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--kindle-bg);
+  opacity: 0.15;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  filter: contrast(100%) brightness(100%);
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
 }
 
 .App {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--gray-50);
-  font-family: var(--font-sans);
-  color: var(--gray-900);
+  position: relative;
+  z-index: 1;
+  background: transparent;
 }
 
 .App-header {
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--gray-900);
-  border-bottom: 1px solid var(--gray-200);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-family: var(--font-ui);
+  color: var(--kindle-text);
+  border-bottom: 1px solid var(--kindle-border);
   position: relative;
-  z-index: 10;
   height: 48px;
+  padding: 0 var(--page-margin);
+  margin-bottom: var(--spacing-4);
+  background: transparent;
 }
 
 .header-content {
@@ -74,20 +100,22 @@
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--kindle-text);
   line-height: 1;
+  font-family: var(--font-content);
 }
 
 .breadcrumb {
-  color: var(--gray-600);
+  color: var(--kindle-muted);
   font-size: 0.875rem;
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  font-family: var(--font-ui);
 }
 
 .breadcrumb span {
-  color: var(--gray-900);
+  color: var(--kindle-text);
   font-weight: 500;
 }
 
@@ -101,12 +129,10 @@
 
 .App-main {
   flex: 1;
-  padding: var(--spacing-5);
-  max-width: var(--max-width);
-  margin: 0 auto;
   width: 100%;
   animation: fadeIn 0.3s ease-out;
   box-sizing: border-box;
+  background: transparent;
 }
 
 .loading {
@@ -114,101 +140,74 @@
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: var(--gray-600);
-  font-size: 1.125rem;
-  animation: pulse 2s infinite;
+  color: var(--kindle-muted);
+  font-size: var(--font-size-base);
+  font-family: var(--font-ui);
+  font-style: italic;
 }
 
 .login-message {
   text-align: center;
-  padding: var(--spacing-6);
-  color: var(--gray-700);
-  font-size: 1.25rem;
-  max-width: 600px;
+  padding: var(--spacing-6) var(--page-margin);
+  color: var(--kindle-text);
+  font-size: var(--font-size-base);
+  max-width: var(--content-width);
   margin: var(--spacing-6) auto;
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--gray-200);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.login-message:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  font-family: var(--font-content);
+  line-height: var(--line-height-content);
 }
 
 .welcome-message {
   text-align: center;
   margin-bottom: var(--spacing-5);
-  color: var(--gray-800);
+  color: var(--kindle-text);
   font-size: 1.75rem;
   font-weight: 600;
   line-height: 1.3;
+  font-family: var(--font-content);
   animation: slideDown 0.5s ease-out;
 }
 
 .recipe-container {
   width: 100%;
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: var(--spacing-4);
-  border: 1px solid var(--gray-200);
-  transition: box-shadow 0.2s ease;
+  padding: 0;
   box-sizing: border-box;
-}
-
-.recipe-container:hover {
-  box-shadow: var(--shadow-lg);
+  background: transparent;
 }
 
 .recipe-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-5);
-  padding-bottom: var(--spacing-4);
-  border-bottom: 1px solid var(--gray-200);
+  justify-content: flex-end;
+  padding: 0 var(--page-margin);
+  margin-bottom: var(--spacing-4);
   width: 100%;
   box-sizing: border-box;
-}
-
-.recipe-header h2 {
-  margin: 0;
-  color: var(--gray-900);
-  font-size: 1.875rem;
-  font-weight: 600;
-  line-height: 1.3;
+  background: transparent;
 }
 
 .create-button {
   padding: var(--spacing-3) var(--spacing-4);
-  background: linear-gradient(to bottom right, var(--secondary-color), var(--secondary-dark));
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
+  background: transparent;
+  color: var(--kindle-text);
+  border: 1px solid var(--kindle-border);
+  font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
-  box-shadow: var(--shadow-sm);
-  width: auto;
-  box-sizing: border-box;
+  font-family: var(--font-ui);
 }
 
 .create-button:hover {
-  background: linear-gradient(to bottom right, var(--secondary-light), var(--secondary-color));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  color: var(--kindle-active);
+  border-color: var(--kindle-active);
 }
 
 .create-button:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--kindle-border);
+  color: var(--kindle-active);
 }
 
 @keyframes fadeIn {
@@ -235,11 +234,16 @@
 
 @media (max-width: 768px) {
   .header-content {
-    padding: 0 var(--spacing-2);
+    padding: 0;
+  }
+
+  .App-header {
+    padding: 0 var(--page-margin);
   }
 
   .App-header h1 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
+    color: var(--kindle-text);
   }
 
   .breadcrumb {
@@ -247,50 +251,40 @@
   }
 
   .App-main {
-    padding: var(--spacing-3);
     width: 100%;
-    box-sizing: border-box;
+    padding: 0;
   }
 
   .recipe-container {
-    padding: var(--spacing-3);
-    margin-bottom: var(--spacing-3);
+    padding: 0;
+    margin-bottom: var(--spacing-4);
     width: 100%;
-    box-sizing: border-box;
   }
 
   .recipe-header {
-    flex-direction: column;
-    gap: var(--spacing-3);
-    text-align: center;
-    margin-bottom: var(--spacing-3);
-    padding-bottom: var(--spacing-3);
-    width: 100%;
-  }
-
-  .recipe-header h2 {
-    font-size: 1.5rem;
-    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-3) var(--page-margin);
+    margin: 0;
   }
 
   .create-button {
     width: 100%;
     justify-content: center;
-    padding: var(--spacing-3);
-    font-size: 1.125rem;
-    box-sizing: border-box;
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-base);
+    font-family: var(--font-ui);
   }
 
   .login-message {
-    margin: var(--spacing-4) auto;
-    padding: var(--spacing-4);
-    width: calc(100% - var(--spacing-4));
-    box-sizing: border-box;
+    margin: var(--spacing-4) var(--page-margin);
+    padding: 0;
+    width: auto;
+    font-size: var(--font-size-base);
   }
 
   .welcome-message {
     font-size: 1.5rem;
-    margin-bottom: var(--spacing-4);
-    width: 100%;
+    margin: var(--spacing-4) var(--page-margin);
+    width: auto;
   }
 }
