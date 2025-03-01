@@ -91,9 +91,8 @@ const AppContent: React.FC = () => {
       case 'list':
       default:
         return (
-          <div className="recipe-container">
+          <>
             <div className="recipe-header">
-              <h2>My Recipes</h2>
               <button
                 onClick={() => setCurrentView({ type: 'create' })}
                 className="create-button"
@@ -112,7 +111,7 @@ const AppContent: React.FC = () => {
               }}
               onRecipeDelete={handleDeleteRecipe}
             />
-          </div>
+          </>
         );
     }
   };
