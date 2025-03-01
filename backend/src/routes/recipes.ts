@@ -16,6 +16,12 @@ const requireAuth: RequestHandler = (req, res, next) => {
 
 // Extract recipe from URL
 const extractRecipeFromUrl: RequestHandler = async (req, res) => {
+  console.log('[DEBUG] Recipe extraction request received:', {
+    path: req.path,
+    fullUrl: req.originalUrl,
+    method: req.method,
+    body: req.body
+  });
   try {
     const { url } = req.body;
     if (!url) {

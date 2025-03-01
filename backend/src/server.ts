@@ -78,10 +78,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log('Request received:', {
     path: req.path,
+    fullUrl: req.originalUrl,
     method: req.method,
     hasSession: !!req.session,
     sessionId: req.session?.id,
-    cookies: req.headers.cookie
+    cookies: req.headers.cookie,
+    body: req.method === 'POST' ? req.body : undefined,
+    headers: {
+      ...req.headers,
+      cookie: undefined // Don't log full cookie contents
+    }
   });
   next();
 });
