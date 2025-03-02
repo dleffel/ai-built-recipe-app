@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 :root {
   /* Kindle colors - strictly grayscale */
   --kindle-bg: #F2F2E9;
@@ -28,9 +32,14 @@
 }
 
 /* Kindle paper texture */
-body {
+html, body {
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
   background-color: var(--kindle-bg);
   color: var(--kindle-text);
   font-family: var(--font-content);
