@@ -2,6 +2,26 @@ import '@testing-library/jest-dom';
 import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { jest, beforeAll, afterAll } from '@jest/globals';
 
+// Polyfill TextEncoder/TextDecoder for react-router-dom
+class TextEncoderPolyfill {
+  encode(text: string): Uint8Array {
+    const arr = new Uint8Array(text.length);
+    for (let i = 0; i < text.length; i++) {
+      arr[i] = text.charCodeAt(i);
+    }
+    return arr;
+  }
+}
+
+class TextDecoderPolyfill {
+  decode(arr: Uint8Array): string {
+    return String.fromCharCode.apply(null, Array.from(arr));
+  }
+}
+
+global.TextEncoder = TextEncoderPolyfill as any;
+global.TextDecoder = TextDecoderPolyfill as any;
+
 export type MockFn = jest.Mock & {
   mockResolvedValue: (value: any) => MockFn;
   mockResolvedValueOnce: (value: any) => MockFn;

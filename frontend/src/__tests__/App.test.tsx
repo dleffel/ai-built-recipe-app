@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { jest, describe, it, beforeEach, afterEach, beforeAll, afterAll, expect } from '@jest/globals';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import App from '../App';
 import { recipeApi } from '../services/api';
 import { AuthProvider } from '../context/AuthContext';
@@ -103,6 +104,7 @@ jest.mock('../services/api', () => ({
     create: jest.fn() as MockFn,
     update: jest.fn() as MockFn,
     delete: jest.fn() as MockFn,
+    get: jest.fn() as MockFn,
     list: jest.fn(() => Promise.resolve({
       recipes: [mockRecipe],
       pagination: {
@@ -129,7 +131,7 @@ const mockRecipe: Recipe = {
   id: '1',
   title: 'Test Recipe',
   ingredients: ['ingredient 1'],
-  instructions: 'test instructions',
+  instructions: ['test instructions'],
   userId: 'user1',
   isDeleted: false,
   createdAt: new Date().toISOString(),
@@ -167,7 +169,8 @@ describe('App Component', () => {
   const renderWithAuth = (
     loading = false,
     user: typeof mockUser | null = null,
-    error: string | null = null
+    error: string | null = null,
+    initialRoute = '/'
   ) => {
     // Mock the AuthContext value
     const authValue = {
@@ -179,6 +182,8 @@ describe('App Component', () => {
       logout: mockLogout,
     };
 
+    window.history.pushState({}, '', initialRoute);
+    
     const utils = render(
       <AuthContext.Provider value={authValue}>
         <App />
@@ -211,8 +216,12 @@ describe('App Component', () => {
         total: 1,
       },
     });
+    // Mock recipe get
+    (recipeApi.get as MockFn).mockResolvedValue(mockRecipe);
     // Mock the auth check
     (api.get as MockFn).mockResolvedValue({ data: mockUser });
+    // Reset window location
+    window.history.pushState({}, '', '/');
   });
 
   afterEach(() => {
@@ -260,7 +269,7 @@ describe('App Component', () => {
       const newRecipe: CreateRecipeDTO = {
         title: 'New Recipe',
         ingredients: ['ingredient'],
-        instructions: 'instructions',
+        instructions: ['instructions'],
       };
 
       (recipeApi.create as MockFn).mockResolvedValueOnce({
@@ -416,35 +425,62 @@ describe('App Component', () => {
       const { waitForRecipeList } = renderWithAuth(false, mockUser);
       await waitForRecipeList();
 
+      // Set up route and mock API response
+      window.history.pushState({}, '', `/${mockRecipe.id}`);
+      (recipeApi.get as MockFn).mockResolvedValueOnce(mockRecipe);
+
       const recipeCard = screen.getByTestId(`recipe-card-${mockRecipe.id}`);
       fireEvent.click(recipeCard);
-      expect(screen.getByTestId('recipe-detail')).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe(`/${mockRecipe.id}`);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('recipe-detail')).toBeInTheDocument();
+      });
     });
 
     it('navigates to edit view', async () => {
       const { waitForRecipeList } = renderWithAuth(false, mockUser);
       await waitForRecipeList();
 
+      // Set up route and mock API response
+      window.history.pushState({}, '', `/${mockRecipe.id}/edit`);
+      (recipeApi.get as MockFn).mockResolvedValueOnce(mockRecipe);
+
       const editButton = screen.getByTestId(`recipe-edit-button-${mockRecipe.id}`);
       fireEvent.click(editButton);
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe(`/${mockRecipe.id}/edit`);
+      });
+
       await waitFor(() => {
         expect(screen.getByTestId('recipe-form')).toBeInTheDocument();
       });
     });
 
     it('returns to list view from detail', async () => {
-      const { waitForRecipeList } = renderWithAuth(false, mockUser);
-      await waitForRecipeList();
-
-      // Navigate to detail first
-      const recipeCard = screen.getByTestId(`recipe-card-${mockRecipe.id}`);
-      fireEvent.click(recipeCard);
+      const { waitForRecipeList } = renderWithAuth(false, mockUser, null, `/${mockRecipe.id}`);
       
-      // Click back button
+      // Mock API response for detail view
+      (recipeApi.get as MockFn).mockResolvedValueOnce(mockRecipe);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('recipe-detail')).toBeInTheDocument();
+      });
+
       const backButton = screen.getByTestId('back-button');
       fireEvent.click(backButton);
       
-      expect(screen.getByTestId('recipe-list')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(window.location.pathname).toBe('/');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('recipe-list')).toBeInTheDocument();
+      });
     });
 
     it('returns to list view from create form', async () => {
