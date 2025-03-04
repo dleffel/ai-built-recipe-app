@@ -33,11 +33,15 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
 
   return (
     <div className={styles.card} onClick={handleClick}>
-      {recipe.imageUrl && (
-        <div className={styles.imageContainer}>
+      <div className={styles.imageContainer}>
+        {recipe.imageUrl ? (
           <img src={recipe.imageUrl} alt={recipe.title} className={styles.image} />
-        </div>
-      )}
+        ) : (
+          <div className={styles.placeholder}>
+            {recipe.title.charAt(0)}
+          </div>
+        )}
+      </div>
       <div className={styles.content}>
         <h3 className={styles.title}>{recipe.title}</h3>
         {recipe.description && (
