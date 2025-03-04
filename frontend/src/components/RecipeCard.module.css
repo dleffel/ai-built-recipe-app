@@ -18,7 +18,18 @@
   height: 200px;
   overflow: hidden;
   margin-bottom: var(--spacing-3);
-  background: transparent;
+  background: var(--kindle-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder {
+  font-size: 2rem;
+  color: var(--kindle-muted);
+  font-family: var(--font-content);
+  text-transform: uppercase;
+  opacity: 0.5;
 }
 
 .image {

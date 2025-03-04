@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent, screen, within } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { describe, it, beforeEach, jest, expect } from '@jest/globals';
 import { RecipeCard } from '../components/RecipeCard';
 import { Recipe } from '../types/recipe';
 
@@ -9,7 +11,7 @@ describe('RecipeCard', () => {
     title: 'Test Recipe',
     description: 'Test description',
     ingredients: ['ingredient 1', 'ingredient 2'],
-    instructions: 'Test instructions',
+    instructions: ['Test instructions'],
     servings: 4,
     prepTime: 30,
     cookTime: 45,
@@ -41,12 +43,31 @@ describe('RecipeCard', () => {
     expect(screen.getByRole('img')).toHaveAttribute('src', mockRecipe.imageUrl);
   });
 
+  it('shows placeholder with first letter when no image URL is provided', () => {
+    const minimalRecipe: Recipe = {
+      id: '1',
+      title: 'Minimal Recipe',
+      ingredients: ['ingredient'],
+      instructions: ['instructions'],
+      isDeleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      userId: 'user-1'
+    };
+
+    render(<RecipeCard recipe={minimalRecipe} />);
+
+    const placeholder = screen.getByText('M');
+    expect(placeholder).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
   it('renders without optional fields', () => {
     const minimalRecipe: Recipe = {
       id: '1',
       title: 'Minimal Recipe',
       ingredients: ['ingredient'],
-      instructions: 'instructions',
+      instructions: ['instructions'],
       isDeleted: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -59,6 +80,9 @@ describe('RecipeCard', () => {
     expect(screen.queryByText(/Prep:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Cook:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Serves:/)).not.toBeInTheDocument();
+    // Should show placeholder with first letter of recipe title
+    const placeholder = screen.getByText('M');
+    expect(placeholder).toBeInTheDocument();
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
