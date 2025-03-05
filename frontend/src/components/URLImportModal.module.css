@@ -15,26 +15,28 @@
 }
 
 .modal {
-  background: var(--kindle-bg);
-  padding: var(--spacing-5) var(--page-margin);
+  background: white;
+  padding: var(--spacing-5);
   width: 100%;
   max-width: 500px;
   position: relative;
-  animation: slideUp 0.4s ease-out;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
-  border: 1px solid var(--kindle-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
 }
 
 .modal h2 {
   margin: 0 0 var(--spacing-4);
-  color: var(--kindle-text);
-  font-size: 1.5rem;
+  color: var(--color-text);
+  font-size: 1.75rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.2;
   font-family: var(--font-content);
   text-align: center;
   width: 100%;
   box-sizing: border-box;
+  letter-spacing: -0.02em;
 }
 
 .field {
@@ -47,102 +49,117 @@
 .field label {
   display: block;
   margin-bottom: var(--spacing-2);
-  color: var(--kindle-text);
+  color: var(--color-text);
   font-weight: 600;
-  font-size: var(--font-size-base);
+  font-size: 0.875rem;
   font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .field:focus-within label {
-  color: var(--kindle-active);
+  color: var(--color-accent);
 }
 
 .field input {
   width: 100%;
-  padding: var(--spacing-3) 0;
-  border: none;
-  border-bottom: 1px solid var(--kindle-border);
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
   font-size: var(--font-size-base);
-  transition: border-color 0.2s ease-in-out;
-  background-color: transparent;
-  color: var(--kindle-text);
+  transition: all 0.2s ease-in-out;
+  background-color: white;
+  color: var(--color-text);
   min-height: 44px;
   box-sizing: border-box;
   font-family: var(--font-content);
 }
 
 .field input:hover {
-  border-color: var(--kindle-active);
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
 }
 
 .field input:focus {
   outline: none;
-  border-color: var(--kindle-active);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+  background: white;
 }
 
 .field input:disabled {
-  color: var(--kindle-muted);
-  border-color: var(--kindle-border);
+  color: var(--color-muted);
+  border-color: var(--color-border);
+  background: var(--color-bg);
   cursor: not-allowed;
 }
 
 .error {
-  color: var(--kindle-text);
+  color: #DC2626;
   margin-bottom: var(--spacing-3);
-  padding: var(--spacing-3) 0;
+  padding: var(--spacing-3);
   font-size: var(--font-size-base);
   font-family: var(--font-ui);
   font-style: italic;
-  border-bottom: 1px solid var(--kindle-border);
+  background: #FEE2E2;
+  border-radius: 6px;
   width: 100%;
   box-sizing: border-box;
+  animation: shake 0.4s ease-in-out;
 }
 
 .buttons {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
   margin-top: var(--spacing-5);
   padding-top: var(--spacing-4);
-  border-top: 1px solid var(--kindle-border);
+  border-top: 1px solid var(--color-border);
   width: 100%;
   box-sizing: border-box;
 }
 
 .buttons button {
-  padding: var(--spacing-3) var(--spacing-4);
-  background: none;
-  border: 1px solid var(--kindle-border);
+  padding: var(--spacing-2) var(--spacing-4);
   font-size: var(--font-size-base);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: color 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   min-width: 120px;
-  min-height: 44px;
+  min-height: 40px;
   box-sizing: border-box;
   font-family: var(--font-ui);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .buttons button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  color: var(--kindle-border);
 }
 
 .cancelButton {
-  color: var(--kindle-muted);
+  color: var(--color-text);
+  background: white;
+  border: 1px solid var(--color-border);
 }
 
 .cancelButton:hover:not(:disabled) {
-  color: var(--kindle-active);
+  background: var(--color-bg);
+  border-color: var(--color-muted);
 }
 
 .importButton {
-  color: var(--kindle-text);
+  color: white;
+  background: var(--color-accent);
+  border: none;
 }
 
 .importButton:hover:not(:disabled) {
-  color: var(--kindle-active);
+  filter: brightness(110%);
+  transform: translateY(-1px);
 }
 
 @keyframes fadeIn {
@@ -173,21 +190,20 @@
 
 @media (max-width: 768px) {
   .overlay {
-    padding: 0;
-    background-color: rgba(0, 0, 0, 0.2);
+    padding: var(--spacing-3);
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .modal {
-    margin: 0;
-    padding: var(--spacing-4) var(--page-margin);
-    border: none;
-    border-top: 1px solid var(--kindle-border);
-    animation: slideUpMobile 0.4s ease-out;
-    width: 100%;
+    margin: auto 0 0 0;
+    padding: var(--spacing-4);
+    border-radius: 12px 12px 0 0;
+    animation: slideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: none;
   }
 
   .modal h2 {
-    font-size: var(--font-size-base);
+    font-size: 1.5rem;
     margin-bottom: var(--spacing-4);
     text-align: left;
   }
@@ -195,29 +211,42 @@
   .buttons {
     flex-direction: column-reverse;
     gap: var(--spacing-3);
-    margin: var(--spacing-4) calc(var(--page-margin) * -1) 0;
-    padding: var(--spacing-4) var(--page-margin) 0;
-    border-top: 1px solid var(--kindle-border);
+    margin: var(--spacing-4) calc(var(--spacing-4) * -1) calc(var(--spacing-4) * -1);
+    padding: var(--spacing-4);
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-border);
   }
 
   .buttons button {
     width: 100%;
     min-width: auto;
-    padding: var(--spacing-3) 0;
-    justify-content: center;
-    border: none;
-    border-bottom: 1px solid var(--kindle-border);
+    padding: var(--spacing-3);
+    height: 48px;
+  }
+
+  .importButton {
+    margin-bottom: var(--spacing-2);
+  }
+
+  .field {
+    margin-bottom: var(--spacing-4);
   }
 
   .field input {
-    padding: var(--spacing-2) 0;
+    padding: var(--spacing-3);
     font-size: 16px; /* Prevents iOS zoom on focus */
     width: 100%;
+    height: 48px;
   }
 
   .field label {
-    font-size: var(--font-size-base);
+    font-size: 0.875rem;
     margin-bottom: var(--spacing-2);
+  }
+
+  .error {
+    margin: var(--spacing-3) 0;
+    padding: var(--spacing-3);
   }
 }
 

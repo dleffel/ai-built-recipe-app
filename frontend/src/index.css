@@ -1,10 +1,10 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
 code {
@@ -16,93 +16,128 @@ code {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: var(--spacing-5);
+  min-height: 60vh;
 }
 
 .login-buttons {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-3);
+  width: 100%;
+  max-width: 320px;
+  background: white;
+  padding: var(--spacing-4);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .google-login-button {
-  background-color: #4285f4;
+  background-color: var(--color-accent);
   color: white;
-  padding: 12px 24px;
+  padding: var(--spacing-3) var(--spacing-4);
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: background-color 0.3s;
+  justify-content: center;
+  gap: var(--spacing-2);
+  transition: all 0.2s ease-in-out;
+  height: 48px;
+  font-family: var(--font-ui);
 }
 
 .google-login-button:hover {
-  background-color: #357abd;
+  filter: brightness(110%);
+  transform: translateY(-1px);
 }
 
 .dev-login-button {
-  background-color: #28a745;
-  color: white;
-  padding: 12px 24px;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent);
+  padding: var(--spacing-3) var(--spacing-4);
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s ease-in-out;
+  height: 48px;
+  font-family: var(--font-ui);
 }
 
 .dev-login-button:hover {
-  background-color: #218838;
+  background-color: var(--color-accent);
+  color: white;
 }
 
 .logout-button {
-  background-color: #dc3545;
-  color: white;
-  padding: 8px 16px;
+  background-color: #FEE2E2;
+  color: #DC2626;
+  padding: var(--spacing-2) var(--spacing-4);
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 10px;
-  transition: background-color 0.3s;
+  transition: all 0.2s ease-in-out;
+  height: 40px;
+  font-family: var(--font-ui);
 }
 
 .logout-button:hover {
-  background-color: #c82333;
+  background-color: #DC2626;
+  color: white;
 }
 
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 10px;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
   border-radius: 8px;
-  background-color: #f5f5f5;
+  background-color: var(--color-accent-light);
+  transition: all 0.2s ease;
+}
+
+.user-profile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .profile-photo {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid var(--color-accent);
+  transition: transform 0.2s ease;
+}
+
+.user-profile:hover .profile-photo {
+  transform: scale(1.1);
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--spacing-1);
 }
 
 .user-info h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: var(--font-content);
 }
 
 .user-info p {
   margin: 0;
-  color: #666;
-  font-size: 14px;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-family: var(--font-ui);
 }
