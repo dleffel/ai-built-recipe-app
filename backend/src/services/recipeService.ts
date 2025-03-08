@@ -1,5 +1,5 @@
 import { prisma as defaultPrisma } from '../lib/prisma';
-import type { Recipe, PrismaClient } from '@prisma/client';
+import type { Recipe, PrismaClient, Prisma } from '@prisma/client';
 
 export interface CreateRecipeDTO {
   title: string;
@@ -16,11 +16,11 @@ export interface CreateRecipeDTO {
 export interface UpdateRecipeDTO extends Partial<CreateRecipeDTO> {}
 
 export class RecipeService {
-    static prisma: PrismaClient = defaultPrisma;
+  static prisma: PrismaClient = defaultPrisma;
 
-    static resetPrisma() {
-        this.prisma = defaultPrisma;
-      }
+  static resetPrisma() {
+    this.prisma = defaultPrisma;
+  }
 
   /**
    * Create a new recipe
@@ -47,17 +47,49 @@ export class RecipeService {
   }
 
   /**
-   * Find recipes by user ID with pagination
+   * Find recipes by user ID with pagination and search
    */
   static async findByUser(userId: string, options?: {
     skip?: number;
     take?: number;
     includeDeleted?: boolean;
+    search?: string;
   }): Promise<Recipe[]> {
+    const searchCondition: Prisma.RecipeWhereInput = options?.search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: options.search,
+                mode: 'insensitive'
+              }
+            },
+            {
+              description: {
+                contains: options.search,
+                mode: 'insensitive'
+              }
+            },
+            {
+              ingredients: {
+                hasSome: [options.search]
+              }
+            }
+          ]
+        }
+      : {};
+
+    console.log('[DEBUG] Recipe search query:', {
+      searchTerm: options?.search,
+      searchCondition: JSON.stringify(searchCondition, null, 2),
+      userId
+    });
+
     return this.prisma.recipe.findMany({
       where: {
         userId,
-        isDeleted: options?.includeDeleted ? undefined : false
+        isDeleted: options?.includeDeleted ? undefined : false,
+        ...searchCondition
       },
       skip: options?.skip,
       take: options?.take,
@@ -106,13 +138,38 @@ export class RecipeService {
   }
 
   /**
-   * Count total recipes for a user (excluding soft-deleted)
+   * Count total recipes for a user with search (excluding soft-deleted)
    */
-  static async countUserRecipes(userId: string): Promise<number> {
+  static async countUserRecipes(userId: string, search?: string): Promise<number> {
+    const searchCondition: Prisma.RecipeWhereInput = search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: search,
+                mode: 'insensitive'
+              }
+            },
+            {
+              description: {
+                contains: search,
+                mode: 'insensitive'
+              }
+            },
+            {
+              ingredients: {
+                hasSome: [search]
+              }
+            }
+          ]
+        }
+      : {};
+
     return this.prisma.recipe.count({
       where: {
         userId,
-        isDeleted: false
+        isDeleted: false,
+        ...searchCondition
       }
     });
   }

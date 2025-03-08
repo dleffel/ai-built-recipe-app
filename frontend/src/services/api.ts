@@ -36,9 +36,19 @@ export const recipeApi = {
     return response.data;
   },
 
-  // Get paginated list of recipes
-  list: async (params?: { skip?: number; take?: number }): Promise<RecipeListResponse> => {
+  // Get paginated list of recipes with optional search
+  list: async (params?: {
+    skip?: number;
+    take?: number;
+    search?: string;
+  }): Promise<RecipeListResponse> => {
+    console.log('[DEBUG] API list request params:', params);
     const response = await api.get<RecipeListResponse>('/api/recipes', { params });
+    console.log('[DEBUG] API list response:', {
+      total: response.data.pagination.total,
+      count: response.data.recipes.length,
+      search: response.data.pagination.search
+    });
     return response.data;
   },
 

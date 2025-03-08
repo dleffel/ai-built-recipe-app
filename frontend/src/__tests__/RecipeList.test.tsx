@@ -21,7 +21,7 @@ const mockRecipes: Recipe[] = [
     id: '1',
     title: 'Recipe 1',
     ingredients: ['ingredient 1'],
-    instructions: 'instructions 1',
+    instructions: ['instructions 1'],
     isDeleted: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -31,7 +31,7 @@ const mockRecipes: Recipe[] = [
     id: '2',
     title: 'Recipe 2',
     ingredients: ['ingredient 2'],
-    instructions: 'instructions 2',
+    instructions: ['instructions 2'],
     isDeleted: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -94,6 +94,7 @@ describe('RecipeList', () => {
     // Should have called the API
     expect(mockApi.get).toHaveBeenCalledWith('/api/recipes', {
       params: {
+        search: '',
         skip: 0,
         take: 12
       }
@@ -245,10 +246,10 @@ describe('RecipeList', () => {
     // Should have called API twice with correct pagination
     expect(mockApi.get).toHaveBeenCalledTimes(2);
     expect(mockApi.get).toHaveBeenNthCalledWith(1, '/api/recipes', {
-      params: { skip: 0, take: 12 }
+      params: { search: '', skip: 0, take: 12 }
     });
     expect(mockApi.get).toHaveBeenNthCalledWith(2, '/api/recipes', {
-      params: { skip: 12, take: 12 }
+      params: { search: '', skip: 12, take: 12 }
     });
   });
 
@@ -301,6 +302,121 @@ describe('RecipeList', () => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
 
+    expect(screen.getByText('No recipes found. Create your first recipe!')).toBeInTheDocument();
+  });
+
+  it('handles search functionality', async () => {
+    const searchTerm = 'pasta';
+    const searchResults: Recipe[] = [
+      {
+        id: 'recipe-3',
+        title: 'Pasta Recipe',
+        ingredients: ['pasta', 'sauce'],
+        instructions: ['Cook pasta', 'Add sauce'],
+        isDeleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        userId: 'user-1'
+      }
+    ];
+
+    const initialResponse: RecipeListResponse = {
+      recipes: mockRecipes,
+      pagination: { skip: 0, take: 12, total: 2 }
+    };
+
+    const searchResponse: RecipeListResponse = {
+      recipes: searchResults,
+      pagination: { skip: 0, take: 12, total: 1 }
+    };
+
+    (mockApi.get as MockFn)
+      .mockResolvedValueOnce(createMockResponse(initialResponse))
+      .mockResolvedValueOnce(createMockResponse(searchResponse));
+
+    render(
+      <RecipeList
+        onRecipeClick={mockHandlers.onRecipeClick}
+        onRecipeEdit={mockHandlers.onRecipeEdit}
+        onRecipeDelete={mockHandlers.onRecipeDelete}
+      />
+    );
+
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    // Type in search input
+    const searchInput = screen.getByPlaceholderText('Search recipes by title, description, or ingredients...');
+    fireEvent.change(searchInput, { target: { value: searchTerm } });
+
+    // Wait for debounced search
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith('/api/recipes', {
+        params: { search: searchTerm, skip: 0, take: 12 }
+      });
+    }, { timeout: 1000 });
+
+    // Wait for loading state to disappear
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    // Verify search results
+    await waitFor(() => {
+      expect(screen.getByText('Pasta Recipe')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Recipe 1')).not.toBeInTheDocument();
+
+  });
+
+  it('shows empty state for no search results', async () => {
+    const searchTerm = 'nonexistent recipe';
+    const initialResponse: RecipeListResponse = {
+      recipes: mockRecipes,
+      pagination: { skip: 0, take: 12, total: 2 }
+    };
+
+    const emptySearchResponse: RecipeListResponse = {
+      recipes: [],
+      pagination: { skip: 0, take: 12, total: 0 }
+    };
+
+    (mockApi.get as MockFn)
+      .mockResolvedValueOnce(createMockResponse(initialResponse))
+      .mockResolvedValueOnce(createMockResponse(emptySearchResponse));
+
+    render(
+      <RecipeList
+        onRecipeClick={mockHandlers.onRecipeClick}
+        onRecipeEdit={mockHandlers.onRecipeEdit}
+        onRecipeDelete={mockHandlers.onRecipeDelete}
+      />
+    );
+
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    // Type in search input
+    const searchInput = screen.getByPlaceholderText('Search recipes by title, description, or ingredients...');
+    fireEvent.change(searchInput, { target: { value: searchTerm } });
+
+    // Wait for debounced search
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith('/api/recipes', {
+        params: { search: searchTerm, skip: 0, take: 12 }
+      });
+    }, { timeout: 1000 });
+
+    // Wait for loading state to disappear
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    // Verify empty state
     expect(screen.getByText('No recipes found. Create your first recipe!')).toBeInTheDocument();
   });
 });

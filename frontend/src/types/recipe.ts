@@ -35,5 +35,6 @@ export interface RecipeListResponse {
     skip: number;
     take: number;
     total: number;
+    search?: string;
   };
 }
