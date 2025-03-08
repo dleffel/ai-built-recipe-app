@@ -95,10 +95,18 @@ const getUserRecipes: RequestHandler = async (req, res) => {
   try {
     const skip = parseInt(req.query.skip as string) || 0;
     const take = parseInt(req.query.take as string) || 10;
+    const search = req.query.search as string | undefined;
+    
+    console.log('[DEBUG] Recipe search request:', {
+      search,
+      skip,
+      take,
+      userId: req.user!.id
+    });
     
     const [recipes, total] = await Promise.all([
-      RecipeService.findByUser(req.user!.id, { skip, take }),
-      RecipeService.countUserRecipes(req.user!.id)
+      RecipeService.findByUser(req.user!.id, { skip, take, search }),
+      RecipeService.countUserRecipes(req.user!.id, search)
     ]);
 
     res.json({
@@ -106,7 +114,8 @@ const getUserRecipes: RequestHandler = async (req, res) => {
       pagination: {
         skip,
         take,
-        total
+        total,
+        search
       }
     });
   } catch (error: unknown) {
