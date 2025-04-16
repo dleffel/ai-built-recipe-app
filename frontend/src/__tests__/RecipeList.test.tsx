@@ -1,7 +1,7 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react';
-import { RecipeList } from '../components/RecipeList';
+import { RecipeList } from '../components/recipes/RecipeList';
 import { mockApi, createMockResponse } from '../setupTests';
 import { Recipe } from '../types/recipe';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';

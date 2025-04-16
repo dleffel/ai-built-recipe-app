@@ -17,6 +17,11 @@ api.interceptors.response.use(
     // Don't log 401s during auth check as they're expected when not logged in
     if (error.response?.status === 401 && !error.config.url.includes('current-user')) {
       console.error('Authentication error:', error);
+      // Redirect to recipes page instead of home page when authentication fails
+      if (window.location.pathname !== '/recipes' &&
+          !window.location.pathname.startsWith('/login')) {
+        console.log('Redirecting to recipes page due to auth error');
+      }
     }
     return Promise.reject(error);
   }

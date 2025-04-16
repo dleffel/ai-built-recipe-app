@@ -54,7 +54,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    checkUser();
+    const checkAndRedirect = async () => {
+      await checkUser();
+      // Check if we need to redirect after login
+      const returnPath = localStorage.getItem('auth_return_path');
+      if (user && returnPath) {
+        localStorage.removeItem('auth_return_path');
+        window.location.href = returnPath;
+      }
+    };
+    
+    checkAndRedirect();
   }, []);
 
   const handleGoogleLogin = async () => {
@@ -62,6 +72,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await logout();
     } else {
       // If no user, this is a login request
+      // Store the current path to redirect back after login
+      const returnPath = window.location.pathname.startsWith('/recipes') ?
+        window.location.pathname : '/recipes';
+      localStorage.setItem('auth_return_path', returnPath);
       window.location.href = `${api.defaults.baseURL}/auth/google`;
     }
   };
