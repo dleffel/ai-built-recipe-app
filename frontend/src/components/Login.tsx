@@ -11,6 +11,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogin = async () => {
+    // handleGoogleLogin will now handle storing the return path
     await handleGoogleLogin();
     onLogin?.();
   };

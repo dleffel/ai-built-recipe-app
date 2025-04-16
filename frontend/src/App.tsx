@@ -1,13 +1,15 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
-import { RecipeList } from './components/RecipeList';
-import { RecipeDetail } from './components/RecipeDetail';
-import { RecipeForm } from './components/RecipeForm';
+import { RecipeList } from './components/recipes/RecipeList';
+import { RecipeDetail } from './components/recipes/RecipeDetail';
+import { RecipeForm } from './components/recipes/RecipeForm';
 import { Recipe, CreateRecipeDTO } from './types/recipe';
 import { recipeApi } from './services/api';
+import Layout from './components/layout/Layout';
+import HomePage from './components/HomePage';
 
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -16,7 +18,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   React.useEffect(() => {
     if (!loading && !user) {
-      navigate('/');
+      navigate('/recipes');
     }
   }, [user, loading, navigate]);
 
@@ -42,7 +44,7 @@ const RecipeDetailPage: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching recipe:', error);
-        navigate('/');
+        navigate('/recipes');
       } finally {
         setLoading(false);
       }
@@ -62,16 +64,16 @@ const RecipeDetailPage: React.FC = () => {
   return (
     <RecipeDetail
       recipe={recipe}
-      onEdit={() => navigate(`/recipes/${recipe.id}/edit`)}
+      onEdit={() => navigate(`/recipes/recipe/${recipe.id}/edit`)}
       onDelete={async () => {
         try {
           await recipeApi.delete(recipe.id);
-          navigate('/');
+          navigate('/recipes');
         } catch (error) {
           console.error('Error deleting recipe:', error);
         }
       }}
-      onBack={() => navigate('/')}
+      onBack={() => navigate('/recipes')}
     />
   );
 };
@@ -90,7 +92,7 @@ const RecipeFormPage: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) => {
           setRecipe(data);
         } catch (error) {
           console.error('Error fetching recipe:', error);
-          navigate('/');
+          navigate('/recipes');
         } finally {
           setLoading(false);
         }
@@ -111,7 +113,7 @@ const RecipeFormPage: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) => {
       } else {
         await recipeApi.create(data);
       }
-      navigate('/');
+      navigate('/recipes');
     } catch (error) {
       console.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} recipe:`, error);
     }
@@ -121,7 +123,7 @@ const RecipeFormPage: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) => {
     <RecipeForm
       recipe={recipe || undefined}
       onSubmit={handleSubmit}
-      onCancel={() => navigate('/')}
+      onCancel={() => navigate('/recipes')}
     />
   );
 };
@@ -142,15 +144,15 @@ const RecipeListPage: React.FC = () => {
     <>
       <div className="recipe-header">
         <button
-          onClick={() => navigate('/new')}
+          onClick={() => navigate('/recipes/new')}
           className="create-button"
         >
           Create New Recipe
         </button>
       </div>
       <RecipeList
-        onRecipeClick={(recipe) => navigate(`/${recipe.id}`)}
-        onRecipeEdit={(recipe) => navigate(`/${recipe.id}/edit`)}
+        onRecipeClick={(recipe) => navigate(`/recipes/recipe/${recipe.id}`)}
+        onRecipeEdit={(recipe) => navigate(`/recipes/recipe/${recipe.id}/edit`)}
         onRecipeDelete={async (recipe) => {
           try {
             await recipeApi.delete(recipe.id);
@@ -165,9 +167,7 @@ const RecipeListPage: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { loading } = useAuth();
 
   if (loading) {
     return <div className="loading">Loading...</div>;
@@ -175,60 +175,44 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="App">
-      <header className="App-header" role="banner">
-        <div className="header-content">
-          <div className="header-left">
-            <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Recipe App</h1>
-            {location.pathname !== '/' && (
-              <div className="breadcrumb" role="navigation">
-                <span
-                  onClick={() => navigate('/')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  My Recipes
-                </span>
-                <span>/</span>
-                <span>
-                  {location.pathname.includes('/new') ? 'New Recipe' :
-                   location.pathname.includes('/edit') ? 'Edit Recipe' :
-                   'Recipe Details'}
-                </span>
-              </div>
-            )}
-          </div>
-          <Login />
-        </div>
-      </header>
-      <main className="App-main">
-        <Routes>
-          <Route path="/" element={<RecipeListPage />} />
-          <Route path="/recipes" element={<Navigate to="/" replace />} />
-          <Route
-            path="/new"
-            element={
-              <ProtectedRoute>
-                <RecipeFormPage mode="create" />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/:id"
-            element={
-              <ProtectedRoute>
-                <RecipeDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/:id/edit"
-            element={
-              <ProtectedRoute>
-                <RecipeFormPage mode="edit" />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </main>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/recipes/*"
+          element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<RecipeListPage />} />
+                <Route
+                  path="/new"
+                  element={
+                    <ProtectedRoute>
+                      <RecipeFormPage mode="create" />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recipe/:id"
+                  element={
+                    <ProtectedRoute>
+                      <RecipeDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recipe/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <RecipeFormPage mode="edit" />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
     </div>
   );
 };

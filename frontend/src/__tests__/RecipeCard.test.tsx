@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, beforeEach, jest, expect } from '@jest/globals';
-import { RecipeCard } from '../components/RecipeCard';
+import { RecipeCard } from '../components/recipes/RecipeCard';
 import { Recipe } from '../types/recipe';
 
 describe('RecipeCard', () => {

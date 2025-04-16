@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import { URLImportModal } from '../components/URLImportModal';
+import { URLImportModal } from '../components/recipes/URLImportModal';
 import { CreateRecipeDTO } from '../types/recipe';
 
 describe('URLImportModal Tests', () => {
@@ -15,7 +15,7 @@ describe('URLImportModal Tests', () => {
     title: 'Test Recipe',
     description: 'Test Description',
     ingredients: ['Ingredient 1', 'Ingredient 2'],
-    instructions: 'Test Instructions',
+    instructions: ['Test Instructions'],
     servings: 4,
     prepTime: 30,
     cookTime: 45

@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import { RecipeForm } from '../components/RecipeForm';
+import { RecipeForm } from '../components/recipes/RecipeForm';
 import { recipeApi } from '../services/api';
 import { Recipe, CreateRecipeDTO } from '../types/recipe';
 

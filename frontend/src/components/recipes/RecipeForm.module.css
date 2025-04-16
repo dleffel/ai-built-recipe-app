@@ -1,0 +1,421 @@
+.form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-5);
+  background: white;
+  animation: formSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-content);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.importSection {
+  margin: var(--spacing-5) calc(var(--spacing-5) * -1);
+  padding: var(--spacing-4) var(--spacing-5);
+  text-align: center;
+  background: var(--color-accent-light);
+  width: calc(100% + var(--spacing-5) * 2);
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+}
+
+.importButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  height: 40px;
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+}
+
+.importButton:hover:not(:disabled) {
+  filter: brightness(110%);
+  transform: translateY(-1px);
+}
+
+.importButton:active:not(:disabled) {
+  filter: brightness(95%);
+  transform: translateY(0);
+}
+
+.importButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: var(--color-border);
+  color: var(--color-muted);
+}
+
+.field {
+  margin-bottom: var(--spacing-4);
+  animation: fadeIn 0.3s ease-out;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field label {
+  display: block;
+  margin-bottom: var(--spacing-2);
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.field:focus-within label {
+  color: var(--color-accent);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  transition: all 0.2s ease-in-out;
+  background-color: white;
+  color: var(--color-text);
+  min-height: 44px;
+  box-sizing: border-box;
+  font-family: var(--font-content);
+}
+
+.field textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.field input:hover,
+.field textarea:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+  background: white;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ingredientRow,
+.instructionRow {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  align-items: flex-start;
+  padding: var(--spacing-3);
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-content);
+  transition: all 0.2s ease;
+}
+
+.ingredientRow:hover,
+.instructionRow:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.stepNumber {
+  color: var(--color-accent);
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  background: var(--color-accent-light);
+  border-radius: 50%;
+}
+
+.instructionRow textarea {
+  flex: 1;
+  min-height: 80px;
+  padding: var(--spacing-3);
+  border-radius: 6px;
+}
+
+.removeButton {
+  padding: var(--spacing-2);
+  background: #FEE2E2;
+  color: #DC2626;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-size: var(--font-size-base);
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+}
+
+.removeButton:hover:not(:disabled) {
+  background: #FEE2E2;
+  transform: scale(1.1);
+}
+
+.removeButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: var(--color-border);
+  color: var(--color-muted);
+}
+
+.addButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: var(--spacing-3);
+  transition: all 0.2s ease-in-out;
+  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  height: 40px;
+  font-weight: 600;
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+}
+
+.addButton:hover {
+  background: var(--color-accent);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.addButton:active {
+  transform: translateY(0);
+}
+
+.error {
+  color: #DC2626;
+  margin-bottom: var(--spacing-3);
+  padding: var(--spacing-3);
+  font-size: var(--font-size-base);
+  font-family: var(--font-ui);
+  font-style: italic;
+  background: #FEE2E2;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  animation: shake 0.4s ease-in-out;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-5);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cancelButton,
+.submitButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-width: 120px;
+  height: 40px;
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancelButton {
+  color: var(--color-text);
+  background: white;
+  border: 1px solid var(--color-border);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: var(--color-bg);
+  border-color: var(--color-muted);
+}
+
+.submitButton {
+  color: white;
+  background: var(--color-accent);
+  border: none;
+}
+
+.submitButton:hover:not(:disabled) {
+  filter: brightness(110%);
+  transform: translateY(-1px);
+}
+
+.cancelButton:disabled,
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: var(--color-border);
+  color: var(--color-muted);
+  transform: none;
+}
+
+@keyframes formSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@media (max-width: 768px) {
+  .form {
+    padding: var(--spacing-4);
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .importSection {
+    margin: var(--spacing-4) calc(var(--spacing-4) * -1);
+    padding: var(--spacing-4);
+    text-align: center;
+    background: var(--color-accent-light);
+  }
+
+  .importButton {
+    width: 100%;
+    justify-content: center;
+    margin-top: var(--spacing-3);
+    height: 48px;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+
+  .ingredientRow,
+  .instructionRow {
+    flex-direction: column;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    width: 100%;
+    margin-bottom: var(--spacing-3);
+  }
+
+  .field {
+    width: 100%;
+  }
+
+  .field input,
+  .field textarea {
+    padding: var(--spacing-3);
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    width: 100%;
+    height: 48px;
+  }
+
+  .field textarea {
+    height: auto;
+    min-height: 120px;
+  }
+
+  .field label {
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-2);
+  }
+
+  .buttons {
+    flex-direction: column-reverse;
+    gap: var(--spacing-3);
+    margin: var(--spacing-4) calc(var(--spacing-4) * -1) calc(var(--spacing-4) * -1);
+    padding: var(--spacing-4);
+    background: var(--color-bg);
+    position: sticky;
+    bottom: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .cancelButton,
+  .submitButton,
+  .addButton {
+    width: 100%;
+    min-width: auto;
+    height: 48px;
+  }
+
+  .removeButton {
+    padding: var(--spacing-2);
+    margin-left: auto;
+    height: 32px;
+    width: 32px;
+  }
+
+  .error {
+    margin: var(--spacing-3) 0;
+    padding: var(--spacing-3);
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .form {
+    max-width: 90%;
+  }
+}

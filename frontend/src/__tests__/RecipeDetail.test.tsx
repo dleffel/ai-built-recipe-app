@@ -3,7 +3,7 @@ import React from 'react';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import '@testing-library/jest-dom/extend-expect';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RecipeDetail } from '../components/RecipeDetail';
+import { RecipeDetail } from '../components/recipes/RecipeDetail';
 import { Recipe } from '../types/recipe';
 
 const mockRecipe: Recipe = {

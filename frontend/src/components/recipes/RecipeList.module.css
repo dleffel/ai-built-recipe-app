@@ -1,0 +1,178 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 0;
+  font-family: var(--font-content);
+  margin: 0 auto;
+}
+
+.searchContainer {
+  padding: var(--spacing-4) var(--page-margin);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.searchInput {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  display: block;
+  padding: var(--spacing-3);
+  font-size: var(--font-size-base);
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+.searchInput::placeholder {
+  color: var(--color-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-5);
+  padding: var(--spacing-5) var(--page-margin);
+  width: 100%;
+}
+
+.gridItem {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.loading {
+  text-align: center;
+  padding: var(--spacing-6);
+  color: var(--color-muted);
+  font-family: var(--font-ui);
+  font-style: italic;
+  background: var(--color-bg);
+  border-radius: 8px;
+  margin: var(--spacing-4) var(--page-margin);
+}
+
+.error {
+  text-align: center;
+  padding: var(--spacing-6);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  background: var(--color-accent-light);
+  border-radius: 8px;
+  margin: var(--spacing-4) var(--page-margin);
+}
+
+.empty {
+  text-align: center;
+  padding: var(--spacing-6);
+  color: var(--color-muted);
+  font-family: var(--font-content);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-content);
+  background: var(--color-bg);
+  border-radius: 8px;
+  margin: var(--spacing-4) var(--page-margin);
+}
+
+.retryButton,
+.loadMoreButton {
+  font-family: var(--font-ui);
+  background: var(--color-accent);
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-base);
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.retryButton {
+  margin-top: var(--spacing-4);
+}
+
+.retryButton:hover,
+.loadMoreButton:hover {
+  filter: brightness(110%);
+  transform: translateY(-1px);
+}
+
+.loadMoreButton {
+  display: block;
+  margin: var(--spacing-6) auto;
+  position: relative;
+  min-width: 160px;
+}
+
+.loadMoreButton::before {
+  content: "• • •";
+  position: absolute;
+  top: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--color-muted);
+  font-size: var(--font-size-base);
+  letter-spacing: 0.75rem;
+  font-family: var(--font-content);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0;
+    width: 100%;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+    padding: var(--spacing-3) var(--spacing-3);
+  }
+
+  .gridItem {
+    margin-bottom: var(--spacing-4);
+  }
+
+  .loading,
+  .error,
+  .empty {
+    margin: var(--spacing-3);
+    padding: var(--spacing-4);
+  }
+
+  .loadMoreButton {
+    width: calc(100% - var(--spacing-3) * 2);
+    margin: var(--spacing-4) var(--spacing-3);
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { RecipeForm } from '../components/RecipeForm';
+import { RecipeForm } from '../components/recipes/RecipeForm';
 import { Recipe, CreateRecipeDTO } from '../types/recipe';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
