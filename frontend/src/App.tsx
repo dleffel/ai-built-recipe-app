@@ -10,6 +10,7 @@ import { Recipe, CreateRecipeDTO } from './types/recipe';
 import { recipeApi } from './services/api';
 import Layout from './components/layout/Layout';
 import HomePage from './components/HomePage';
+import { TodoPlaceholder } from './components/todos/TodoPlaceholder';
 
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -209,6 +210,16 @@ const AppContent: React.FC = () => {
                   }
                 />
               </Routes>
+            </Layout>
+          }
+        />
+        <Route
+          path="/todos/*"
+          element={
+            <Layout>
+              <ProtectedRoute>
+                <TodoPlaceholder />
+              </ProtectedRoute>
             </Layout>
           }
         />
