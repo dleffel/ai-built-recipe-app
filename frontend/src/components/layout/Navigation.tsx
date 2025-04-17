@@ -22,9 +22,9 @@ const Navigation: React.FC = () => {
     <nav className={styles.navigation} aria-label="Main Navigation">
       <ul className={styles.navList}>
         <li className={styles.navItem}>
-          <NavLink 
-            to="/" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
               isActive ? `${styles.navLink} ${styles.activeLink}` : styles.navLink
             }
             end
@@ -33,13 +33,23 @@ const Navigation: React.FC = () => {
           </NavLink>
         </li>
         <li className={styles.navItem}>
-          <NavLink 
-            to="/recipes" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/recipes"
+            className={({ isActive }) =>
               isActive ? `${styles.navLink} ${styles.activeLink}` : styles.navLink
             }
           >
             Recipes
+          </NavLink>
+        </li>
+        <li className={styles.navItem}>
+          <NavLink
+            to="/todos"
+            className={({ isActive }) =>
+              isActive ? `${styles.navLink} ${styles.activeLink}` : styles.navLink
+            }
+          >
+            To-Do
           </NavLink>
         </li>
       </ul>
@@ -51,9 +61,9 @@ const Navigation: React.FC = () => {
     <nav className={styles.mobileNavigation} aria-label="Mobile Navigation">
       <ul className={styles.mobileNavList}>
         <li className={styles.mobileNavItem}>
-          <NavLink 
-            to="/" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
               isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
             }
             end
@@ -62,13 +72,23 @@ const Navigation: React.FC = () => {
           </NavLink>
         </li>
         <li className={styles.mobileNavItem}>
-          <NavLink 
-            to="/recipes" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/recipes"
+            className={({ isActive }) =>
               isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
             }
           >
             Recipes
+          </NavLink>
+        </li>
+        <li className={styles.mobileNavItem}>
+          <NavLink
+            to="/todos"
+            className={({ isActive }) =>
+              isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
+            }
+          >
+            To-Do
           </NavLink>
         </li>
       </ul>

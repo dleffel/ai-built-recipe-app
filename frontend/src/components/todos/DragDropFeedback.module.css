@@ -1,0 +1,141 @@
+/* Styles for the drag feedback component */
+.dragFeedback {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 4px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+  top: -1000px;
+  left: -1000px;
+}
+
+.categoryIndicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-right: 8px;
+  color: white;
+}
+
+.rooVet {
+  background-color: #3b82f6; /* Blue */
+}
+
+.rooCode {
+  background-color: #10b981; /* Green */
+}
+
+.personal {
+  background-color: #8b5cf6; /* Purple */
+}
+
+.taskTitle {
+  flex: 1;
+  font-size: 0.9rem;
+  margin-right: 8px;
+}
+
+.priorityIndicator {
+  color: #f59e0b; /* Amber */
+  font-size: 1rem;
+}
+
+/* Styles for the draggable item */
+.draggable {
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.draggable:active {
+  cursor: grabbing;
+}
+
+/* Styles for the item being dragged */
+.dragging {
+  opacity: 0.8;
+  transform: scale(1.02);
+  background-color: var(--color-accent-light);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Styles for the drag preview (ghost element) */
+.dragPreview {
+  opacity: 0.6;
+  background-color: var(--color-accent-light);
+  pointer-events: none;
+}
+
+/* Styles for the drop target */
+.dropTarget {
+  background-color: var(--color-accent-light);
+  opacity: 0.7;
+  margin: var(--spacing-1) 0;
+  height: 40px;
+  animation: pulse 1.5s infinite;
+}
+
+/* Styles for valid drop targets */
+.validDropTarget {
+  background-color: rgba(5, 150, 105, 0.1); /* Light green */
+}
+
+/* Styles for invalid drop targets */
+.invalidDropTarget {
+  background-color: rgba(220, 38, 38, 0.1); /* Light red */
+  cursor: not-allowed;
+}
+
+/* Styles for the drop indicator line */
+.dropIndicator {
+  height: 2px;
+  background-color: var(--color-accent);
+  margin: var(--spacing-1) 0;
+  border-radius: 1px;
+  animation: pulse 1.5s infinite;
+}
+
+/* Styles for the day container when it's a drop target */
+.dayDropTarget {
+  background-color: var(--color-accent-light);
+}
+
+/* Animation for the pulse effect */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Animation for the drop indicator */
+@keyframes slideIn {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .dropTarget {
+    height: 30px;
+  }
+}

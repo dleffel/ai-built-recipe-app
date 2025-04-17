@@ -4,10 +4,53 @@ import cookieSession from 'cookie-session';
 import passport from './config/passport';
 import authRoutes from './routes/auth';
 import recipeRoutes from './routes/recipes';
+import taskRoutes from './routes/tasks';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
 
 const app = express();
+
+// Task rollover scheduler
+const scheduleTaskRollover = () => {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  
+  // Calculate milliseconds until midnight
+  const msUntilMidnight = midnight.getTime() - now.getTime();
+  
+  // Schedule the task rollover
+  setTimeout(async () => {
+    try {
+      const { TaskService } = require('./services/taskService');
+      
+      // Get yesterday's date
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+      
+      // Get today's date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Roll over tasks
+      const rolledOverCount = await TaskService.rollOverTasks(yesterday, today);
+      console.log(`Task rollover completed: ${rolledOverCount} tasks rolled over from ${yesterday.toISOString()} to ${today.toISOString()}`);
+      
+      // Schedule the next rollover
+      scheduleTaskRollover();
+    } catch (error) {
+      console.error('Error during task rollover:', error);
+      // Still schedule the next rollover even if this one failed
+      scheduleTaskRollover();
+    }
+  }, msUntilMidnight);
+  
+  console.log(`Task rollover scheduled for ${midnight.toISOString()} (in ${Math.floor(msUntilMidnight / 60000)} minutes)`);
+};
+
+// Start the task rollover scheduler
+scheduleTaskRollover();
 
 // Trust proxy - needed for secure cookies behind a proxy
 app.set('trust proxy', 1);
@@ -205,6 +248,9 @@ app.use('/auth', authRoutes);
 
 // Recipe routes
 app.use('/api/recipes', recipeRoutes);
+
+// Task routes
+app.use('/api/tasks', taskRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

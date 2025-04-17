@@ -22,6 +22,7 @@ model User {
 
   // Relations
   recipes     Recipe[]
+  tasks       Task[]
 
   @@map("users")
 }
@@ -47,4 +48,25 @@ model Recipe {
 
   @@map("recipes")
   @@index([userId])
+}
+
+model Task {
+  id                String    @id @default(uuid())
+  title             String
+  status            String    // "complete" or "incomplete"
+  dueDate           DateTime
+  category          String    // "Roo Vet", "Roo Code", "Personal"
+  isPriority        Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+  isRolledOver      Boolean   @default(false)
+  displayOrder      Int       // For ordering tasks within a day
+  
+  // Relations
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+
+  @@map("tasks")
+  @@index([userId])
+  @@index([dueDate])
 }
