@@ -1,0 +1,122 @@
+.taskListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.dayContainer {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s;
+}
+
+/* Highlight style for drop target day */
+.dayContainer.dayDropTarget {
+  background-color: #e8f0fe;
+  box-shadow: 0 0 0 2px #4a90e2;
+}
+
+.dayHeader {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dayTitle {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.today {
+  color: #4a90e2;
+  font-weight: 600;
+}
+
+.taskList {
+  min-height: 40px;
+}
+
+.emptyState {
+  color: #999;
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* Add task button styling */
+.addTaskButton {
+  background: transparent;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  padding: 8px 12px;
+  width: 100%;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.addTaskButton:hover {
+  background-color: #f0f0f0;
+  border-color: #aaa;
+  color: #333;
+}
+
+.addTaskIcon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Loading and error states */
+.loading, .error {
+  padding: 24px;
+  text-align: center;
+  color: #555;
+}
+
+.error {
+  color: #e53935;
+}
+
+/* Drag ghost styling */
+.dragGhost {
+  padding: 8px 12px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .taskListContainer {
+    padding: 12px;
+    gap: 16px;
+  }
+  
+  .dayContainer {
+    padding: 12px;
+  }
+  
+  .dayTitle {
+    font-size: 16px;
+  }
+  
+  .addTaskButton {
+    padding: 6px 10px;
+  }
+}

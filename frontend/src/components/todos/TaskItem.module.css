@@ -1,0 +1,181 @@
+.taskItem {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+  transition: box-shadow 0.2s, transform 0.1s;
+}
+
+.taskItem:active {
+  cursor: grabbing;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Add styling for when item is being dragged */
+.taskItem.dragging {
+  opacity: 0.6;
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Rest of styling remains mostly the same */
+.completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.dragHandle {
+  margin-right: 10px;
+  color: #aaa;
+  cursor: grab;
+  font-size: 16px;
+}
+
+.dragHandle:hover {
+  color: #666;
+}
+
+/* Add ghost styling for drag preview */
+.dragGhost {
+  position: absolute;
+  top: -1000px;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Add drop target styling */
+.dropTarget {
+  background-color: #f0f8ff;
+  box-shadow: 0 0 0 2px #4a90e2;
+}
+
+.checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.checkbox:checked {
+  background-color: #4a90e2;
+  border-color: #4a90e2;
+}
+
+.checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.taskContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.taskTitle {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.categoryIndicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 24px;
+}
+
+.roovet {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563EB; /* Blue */
+}
+
+.roocode {
+  background-color: rgba(5, 150, 105, 0.1);
+  color: #059669; /* Green */
+}
+
+.personal {
+  background-color: rgba(124, 58, 237, 0.1);
+  color: #7C3AED; /* Purple */
+}
+
+.priorityIndicator {
+  color: #F59E0B; /* Amber/Yellow for star */
+  font-size: 16px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.rolledOver {
+  font-style: italic;
+}
+
+.rolledOverIndicator {
+  font-size: 12px;
+  color: #999;
+  margin-left: 4px;
+}
+
+.actionButton {
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .taskItem {
+    padding: 8px;
+  }
+  
+  .categoryIndicator {
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+  
+  .taskTitle {
+    font-size: 13px;
+  }
+}
