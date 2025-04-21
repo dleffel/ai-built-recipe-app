@@ -1,183 +1,122 @@
-.container {
-  width: 100%;
+.taskListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
   max-width: 800px;
   margin: 0 auto;
-  padding: var(--spacing-3);
-  min-height: 400px;
-  height: calc(100vh - 120px);
-  overflow: hidden;
-  position: relative;
 }
 
 .dayContainer {
-  background: white;
-  padding: var(--spacing-3) var(--spacing-4);
-  transition: all 0.2s ease-in-out;
-  animation: fadeIn 0.3s ease-out;
-  margin-bottom: var(--spacing-3);
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s;
 }
 
-.dayContainer:hover {
-  background-color: var(--color-card-hover);
+/* Highlight style for drop target day */
+.dayContainer.dayDropTarget {
+  background-color: #e8f0fe;
+  box-shadow: 0 0 0 2px #4a90e2;
 }
 
 .dayHeader {
+  margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-3);
-  padding-bottom: var(--spacing-2);
-  border-bottom: 1px solid var(--color-accent-light);
 }
 
 .dayTitle {
-  font-family: var(--font-content);
-  font-size: 1.25rem;
-  color: var(--color-text);
   margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  color: #333;
+  font-size: 18px;
 }
 
 .today {
-  font-weight: 700;
-  color: var(--color-accent);
+  color: #4a90e2;
+  font-weight: 600;
 }
 
 .taskList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  margin-bottom: var(--spacing-3);
-}
-
-.addTaskButton {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  background: transparent;
-  border: none;
-  color: var(--color-muted);
-  font-family: var(--font-ui);
-  font-size: var(--font-size-base);
-  padding: var(--spacing-2) var(--spacing-3);
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  width: 100%;
-  text-align: left;
-}
-
-.addTaskButton:hover {
-  background: var(--color-accent-light);
-  color: var(--color-accent);
-}
-
-.addTaskButton:active {
-  transform: translateY(1px);
-}
-
-.addTaskIcon {
-  font-size: 1.25rem;
-  line-height: 1;
+  min-height: 40px;
 }
 
 .emptyState {
-  padding: var(--spacing-3);
-  text-align: center;
-  color: var(--color-muted);
+  color: #999;
   font-style: italic;
-  font-family: var(--font-ui);
-  font-size: 0.875rem;
+  padding: 8px 0;
+}
+
+/* Add task button styling */
+.addTaskButton {
+  background: transparent;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  padding: 8px 12px;
+  width: 100%;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.addTaskButton:hover {
+  background-color: #f0f0f0;
+  border-color: #aaa;
+  color: #333;
+}
+
+.addTaskIcon {
+  margin-right: 8px;
+  font-size: 16px;
 }
 
 /* Loading and error states */
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-size: 1.2rem;
-  color: var(--color-muted);
+.loading, .error {
+  padding: 24px;
+  text-align: center;
+  color: #555;
 }
 
 .error {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-size: 1.2rem;
-  color: #e53e3e;
-  background-color: #fff5f5;
+  color: #e53935;
+}
+
+/* Drag ghost styling */
+.dragGhost {
+  padding: 8px 12px;
+  background-color: white;
   border-radius: 4px;
-  padding: 1rem;
-  margin: 1rem 0;
-}
-
-/* Drag and drop styles */
-.dropIndicator {
-  height: 2px;
-  background-color: var(--color-accent);
-  margin: var(--spacing-1) 0;
-  border-radius: 1px;
-  animation: pulse 1.5s infinite;
-}
-
-/* Virtualized list styles */
-.virtualizedRow {
-  padding: var(--spacing-1) 0;
-}
-
-.virtualizedList {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-accent-light) transparent;
-}
-
-.virtualizedList::-webkit-scrollbar {
-  width: 6px;
-}
-
-.virtualizedList::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.virtualizedList::-webkit-scrollbar-thumb {
-  background-color: var(--color-accent-light);
-  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
-  .container {
-    padding: var(--spacing-2);
-    height: calc(100vh - 80px);
+  .taskListContainer {
+    padding: 12px;
+    gap: 16px;
   }
   
   .dayContainer {
-    padding: var(--spacing-3);
+    padding: 12px;
   }
   
   .dayTitle {
-    font-size: 1.125rem;
+    font-size: 16px;
   }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
+  
+  .addTaskButton {
+    padding: 6px 10px;
   }
 }

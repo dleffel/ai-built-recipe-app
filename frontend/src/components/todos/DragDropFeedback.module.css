@@ -106,11 +106,36 @@
   margin: var(--spacing-1) 0;
   border-radius: 1px;
   animation: pulse 1.5s infinite;
+  /* Ensure the indicator is only visible during active drag */
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 /* Styles for the day container when it's a drop target */
+/* IMPORTANT: Do not change the background color of the day container during drag */
 .dayDropTarget {
-  background-color: var(--color-accent-light);
+  /* Keep the original white background */
+  background-color: white !important;
+  /* Add a border instead to indicate it's a drop target */
+  border: 2px dashed var(--color-accent) !important;
+  /* Add some padding to prevent content shift */
+  padding: calc(var(--spacing-3) - 2px) calc(var(--spacing-4) - 2px) !important;
+}
+
+/* IMPORTANT: Make sure task items remain fully visible during drag */
+.dayDropTarget [data-id] {
+  /* Force white background */
+  background-color: white !important;
+  /* Force full opacity */
+  opacity: 1 !important;
+  /* Add a subtle shadow for better visibility */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  /* Ensure z-index is higher than other elements */
+  position: relative !important;
+  z-index: 5 !important;
+  /* Force visibility */
+  visibility: visible !important;
+  display: flex !important;
 }
 
 /* Animation for the pulse effect */

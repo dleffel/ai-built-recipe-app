@@ -6,29 +6,8 @@ import { jest, describe, it, beforeEach, expect } from '@jest/globals';
 import { TaskListContainer } from '../components/todos/TaskListContainer';
 import { TodoProvider } from '../context/TodoContext';
 import { AuthProvider } from '../context/AuthContext';
-import { todoApi, Task } from '../services/todoApi';
+import { Task } from '../services/todoApi';
 import { MockFn } from '../setupTests';
-
-// Mock react-window and react-window-infinite-loader
-jest.mock('react-window', () => ({
-  FixedSizeList: ({ children, itemCount }: any) => {
-    const items: React.ReactNode[] = [];
-    for (let i = 0; i < itemCount; i++) {
-      items.push(children({ index: i, style: {} }));
-    }
-    return <div data-testid="virtualized-list">{items}</div>;
-  }
-}));
-
-jest.mock('react-window-infinite-loader', () => ({
-  __esModule: true,
-  default: ({ children, itemCount }: any) => {
-    return children({
-      onItemsRendered: () => {},
-      ref: () => {}
-    });
-  }
-}));
 
 // Mock the TodoContext
 jest.mock('../context/TodoContext', () => ({
@@ -43,130 +22,108 @@ jest.mock('../context/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }));
 
-// Mock the TaskItem component
-jest.mock('../components/todos/TaskItem', () => ({
-  TaskItem: ({ 
-    id, 
-    title, 
-    completed, 
-    category, 
-    isPriority, 
-    isRolledOver,
+// Mock the DayContainer component
+jest.mock('../components/todos/DayContainer', () => ({
+  DayContainer: ({ 
+    dayKey,
+    date,
+    isToday,
+    tasks,
+    editingTaskId,
+    creatingTaskForDay,
     onToggleComplete,
     onEdit,
+    onUpdate,
+    onDelete,
+    onAddTaskClick,
+    onCreateTask,
     onDragStart,
-    onDragEnd
+    onDragOver,
+    onDrop
   }: any) => (
     <div 
-      data-testid={`task-item-${id}`}
-      data-completed={completed}
-      data-category={category}
-      data-priority={isPriority}
-      data-rolled-over={isRolledOver}
+      data-testid={`day-container-${dayKey}`}
+      data-is-today={isToday}
     >
-      <span>{title}</span>
+      <h2>{isToday ? 'TODAY - ' : ''}{date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
+      <div data-testid={`task-list-${dayKey}`}>
+        {tasks.map((task: Task) => (
+          <div 
+            key={task.id}
+            data-testid={`task-item-${task.id}`}
+            data-completed={task.status === 'complete'}
+            data-category={task.category}
+            data-priority={task.isPriority}
+            data-rolled-over={task.isRolledOver}
+          >
+            <span>{task.title}</span>
+            <button 
+              data-testid={`toggle-${task.id}`} 
+              onClick={() => onToggleComplete(task)}
+            >
+              {task.status === 'complete' ? 'Mark Incomplete' : 'Mark Complete'}
+            </button>
+            <button 
+              data-testid={`edit-${task.id}`} 
+              onClick={() => onEdit(task.id)}
+            >
+              Edit
+            </button>
+          </div>
+        ))}
+        {editingTaskId && (
+          <div data-testid={`task-edit-${editingTaskId}`}>
+            <button 
+              data-testid={`save-edit-${editingTaskId}`} 
+              onClick={() => onUpdate({ 
+                id: editingTaskId, 
+                title: 'Updated Task', 
+                category: 'Roo Code', 
+                isPriority: false 
+              })}
+            >
+              Save
+            </button>
+            <button 
+              data-testid={`cancel-edit-${editingTaskId}`} 
+              onClick={() => onEdit('')}
+            >
+              Cancel
+            </button>
+            <button 
+              data-testid={`delete-task-${editingTaskId}`} 
+              onClick={() => onDelete(editingTaskId)}
+            >
+              Delete
+            </button>
+          </div>
+        )}
+        {creatingTaskForDay === dayKey && (
+          <div data-testid="task-creation">
+            <button 
+              data-testid="save-task-button" 
+              onClick={() => onCreateTask(dayKey, { 
+                title: 'New Task', 
+                category: 'Roo Code', 
+                isPriority: false 
+              })}
+            >
+              Save
+            </button>
+            <button 
+              data-testid="cancel-task-button" 
+              onClick={() => onAddTaskClick(dayKey)}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
       <button 
-        data-testid={`toggle-${id}`} 
-        onClick={onToggleComplete}
+        data-testid={`add-task-button-${dayKey}`}
+        onClick={() => onAddTaskClick(dayKey)}
       >
-        {completed ? 'Mark Incomplete' : 'Mark Complete'}
-      </button>
-      <button 
-        data-testid={`edit-${id}`} 
-        onClick={onEdit}
-      >
-        Edit
-      </button>
-    </div>
-  )
-}));
-
-// Mock the TaskCreation component
-jest.mock('../components/todos/TaskCreation', () => ({
-  TaskCreation: ({ onCancel, onSave }: any) => (
-    <div data-testid="task-creation">
-      <input 
-        data-testid="task-title-input" 
-        placeholder="Task title" 
-      />
-      <select data-testid="task-category-select">
-        <option value="Roo Vet">Roo Vet</option>
-        <option value="Roo Code">Roo Code</option>
-        <option value="Personal">Personal</option>
-      </select>
-      <label>
-        <input 
-          type="checkbox" 
-          data-testid="task-priority-checkbox" 
-        />
-        High Priority
-      </label>
-      <button 
-        data-testid="save-task-button" 
-        onClick={() => onSave({ 
-          title: 'New Task', 
-          category: 'Roo Code', 
-          isPriority: false 
-        })}
-      >
-        Save
-      </button>
-      <button 
-        data-testid="cancel-task-button" 
-        onClick={onCancel}
-      >
-        Cancel
-      </button>
-    </div>
-  )
-}));
-
-// Mock the TaskEdit component
-jest.mock('../components/todos/TaskEdit', () => ({
-  TaskEdit: ({ id, title, category, isPriority, onCancel, onSave, onDelete }: any) => (
-    <div data-testid={`task-edit-${id}`}>
-      <input 
-        data-testid={`edit-title-${id}`} 
-        defaultValue={title} 
-      />
-      <select 
-        data-testid={`edit-category-${id}`} 
-        defaultValue={category}
-      >
-        <option value="Roo Vet">Roo Vet</option>
-        <option value="Roo Code">Roo Code</option>
-        <option value="Personal">Personal</option>
-      </select>
-      <label>
-        <input 
-          type="checkbox" 
-          data-testid={`edit-priority-${id}`} 
-          defaultChecked={isPriority} 
-        />
-        High Priority
-      </label>
-      <button 
-        data-testid={`save-edit-${id}`} 
-        onClick={() => onSave({ 
-          id, 
-          title: 'Updated Task', 
-          category, 
-          isPriority 
-        })}
-      >
-        Save
-      </button>
-      <button 
-        data-testid={`cancel-edit-${id}`} 
-        onClick={onCancel}
-      >
-        Cancel
-      </button>
-      <button 
-        data-testid={`delete-task-${id}`} 
-        onClick={() => onDelete(id)}
-      >
-        Delete
+        Add task
       </button>
     </div>
   )
@@ -229,13 +186,11 @@ const mockUseTodo = (overrides = {}) => ({
   loading: false,
   error: null,
   fetchTasks: mockFetchTasks,
-  fetchTasksByDate: jest.fn(),
   createTask: mockCreateTask,
   updateTask: mockUpdateTask,
   deleteTask: mockDeleteTask,
   moveTask: mockMoveTask,
   reorderTask: mockReorderTask,
-  checkForRolloverTasks: jest.fn(),
   ...overrides
 });
 
@@ -247,7 +202,7 @@ describe('TaskListContainer', () => {
     (useTodo as jest.Mock).mockImplementation(() => mockUseTodo());
   });
 
-  it('renders task lists for today, tomorrow, and day after tomorrow', async () => {
+  it('renders task lists for today and other days', async () => {
     // Mock the formatDate function to return predictable values
     jest.spyOn(global.Date.prototype, 'toLocaleDateString').mockImplementation((locale, options) => {
       if (options?.weekday === 'long') {
@@ -262,8 +217,8 @@ describe('TaskListContainer', () => {
     expect(screen.getByText('TODAY - Wednesday, April 16')).toBeInTheDocument();
     
     // Check for tasks
-    expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
-    expect(screen.getByTestId('task-item-task-2')).toBeInTheDocument();
+    expect(screen.getByTestId(`task-item-task-1`)).toBeInTheDocument();
+    expect(screen.getByTestId(`task-item-task-2`)).toBeInTheDocument();
     
     // Restore the original implementation
     (global.Date.prototype.toLocaleDateString as jest.Mock).mockRestore();
@@ -331,7 +286,7 @@ describe('TaskListContainer', () => {
     
     // Render with error
     const { unmount } = render(<TaskListContainer />);
-    expect(screen.getByText('Failed to fetch tasks')).toBeInTheDocument();
+    expect(screen.getByText('Error loading tasks: Failed to fetch tasks')).toBeInTheDocument();
     
     // Unmount the component
     unmount();
@@ -350,7 +305,7 @@ describe('TaskListContainer', () => {
     render(<TaskListContainer />);
     
     // Verify the error is no longer displayed
-    expect(screen.queryByText('Failed to fetch tasks')).not.toBeInTheDocument();
+    expect(screen.queryByText('Error loading tasks: Failed to fetch tasks')).not.toBeInTheDocument();
   });
 
   it('opens task creation form when add task button is clicked', async () => {
@@ -365,8 +320,8 @@ describe('TaskListContainer', () => {
     });
     
     // Click the add task button for today
-    const addTaskButtons = screen.getAllByText('Add task');
-    await userEvent.click(addTaskButtons[0]);
+    const addTaskButton = screen.getByTestId(`add-task-button-${todayKey}`);
+    await userEvent.click(addTaskButton);
     
     // Check if the task creation form is displayed
     expect(screen.getByTestId('task-creation')).toBeInTheDocument();
@@ -384,8 +339,8 @@ describe('TaskListContainer', () => {
     });
     
     // Click the add task button for today
-    const addTaskButtons = screen.getAllByText('Add task');
-    await userEvent.click(addTaskButtons[0]);
+    const addTaskButton = screen.getByTestId(`add-task-button-${todayKey}`);
+    await userEvent.click(addTaskButton);
     
     // Check if the task creation form is displayed
     await waitFor(() => {
@@ -417,9 +372,6 @@ describe('TaskListContainer', () => {
       expect(screen.queryByText('Loading tasks...')).not.toBeInTheDocument();
     });
     
-    // With virtualization mocked, we should be able to find the task item
-    expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
-    
     // Find and click the toggle button for task 1
     const toggleButton = screen.getByTestId('toggle-task-1');
     await userEvent.click(toggleButton);
@@ -441,15 +393,13 @@ describe('TaskListContainer', () => {
       expect(screen.queryByText('Loading tasks...')).not.toBeInTheDocument();
     });
     
-    // With virtualization mocked, we should be able to find the task item
-    expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
-    
     // Find and click the edit button for task 1
     const editButton = screen.getByTestId('edit-task-1');
     await userEvent.click(editButton);
     
     // Check if the task edit form is displayed
-    expect(screen.getByTestId('task-edit-task-1')).toBeInTheDocument();
+    const editForms = screen.getAllByTestId('task-edit-task-1');
+    expect(editForms.length).toBeGreaterThan(0);
   });
 
   it('updates a task when the edit form is submitted', async () => {
@@ -463,18 +413,16 @@ describe('TaskListContainer', () => {
       expect(screen.queryByText('Loading tasks...')).not.toBeInTheDocument();
     });
     
-    // With virtualization mocked, we should be able to find the task item
-    expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
-    
     // Find and click the edit button for task 1
     const editButton = screen.getByTestId('edit-task-1');
     await userEvent.click(editButton);
     
     // Check if the task edit form is displayed
-    expect(screen.getByTestId('task-edit-task-1')).toBeInTheDocument();
+    const editForms = screen.getAllByTestId('task-edit-task-1');
+    expect(editForms.length).toBeGreaterThan(0);
     
     // Find and click the save button
-    const saveButton = screen.getByTestId('save-edit-task-1');
+    const saveButton = screen.getAllByTestId('save-edit-task-1')[0];
     await userEvent.click(saveButton);
     
     // Check if updateTask was called with the correct parameters
@@ -500,15 +448,12 @@ describe('TaskListContainer', () => {
       expect(screen.queryByText('Loading tasks...')).not.toBeInTheDocument();
     });
     
-    // With virtualization mocked, we should be able to find the task item
-    expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
-    
     // Find and click the edit button for task 1
     const editButton = screen.getByTestId('edit-task-1');
     await userEvent.click(editButton);
     
     // Find and click the delete button
-    const deleteButton = screen.getByTestId('delete-task-task-1');
+    const deleteButton = screen.getAllByTestId('delete-task-task-1')[0];
     await userEvent.click(deleteButton);
     
     // Check if deleteTask was called with the correct parameters
