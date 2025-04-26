@@ -51,7 +51,12 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         </span>
         
         {/* Task title */}
-        <span className={`${styles.taskTitle} ${task.isRolledOver ? styles.rolledOver : ''}`}>
+        <span
+          className={`${styles.taskTitle} ${task.isRolledOver ? styles.rolledOver : ''}`}
+          onClick={onToggleComplete}
+          role="button"
+          aria-label={`Toggle completion of task: ${task.title}`}
+        >
           {task.title}
           {task.isRolledOver && (
             <span className={styles.rolledOverIndicator} title="Rolled over from previous day">

@@ -1,6 +1,6 @@
 .taskItem {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 10px;
   margin-bottom: 8px;
   background-color: white;
@@ -93,7 +93,7 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
 }
 
@@ -101,9 +101,10 @@
   font-size: 14px;
   color: #333;
   margin: 0;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  cursor: pointer;
 }
 
 .categoryIndicator {
