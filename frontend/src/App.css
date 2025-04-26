@@ -270,6 +270,10 @@ body::before {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --page-margin: 0.5rem;
+  }
+  
   .header-content {
     padding: 0;
   }

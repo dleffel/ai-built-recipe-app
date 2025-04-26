@@ -104,12 +104,15 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .taskListContainer {
-    padding: 12px;
-    gap: 16px;
+    padding: 8px;
+    gap: 12px;
+    max-width: 100%;
+    width: 100%;
   }
   
   .dayContainer {
-    padding: 12px;
+    padding: 10px;
+    border-radius: 6px;
   }
   
   .dayTitle {
