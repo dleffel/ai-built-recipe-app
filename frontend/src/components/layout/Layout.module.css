@@ -73,6 +73,8 @@
 
   .main {
     width: 100%;
+    max-width: 100%;
     padding: 0 var(--page-margin);
+    padding-bottom: 60px; /* Add bottom padding to account for mobile navigation */
   }
 }

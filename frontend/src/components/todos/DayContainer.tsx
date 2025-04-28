@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Task } from '../../services/todoApi';
 import { TaskItem } from './TaskItem';
 import { TaskEdit } from './TaskEdit';
 import { TaskCreation } from './TaskCreation';
 import styles from './TaskListContainer.module.css';
+import './TodoVariables.css';
 
 interface DayContainerProps {
   dayKey: string;
@@ -23,7 +24,7 @@ interface DayContainerProps {
   onDrop: (e: React.DragEvent, dayKey: string) => void;
 }
 
-export const DayContainer: React.FC<DayContainerProps> = ({
+export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
   dayKey,
   date,
   isToday,
@@ -39,7 +40,7 @@ export const DayContainer: React.FC<DayContainerProps> = ({
   onDragStart,
   onDragOver,
   onDrop
-}) => {
+}, ref) => {
   // Format date for display
   const formatDate = (date: Date): string => {
     const options: Intl.DateTimeFormatOptions = {
@@ -50,8 +51,14 @@ export const DayContainer: React.FC<DayContainerProps> = ({
     return date.toLocaleDateString('en-US', options);
   };
   
+  // Count completed and total tasks
+  const completedTasks = tasks.filter(task => task.status === 'complete').length;
+  const totalTasks = tasks.length;
+  const hasCompletedTasks = completedTasks > 0;
+  
   return (
     <div
+      ref={ref}
       className={`${styles.dayContainer}`}
       data-day={dayKey}
       onDragOver={(e) => onDragOver(e, dayKey)}
@@ -61,6 +68,14 @@ export const DayContainer: React.FC<DayContainerProps> = ({
         <h2 className={`${styles.dayTitle} ${isToday ? styles.today : ''}`}>
           {isToday ? 'TODAY - ' : ''}{formatDate(date)}
         </h2>
+        
+        {totalTasks > 0 && (
+          <div className={styles.taskCounter} title={`${completedTasks} of ${totalTasks} tasks completed`}>
+            <span className={styles.completedCount}>{completedTasks}</span>
+            <span className={styles.countDivider}>/</span>
+            <span className={styles.totalCount}>{totalTasks}</span>
+          </div>
+        )}
       </div>
       
       <div className={styles.taskList}>
@@ -106,9 +121,14 @@ export const DayContainer: React.FC<DayContainerProps> = ({
       <button
         className={styles.addTaskButton}
         onClick={() => onAddTaskClick(dayKey)}
+        aria-label="Add new task"
       >
-        <span className={styles.addTaskIcon}>+</span> Add task
+        <svg className={styles.addTaskIcon} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 3V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+        Add task
       </button>
     </div>
   );
-};
+});

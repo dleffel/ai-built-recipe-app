@@ -1,62 +1,72 @@
+@import './TodoVariables.css';
+
 /* Styles for the drag feedback component */
 .dragFeedback {
   display: flex;
   align-items: center;
   background-color: white;
-  border-radius: 4px;
-  padding: 8px 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-1) var(--spacing-2);
+  box-shadow: var(--shadow-lg);
   max-width: 300px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   pointer-events: none;
   position: fixed;
-  z-index: 9999;
+  z-index: var(--z-index-dragitem);
   top: -1000px;
   left: -1000px;
+  border: 1px solid var(--todo-border-color);
 }
 
 .categoryIndicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-  padding: 2px 4px;
-  border-radius: 3px;
-  margin-right: 8px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-right: var(--spacing-1);
   color: white;
+  letter-spacing: 0.5px;
 }
 
 .rooVet {
-  background-color: #3b82f6; /* Blue */
+  background-color: var(--category-roovet-bg);
 }
 
 .rooCode {
-  background-color: #10b981; /* Green */
+  background-color: var(--category-roocode-bg);
 }
 
 .personal {
-  background-color: #8b5cf6; /* Purple */
+  background-color: var(--category-personal-bg);
 }
 
 .taskTitle {
   flex: 1;
-  font-size: 0.9rem;
-  margin-right: 8px;
+  font-size: var(--font-size-sm);
+  margin-right: var(--spacing-1);
+  font-family: var(--font-family-ui);
+  font-weight: var(--font-weight-medium);
+  color: var(--todo-text-color);
 }
 
 .priorityIndicator {
-  color: #f59e0b; /* Amber */
-  font-size: 1rem;
+  color: var(--priority-color);
+  font-size: var(--font-size-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Styles for the draggable item */
 .draggable {
   cursor: grab;
   user-select: none;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .draggable:active {
@@ -65,50 +75,55 @@
 
 /* Styles for the item being dragged */
 .dragging {
-  opacity: 0.8;
+  opacity: 0.9;
   transform: scale(1.02);
-  background-color: var(--color-accent-light);
-  z-index: 1000;
+  background-color: var(--feedback-info-bg);
+  z-index: var(--z-index-dragitem);
   pointer-events: none;
+  box-shadow: var(--shadow-lg);
 }
 
 /* Styles for the drag preview (ghost element) */
 .dragPreview {
-  opacity: 0.6;
-  background-color: var(--color-accent-light);
+  opacity: 0.8;
+  background-color: var(--feedback-info-bg);
   pointer-events: none;
+  border: 1px solid var(--button-primary-bg);
 }
 
 /* Styles for the drop target */
 .dropTarget {
-  background-color: var(--color-accent-light);
-  opacity: 0.7;
+  background-color: var(--feedback-info-bg);
+  opacity: 0.8;
   margin: var(--spacing-1) 0;
   height: 40px;
   animation: pulse 1.5s infinite;
+  border-radius: var(--radius-md);
 }
 
 /* Styles for valid drop targets */
 .validDropTarget {
-  background-color: rgba(5, 150, 105, 0.1); /* Light green */
+  background-color: var(--feedback-success-bg);
+  border: 1px dashed var(--feedback-success-text);
 }
 
 /* Styles for invalid drop targets */
 .invalidDropTarget {
-  background-color: rgba(220, 38, 38, 0.1); /* Light red */
+  background-color: var(--feedback-error-bg);
+  border: 1px dashed var(--feedback-error-text);
   cursor: not-allowed;
 }
 
 /* Styles for the drop indicator line */
 .dropIndicator {
-  height: 2px;
-  background-color: var(--color-accent);
+  height: 3px;
+  background-color: var(--button-primary-bg);
   margin: var(--spacing-1) 0;
-  border-radius: 1px;
+  border-radius: var(--radius-sm);
   animation: pulse 1.5s infinite;
   /* Ensure the indicator is only visible during active drag */
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-fast);
 }
 
 /* Styles for the day container when it's a drop target */
@@ -117,9 +132,9 @@
   /* Keep the original white background */
   background-color: white !important;
   /* Add a border instead to indicate it's a drop target */
-  border: 2px dashed var(--color-accent) !important;
+  border: 2px dashed var(--button-primary-bg) !important;
   /* Add some padding to prevent content shift */
-  padding: calc(var(--spacing-3) - 2px) calc(var(--spacing-4) - 2px) !important;
+  padding: calc(var(--spacing-2) - 2px) !important;
 }
 
 /* IMPORTANT: Make sure task items remain fully visible during drag */
@@ -129,7 +144,7 @@
   /* Force full opacity */
   opacity: 1 !important;
   /* Add a subtle shadow for better visibility */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--shadow-sm) !important;
   /* Ensure z-index is higher than other elements */
   position: relative !important;
   z-index: 5 !important;
@@ -141,7 +156,7 @@
 /* Animation for the pulse effect */
 @keyframes pulse {
   0%, 100% {
-    opacity: 0.6;
+    opacity: 0.7;
   }
   50% {
     opacity: 1;
@@ -162,5 +177,19 @@
 @media (max-width: 768px) {
   .dropTarget {
     height: 30px;
+  }
+  
+  .dragFeedback {
+    max-width: 250px;
+    padding: calc(var(--spacing-1) * 0.75) var(--spacing-1);
+  }
+  
+  .categoryIndicator {
+    padding: 2px 6px;
+    font-size: calc(var(--font-size-xs) * 0.9);
+  }
+  
+  .taskTitle {
+    font-size: calc(var(--font-size-xs) * 1.1);
   }
 }

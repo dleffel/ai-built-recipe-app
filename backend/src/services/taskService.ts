@@ -179,7 +179,7 @@ export class TaskService {
 
   /**
    * Roll over incomplete tasks from one day to the next
-   * Creates copies of incomplete tasks for the next day instead of moving them
+   * Updates incomplete tasks to move them to the next day instead of creating copies
    */
   static async rollOverTasks(fromDate: Date, toDate: Date): Promise<number> {
     // Create start and end of the day for the given date
@@ -205,11 +205,17 @@ export class TaskService {
     }
 
     // Get the highest display order for the target date to ensure new tasks are added at the end
+    const targetStartOfDay = new Date(toDate);
+    targetStartOfDay.setHours(0, 0, 0, 0);
+    
+    const targetEndOfDay = new Date(toDate);
+    targetEndOfDay.setHours(23, 59, 59, 999);
+    
     const tasksForTargetDate = await this.prisma.task.findMany({
       where: {
         dueDate: {
-          gte: new Date(toDate.setHours(0, 0, 0, 0)),
-          lte: new Date(toDate.setHours(23, 59, 59, 999))
+          gte: targetStartOfDay,
+          lte: targetEndOfDay
         }
       },
       orderBy: {
@@ -222,25 +228,21 @@ export class TaskService {
       ? tasksForTargetDate[0].displayOrder + 10
       : 0;
 
-    // Create copies of incomplete tasks for the new date
-    const createPromises = incompleteTasks.map((task, index) => {
+    // Update incomplete tasks to move them to the next day instead of creating copies
+    const updatePromises = incompleteTasks.map((task, index) => {
       const displayOrder = baseDisplayOrder + (index * 10);
-      return this.prisma.task.create({
+      return this.prisma.task.update({
+        where: { id: task.id },
         data: {
-          title: task.title,
-          status: 'incomplete',
           dueDate: toDate,
-          category: task.category,
-          isPriority: task.isPriority,
           isRolledOver: true,
-          displayOrder,
-          userId: task.userId
+          displayOrder
         }
       });
     });
 
-    const createdTasks = await Promise.all(createPromises);
-    return createdTasks.length;
+    const updatedTasks = await Promise.all(updatePromises);
+    return updatedTasks.length;
   }
 
   /**

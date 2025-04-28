@@ -67,7 +67,7 @@
     display: none;
   }
   
-  /* Mobile navigation styles would go here */
+  /* Mobile navigation styles */
   .mobileNavigation {
     display: flex;
     position: fixed;
@@ -78,6 +78,7 @@
     border-top: 1px solid var(--color-border);
     box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
     z-index: 10;
+    padding: var(--spacing-1) 0;
   }
   
   .mobileNavList {
@@ -86,23 +87,43 @@
     margin: 0;
     padding: 0;
     width: 100%;
+    justify-content: space-around;
   }
   
   .mobileNavItem {
     flex: 1;
     text-align: center;
+    margin: 0 var(--spacing-1);
   }
   
   .mobileNavLink {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     padding: var(--spacing-2) 0;
     color: var(--color-muted);
     text-decoration: none;
     font-size: 0.75rem;
     font-weight: 500;
     font-family: var(--font-ui);
+    min-height: 44px; /* Minimum touch target height */
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  .mobileNavIcon {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .mobileNavText {
+    display: block;
   }
   
   .mobileNavLink:hover {
@@ -111,5 +132,19 @@
   
   .mobileActiveLink {
     color: var(--color-accent);
+    font-weight: 600;
+  }
+  
+  /* Enhanced active state visualization */
+  .mobileActiveLink::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
+    background-color: var(--color-accent);
+    border-radius: 1.5px;
   }
 }

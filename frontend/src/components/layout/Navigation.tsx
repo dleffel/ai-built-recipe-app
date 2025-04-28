@@ -1,10 +1,12 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import styles from './Navigation.module.css';
+import useMediaQuery from '../../hooks/useMediaQuery';
+import { FaHome, FaUtensils, FaListUl } from 'react-icons/fa';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
-  const isMobile = window.innerWidth <= 768;
+  const isMobile = useMediaQuery('(max-width: 768px)');
   
   // Function to determine if a link is active
   const isActive = (path: string): boolean => {
@@ -68,7 +70,10 @@ const Navigation: React.FC = () => {
             }
             end
           >
-            Home
+            <span className={styles.mobileNavIcon}>
+              {FaHome({ 'aria-hidden': 'true' })}
+            </span>
+            <span className={styles.mobileNavText}>Home</span>
           </NavLink>
         </li>
         <li className={styles.mobileNavItem}>
@@ -78,7 +83,10 @@ const Navigation: React.FC = () => {
               isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
             }
           >
-            Recipes
+            <span className={styles.mobileNavIcon}>
+              {FaUtensils({ 'aria-hidden': 'true' })}
+            </span>
+            <span className={styles.mobileNavText}>Recipes</span>
           </NavLink>
         </li>
         <li className={styles.mobileNavItem}>
@@ -88,17 +96,18 @@ const Navigation: React.FC = () => {
               isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
             }
           >
-            To-Do
+            <span className={styles.mobileNavIcon}>
+              {FaListUl({ 'aria-hidden': 'true' })}
+            </span>
+            <span className={styles.mobileNavText}>To-Do</span>
           </NavLink>
         </li>
       </ul>
     </nav>
   );
 
-  // For now, we'll just return the desktop navigation
-  // In a more complete implementation, we would use a media query hook
-  // to determine which navigation to show based on screen size
-  return desktopNav;
+  // Return the appropriate navigation based on screen size
+  return isMobile ? mobileNav : desktopNav;
 };
 
 export default Navigation;
