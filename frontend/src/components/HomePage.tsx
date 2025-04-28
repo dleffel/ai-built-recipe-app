@@ -12,7 +12,7 @@ const HomePage: React.FC = () => {
     <Layout>
       <div className={styles.homeContainer}>
         <h1 className={styles.welcomeHeading}>
-          {user ? `Welcome, ${user.displayName || 'Chef'}!` : 'Welcome to Recipe App'}
+          {user ? `Welcome, ${user.displayName || 'Chef'}!` : 'Welcome to Organizer'}
         </h1>
         <p className={styles.welcomeSubheading}>
           Your modular platform for organizing recipes and more. Choose a module below to get started.
@@ -37,20 +37,23 @@ const HomePage: React.FC = () => {
             </button>
           </Link>
 
-          {/* To-Do Module Card (Coming Soon) */}
-          <div className={`${styles.moduleCard} ${styles.comingSoonModule}`}>
+          {/* To-Do Module Card */}
+          <Link to="/todos" className={`${styles.moduleCard} ${styles.activeModule}`}>
             <div className={styles.moduleIcon}>✓</div>
             <h2 className={styles.moduleTitle}>To-Do List</h2>
             <p className={styles.moduleDescription}>
               Create shopping lists, meal plans, and organize your cooking tasks in one place.
             </p>
-            <button 
+            <button
               className={styles.moduleButton}
-              disabled
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/todos');
+              }}
             >
-              Coming Soon
+              Open To-Do List
             </button>
-          </div>
+          </Link>
         </div>
       </div>
     </Layout>

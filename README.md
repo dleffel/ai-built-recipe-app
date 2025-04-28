@@ -1,11 +1,11 @@
-# AI-Built Recipe App
+# Organizer
 
-A full-stack recipe application built with React frontend and Express backend.
+A full-stack modular organization application with React frontend and Express backend, featuring recipe management and task organization modules.
 
 ## Project Structure
 
 ```
-ai-built-recipe-app/
+organizer/
 ├── backend/             # Express server
 │   ├── src/
 │   │   ├── server.js   # Main server file
@@ -15,6 +15,9 @@ ai-built-recipe-app/
 └── frontend/           # React application
     ├── src/
     │   ├── components/
+    │   │   ├── recipes/  # Recipe module components
+    │   │   ├── todos/    # To-Do module components
+    │   │   └── layout/   # Shared layout components
     │   ├── App.js
     │   └── index.js
     └── package.json
@@ -30,7 +33,7 @@ ai-built-recipe-app/
 1. Clone the repository:
 ```bash
 git clone [repository-url]
-cd ai-built-recipe-app
+cd organizer
 ```
 
 2. Install dependencies for both frontend and backend:
@@ -111,7 +114,23 @@ cd frontend && npm test
 
 ## API Endpoints
 
+### Core Endpoints
 - `GET /api/health` - Health check endpoint
+
+### Recipe Module Endpoints
+- `GET /api/recipes` - List recipes
+- `POST /api/recipes` - Create recipe
+- `GET /api/recipes/:id` - Get recipe details
+- `PUT /api/recipes/:id` - Update recipe
+- `DELETE /api/recipes/:id` - Delete recipe
+- `POST /api/recipes/extract-url` - Extract recipe from URL
+
+### To-Do Module Endpoints
+- `GET /api/tasks` - List tasks
+- `POST /api/tasks` - Create task
+- `GET /api/tasks/:id` - Get task details
+- `PUT /api/tasks/:id` - Update task
+- `DELETE /api/tasks/:id` - Delete task
 
 ## Contributing
 

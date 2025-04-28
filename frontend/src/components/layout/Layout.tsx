@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               className={styles.title} 
               onClick={() => navigate('/')}
             >
-              Recipe App
+              Organizer
             </h1>
             <Navigation />
           </div>

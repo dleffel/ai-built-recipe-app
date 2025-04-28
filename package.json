@@ -1,7 +1,7 @@
 {
-  "name": "ai-built-recipe-app",
+  "name": "organizer",
   "version": "1.0.0",
-  "description": "Recipe application with Express backend and React frontend",
+  "description": "Modular organization application with Express backend and React frontend",
   "main": "index.js",
   "scripts": {
     "start": "node backend/src/server.js",
@@ -18,7 +18,9 @@
     "test:frontend:coverage": "cd frontend && npm run test:coverage"
   },
   "keywords": [
+    "organizer",
     "recipe",
+    "tasks",
     "express",
     "react"
   ],

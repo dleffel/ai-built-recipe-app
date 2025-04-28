@@ -39,7 +39,7 @@ router.get('/google/callback',
     next();
   },
   passport.authenticate('google', {
-    failureRedirect: 'https://recipes.dannyleffel.com?error=auth_failed'
+    failureRedirect: 'https://organizer.dannyleffel.com?error=auth_failed'
   }),
   async (req: Request, res: Response) => {
     try {
@@ -55,7 +55,7 @@ router.get('/google/callback',
       // Ensure user is properly logged in
       if (!req.user) {
         console.error('No user in request after Google authentication');
-        res.redirect('https://recipes.dannyleffel.com?error=auth_failed');
+        res.redirect('https://organizer.dannyleffel.com?error=auth_failed');
         return;
       }
 
@@ -99,10 +99,10 @@ router.get('/google/callback',
       });
       
       // Redirect to frontend with success
-      res.redirect('https://recipes.dannyleffel.com');
+      res.redirect('https://organizer.dannyleffel.com');
     } catch (error) {
       console.error('Error in Google callback:', error);
-      res.redirect('https://recipes.dannyleffel.com?error=auth_failed');
+      res.redirect('https://organizer.dannyleffel.com?error=auth_failed');
     }
   }
 );

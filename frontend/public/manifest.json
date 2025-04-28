@@ -1,6 +1,6 @@
 {
-  "short_name": "Recipe App",
-  "name": "Recipe App - Find and Save Recipes",
+  "short_name": "Organizer",
+  "name": "Organizer - Manage your recipes, tasks, and more",
   "icons": [
     {
       "src": "favicon.ico",
