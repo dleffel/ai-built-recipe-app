@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Express backend for recipe app",
+  "description": "Express backend for Organizer app",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
