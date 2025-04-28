@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTodo } from '../../context/TodoContext';
 import { Task } from '../../services/todoApi';
 import { DayContainer } from './DayContainer';
@@ -28,6 +28,9 @@ export const TaskListContainer: React.FC = () => {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  
+  // Reference to the "today" day container for auto-scrolling
+  const todayRef = useRef<HTMLDivElement>(null);
   
   // Generate date array for the fixed range
   const dateArray = React.useMemo(() => {
@@ -67,6 +70,17 @@ export const TaskListContainer: React.FC = () => {
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+  
+  // Auto-scroll to today's tasks when component mounts and tasks are loaded
+  useEffect(() => {
+    if (!loading && !error && tasks.length > 0 && todayRef.current) {
+      // Scroll to the today element with a small offset to position it at the top
+      todayRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  }, [loading, error, tasks.length]);
 
   // Task action handlers
   const handleAddTaskClick = (day: string) => {
@@ -329,6 +343,7 @@ export const TaskListContainer: React.FC = () => {
             dayKey={key}
             date={date}
             isToday={isToday}
+            ref={isToday ? todayRef : undefined}
             tasks={tasksForDay}
             editingTaskId={editingTaskId}
             creatingTaskForDay={creatingTaskForDay}
