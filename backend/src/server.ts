@@ -72,7 +72,7 @@ const cookieConfig = {
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
-  domain: process.env.NODE_ENV === 'production' ? 'api.recipes.dannyleffel.com' : undefined,
+  domain: process.env.NODE_ENV === 'production' ? 'api.organizer.dannyleffel.com' : undefined,
   path: '/',
   httpOnly: true,
   signed: true
