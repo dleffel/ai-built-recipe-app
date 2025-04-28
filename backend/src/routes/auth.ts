@@ -92,7 +92,7 @@ router.get('/google/callback',
         },
         setCookieHeader: res.getHeader('set-cookie'),
         cookieConfig: {
-          domain: process.env.NODE_ENV === 'production' ? '.recipes.dannyleffel.com' : undefined,
+          domain: process.env.NODE_ENV === 'production' ? '.organizer.dannyleffel.com' : undefined,
           secure: process.env.NODE_ENV === 'production',
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
         }
