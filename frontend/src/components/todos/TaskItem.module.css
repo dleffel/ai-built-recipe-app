@@ -1,81 +1,116 @@
+@import './TodoVariables.css';
+
 .taskItem {
   display: flex;
-  align-items: flex-start;
-  padding: 10px;
-  margin-bottom: 8px;
+  align-items: center;
+  padding: var(--spacing-1) var(--spacing-2);
+  margin-bottom: var(--spacing-1);
   background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   cursor: grab;
-  transition: box-shadow 0.2s, transform 0.1s;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  border: 1px solid var(--todo-border-color);
+}
+
+.taskItem:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .taskItem:active {
   cursor: grabbing;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Add styling for when item is being dragged */
 .taskItem.dragging {
-  opacity: 0.6;
+  opacity: 0.8;
   transform: scale(1.02);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Rest of styling remains mostly the same */
 .completed {
-  opacity: 0.6;
+  opacity: 0.85;
+  background-color: #F9FAFB;
+  border-color: var(--todo-border-color);
+}
+
+.completed .taskTitle {
   text-decoration: line-through;
+  color: var(--status-complete-color);
 }
 
 .dragHandle {
-  margin-right: 10px;
-  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--spacing-1);
+  color: var(--todo-muted-color);
   cursor: grab;
-  font-size: 16px;
+  font-size: var(--font-size-base);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
 }
 
 .dragHandle:hover {
-  color: #666;
+  color: var(--todo-text-color);
+  background-color: var(--button-secondary-bg);
+}
+
+.dragHandleIcon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Add ghost styling for drag preview */
 .dragGhost {
   position: absolute;
   top: -1000px;
-  background-color: #f0f0f0;
-  padding: 10px;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  background-color: var(--todo-bg-color);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border: 1px solid var(--todo-border-color);
 }
 
 /* Add drop target styling */
 .dropTarget {
-  background-color: #f0f8ff;
-  box-shadow: 0 0 0 2px #4a90e2;
+  background-color: var(--feedback-info-bg);
+  box-shadow: 0 0 0 2px var(--button-primary-bg);
 }
 
 .checkbox {
   appearance: none;
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #aaa;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--todo-muted-color);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   position: relative;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   flex-shrink: 0;
-  margin-right: 10px;
+  margin-right: var(--spacing-2);
+}
+
+.checkbox:focus {
+  outline: 2px solid var(--button-primary-bg);
+  outline-offset: 2px;
 }
 
 .checkbox:checked {
-  background-color: #4a90e2;
-  border-color: #4a90e2;
+  background-color: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
 }
 
 .checkbox:checked::after {
@@ -85,59 +120,68 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
 }
 
 .taskContent {
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: var(--spacing-1);
 }
 
 .taskTitle {
-  font-size: 14px;
-  color: #333;
+  font-size: var(--font-size-sm);
+  color: var(--todo-text-color);
   margin: 0;
   overflow: hidden;
   overflow-wrap: break-word;
   word-break: break-word;
   cursor: pointer;
+  padding: var(--spacing-1) 0;
+  font-family: var(--font-family-ui);
+  font-weight: var(--font-weight-medium);
 }
 
 .categoryIndicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-  min-width: 24px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  min-width: 28px;
+  letter-spacing: 0.5px;
 }
 
 .roovet {
-  background-color: rgba(37, 99, 235, 0.1);
-  color: #2563EB; /* Blue */
+  background-color: var(--category-roovet-bg);
+  color: var(--category-roovet-text);
 }
 
 .roocode {
-  background-color: rgba(5, 150, 105, 0.1);
-  color: #059669; /* Green */
+  background-color: var(--category-roocode-bg);
+  color: var(--category-roocode-text);
 }
 
 .personal {
-  background-color: rgba(124, 58, 237, 0.1);
-  color: #7C3AED; /* Purple */
+  background-color: var(--category-personal-bg);
+  color: var(--category-personal-text);
 }
 
 .priorityIndicator {
-  color: #F59E0B; /* Amber/Yellow for star */
-  font-size: 16px;
-  margin-left: 8px;
-  margin-right: 8px;
+  color: var(--priority-color);
+  font-size: var(--font-size-base);
+  margin-left: var(--spacing-1);
+  margin-right: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
 }
 
 .rolledOver {
@@ -145,38 +189,73 @@
 }
 
 .rolledOverIndicator {
-  font-size: 12px;
-  color: #999;
-  margin-left: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--todo-muted-color);
+  margin-left: var(--spacing-1);
+  background-color: var(--button-secondary-bg);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
 }
 
 .actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
-  border: none;
-  color: #999;
+  border: 1px solid transparent;
+  color: var(--todo-muted-color);
   cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  min-width: 32px;
+  height: 32px;
+  position: relative;
 }
 
 .actionButton:hover {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--button-secondary-bg);
+  color: var(--todo-text-color);
+  border-color: var(--todo-border-color);
+}
+
+.actionButton:focus {
+  outline: 2px solid var(--button-primary-bg);
+  outline-offset: 2px;
+}
+
+.actionButtonLabel {
+  position: absolute;
+  font-size: var(--font-size-xs);
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--todo-muted-color);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.actionButton:hover .actionButtonLabel {
+  opacity: 1;
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
   .taskItem {
-    padding: 8px;
+    padding: calc(var(--spacing-1) * 0.75);
   }
   
   .categoryIndicator {
-    padding: 2px 4px;
-    font-size: 10px;
+    padding: 2px 6px;
+    font-size: var(--font-size-xs);
   }
   
   .taskTitle {
-    font-size: 13px;
+    font-size: var(--font-size-xs);
+  }
+  
+  .actionButtonLabel {
+    display: none;
   }
 }
