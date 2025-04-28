@@ -32,6 +32,9 @@ export const TaskListContainer: React.FC = () => {
   // Reference to the "today" day container for auto-scrolling
   const todayRef = useRef<HTMLDivElement>(null);
   
+  // Ref to track if component has mounted
+  const hasMountedRef = useRef<boolean>(false);
+  
   // Generate date array for the fixed range
   const dateArray = React.useMemo(() => {
     const today = new Date();
@@ -71,16 +74,25 @@ export const TaskListContainer: React.FC = () => {
     fetchTasks();
   }, [fetchTasks]);
   
-  // Auto-scroll to today's tasks when component mounts and tasks are loaded
+  // Auto-scroll to today's tasks ONLY when component initially mounts and tasks are loaded
   useEffect(() => {
-    if (!loading && !error && tasks.length > 0 && todayRef.current) {
+    // Only scroll if:
+    // 1. Component hasn't mounted yet
+    // 2. Not loading
+    // 3. No errors
+    // 4. We have tasks
+    // 5. Today's element exists
+    if (!hasMountedRef.current && !loading && !error && tasks.length > 0 && todayRef.current) {
       // Scroll to the today element with a small offset to position it at the top
       todayRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
+      
+      // Mark as mounted so we don't auto-scroll again
+      hasMountedRef.current = true;
     }
-  }, [loading, error, tasks.length]);
+  }, [loading, error]); // Removed tasks.length dependency
 
   // Task action handlers
   const handleAddTaskClick = (day: string) => {
