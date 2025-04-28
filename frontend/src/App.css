@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+@import './styles/typography.css';
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -24,11 +24,7 @@
   --spacing-5: 2rem;
   --spacing-6: 2.5rem;
   
-  /* Typography */
-  --font-content: 'Crimson Pro', 'Bookerly', Georgia, serif;
-  --font-ui: -apple-system, 'Amazon Ember', sans-serif;
-  --line-height-content: 1.8;
-  --font-size-base: 1.125rem;
+  /* Typography variables moved to typography.css */
   
   /* Layout */
   --page-margin: 1.5rem;
@@ -53,6 +49,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   position: relative;
+  font-feature-settings: var(--features-content);
 }
 
 body::before {
@@ -92,6 +89,7 @@ body::before {
   margin-bottom: var(--spacing-4);
   background: var(--color-bg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-feature-settings: var(--features-ui);
 }
 
 .header-content {
@@ -131,6 +129,7 @@ body::before {
   font-family: var(--font-ui);
   position: relative;
   padding-left: var(--spacing-3);
+  font-feature-settings: var(--features-ui);
 }
 
 .breadcrumb::before {
@@ -156,6 +155,7 @@ body::before {
   gap: var(--spacing-3);
   padding: var(--spacing-1) 0;
   height: 100%;
+  font-feature-settings: var(--features-ui);
 }
 
 .App-main {
@@ -232,6 +232,7 @@ body::before {
   font-family: var(--font-ui);
   height: 40px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-feature-settings: var(--features-ui);
 }
 
 .create-button:hover {
@@ -284,7 +285,7 @@ body::before {
 
   .App-header h1 {
     font-size: 1.125rem;
-    color: var(--kindle-text);
+    color: var(--color-text);
   }
 
   .breadcrumb {
