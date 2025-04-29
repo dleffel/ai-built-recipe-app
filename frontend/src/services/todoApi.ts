@@ -50,7 +50,11 @@ export const todoApi = {
    * Fetch tasks for a specific date
    */
   async fetchTasksByDate(date: Date): Promise<Task[]> {
-    const formattedDate = date.toISOString().split('T')[0];
+    // Ensure the date is in PT timezone
+    const dateStr = date.toISOString().split('T')[0];
+    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    const formattedDate = ptDate.toISOString().split('T')[0];
+    
     const response = await api.get<Task[]>(`/api/tasks/${formattedDate}`);
     return response.data;
   },
@@ -59,7 +63,16 @@ export const todoApi = {
    * Create a new task
    */
   async createTask(task: CreateTaskDTO): Promise<Task> {
-    const response = await api.post<Task>('/api/tasks', task);
+    // Ensure the date is in PT timezone
+    const dateStr = new Date(task.dueDate).toISOString().split('T')[0];
+    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    
+    const ptTask = {
+      ...task,
+      dueDate: ptDate.toISOString()
+    };
+    
+    const response = await api.post<Task>('/api/tasks', ptTask);
     return response.data;
   },
 
@@ -82,7 +95,16 @@ export const todoApi = {
    * Move a task to a different date
    */
   async moveTask(id: string, moveData: MoveTaskDTO): Promise<Task> {
-    const response = await api.put<Task>(`/api/tasks/${id}/move`, moveData);
+    // Ensure the date is in PT timezone
+    const dateStr = new Date(moveData.dueDate).toISOString().split('T')[0];
+    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    
+    const ptMoveData = {
+      ...moveData,
+      dueDate: ptDate.toISOString()
+    };
+    
+    const response = await api.put<Task>(`/api/tasks/${id}/move`, ptMoveData);
     return response.data;
   },
 

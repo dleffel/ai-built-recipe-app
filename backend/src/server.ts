@@ -12,11 +12,15 @@ const app = express();
 
 // Task rollover scheduler
 const scheduleTaskRollover = () => {
+  // Get current time in PT
   const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
   
-  // Calculate milliseconds until midnight
+  // Create midnight in PT timezone
+  const todayStr = now.toISOString().split('T')[0];
+  const midnight = new Date(`${todayStr}T23:59:59.999-07:00`);
+  midnight.setSeconds(midnight.getSeconds() + 1); // Add 1 second to get to next day 00:00:00
+  
+  // Calculate milliseconds until midnight PT
   const msUntilMidnight = midnight.getTime() - now.getTime();
   
   // Schedule the task rollover
@@ -24,14 +28,16 @@ const scheduleTaskRollover = () => {
     try {
       const { TaskService } = require('./services/taskService');
       
-      // Get yesterday's date
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterday.setHours(0, 0, 0, 0);
+      // Get yesterday's date in PT
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const yesterdayDate = new Date(todayStr);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
       
-      // Get today's date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Create explicit PT timezone dates
+      const yesterday = new Date(`${yesterdayStr}T00:00:00-07:00`);
+      const today = new Date(`${todayStr}T00:00:00-07:00`);
       
       // Roll over tasks
       const rolledOverCount = await TaskService.rollOverTasks(yesterday, today);

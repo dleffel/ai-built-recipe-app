@@ -19,10 +19,21 @@ export const calculateDisplayOrder = (
   return Math.floor((prevTask + nextTask) / 2);
 };
 
+// Helper function to create a date in PT timezone
+const createPTDate = (dateStr: string): Date => {
+  // Extract the date part (YYYY-MM-DD)
+  const datePart = new Date(dateStr).toISOString().split('T')[0];
+  // Create a new date with explicit PT timezone
+  return new Date(`${datePart}T00:00:00-07:00`);
+};
+
 // Group tasks by day - optimized version
 export const groupTasksByDay = (tasks: Task[]): Record<string, Task[]> => {
   return tasks.reduce((groups: Record<string, Task[]>, task) => {
-    const dateKey = new Date(task.dueDate).toISOString().split('T')[0];
+    // Create a date object with explicit PT timezone and get the date key
+    const dateObj = createPTDate(task.dueDate);
+    const dateKey = dateObj.toISOString().split('T')[0];
+    
     if (!groups[dateKey]) groups[dateKey] = [];
     groups[dateKey].push(task);
     return groups;
