@@ -56,7 +56,12 @@ export const TaskItem: React.FC<TaskItemProps> = ({
           className={`${styles.categoryIndicator} ${styles[task.category.toLowerCase().replace(' ', '')]}`}
           title={task.category}
         >
-          {task.category.substring(0, 2)}
+          <span className={styles.categoryFullName}>{task.category}</span>
+          <span className={styles.categoryAbbr}>
+            {task.category === 'Roo Vet' && 'VET'}
+            {task.category === 'Roo Code' && 'CODE'}
+            {task.category === 'Personal' && 'PERS'}
+          </span>
         </span>
         
         {/* Task title */}
