@@ -77,12 +77,21 @@ export class TaskService {
    * Get tasks for a user on a specific date
    */
   static async getTasksByUserIdAndDate(userId: string, date: Date): Promise<Task[]> {
-    // Create start and end of the day for the given date
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
+    // Fix timezone handling by creating date boundaries in PT timezone
+    // Extract the date part in YYYY-MM-DD format
+    const dateStr = date.toISOString().split('T')[0];
     
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Create start and end of day with explicit PT timezone (-07:00)
+    // This ensures consistent date boundaries regardless of server timezone
+    const startOfDay = new Date(`${dateStr}T00:00:00-07:00`);
+    const endOfDay = new Date(`${dateStr}T23:59:59.999-07:00`);
+
+    console.log('Getting tasks by date:', {
+      requestedDate: date.toISOString(),
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString(),
+      serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
 
     return this.prisma.task.findMany({
       where: {
@@ -112,6 +121,13 @@ export class TaskService {
     const updateData: any = { ...data };
     if (data.status === 'complete' && !data.completedAt) {
       updateData.completedAt = new Date();
+      console.log('Task completed:', {
+        taskId: id,
+        originalDueDate: task.dueDate.toISOString(),
+        completedAt: updateData.completedAt.toISOString(),
+        serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        serverTime: new Date().toISOString()
+      });
     } else if (data.status === 'incomplete') {
       updateData.completedAt = null;
     }
@@ -182,12 +198,13 @@ export class TaskService {
    * Updates incomplete tasks to move them to the next day instead of creating copies
    */
   static async rollOverTasks(fromDate: Date, toDate: Date): Promise<number> {
-    // Create start and end of the day for the given date
-    const startOfDay = new Date(fromDate);
-    startOfDay.setHours(0, 0, 0, 0);
+    // Fix timezone handling by creating date boundaries in PT timezone
+    // Extract the date part in YYYY-MM-DD format
+    const fromDateStr = fromDate.toISOString().split('T')[0];
     
-    const endOfDay = new Date(fromDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Create start and end of day with explicit PT timezone (-07:00)
+    const startOfDay = new Date(`${fromDateStr}T00:00:00-07:00`);
+    const endOfDay = new Date(`${fromDateStr}T23:59:59.999-07:00`);
 
     // Find all incomplete tasks for the fromDate
     const incompleteTasks = await this.prisma.task.findMany({
@@ -205,11 +222,10 @@ export class TaskService {
     }
 
     // Get the highest display order for the target date to ensure new tasks are added at the end
-    const targetStartOfDay = new Date(toDate);
-    targetStartOfDay.setHours(0, 0, 0, 0);
-    
-    const targetEndOfDay = new Date(toDate);
-    targetEndOfDay.setHours(23, 59, 59, 999);
+    // Fix timezone handling for target date as well
+    const toDateStr = toDate.toISOString().split('T')[0];
+    const targetStartOfDay = new Date(`${toDateStr}T00:00:00-07:00`);
+    const targetEndOfDay = new Date(`${toDateStr}T23:59:59.999-07:00`);
     
     const tasksForTargetDate = await this.prisma.task.findMany({
       where: {
@@ -252,17 +268,18 @@ export class TaskService {
     // Get yesterday's date
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
     
-    const endOfYesterday = new Date(yesterday);
-    endOfYesterday.setHours(23, 59, 59, 999);
+    // Fix timezone handling for yesterday's date boundaries
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const startOfYesterday = new Date(`${yesterdayStr}T00:00:00-07:00`);
+    const endOfYesterday = new Date(`${yesterdayStr}T23:59:59.999-07:00`);
 
     // Find all incomplete tasks for yesterday
     return this.prisma.task.findMany({
       where: {
         status: 'incomplete',
         dueDate: {
-          gte: yesterday,
+          gte: startOfYesterday,
           lte: endOfYesterday
         }
       }
