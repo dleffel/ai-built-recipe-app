@@ -258,15 +258,40 @@ export class TaskService {
    * Get tasks that need to be rolled over (incomplete tasks from yesterday)
    */
   static async getTasksToRollOver(): Promise<Task[]> {
-    // Get yesterday's date
-    const yesterday = new Date();
+    // Get yesterday's date in PT timezone using DateTimeFormat
+    const now = new Date();
+    
+    // Format the date in PT timezone
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Get date parts in PT timezone
+    const parts = formatter.formatToParts(now);
+    const ptYear = parts.find(part => part.type === 'year')?.value || '';
+    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+    const ptDay = parts.find(part => part.type === 'day')?.value || '';
+    
+    // Create today's date in PT timezone
+    const today = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
+    
+    // Get yesterday by subtracting 1 day
+    const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    // Fix timezone handling for yesterday's date boundaries
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    const startOfYesterday = new Date(`${yesterdayStr}T00:00:00-07:00`);
-    const endOfYesterday = new Date(`${yesterdayStr}T23:59:59.999-07:00`);
-
+    // Create yesterday's date string in YYYY-MM-DD format
+    const yesterdayParts = formatter.formatToParts(yesterday);
+    const yesterdayYear = yesterdayParts.find(part => part.type === 'year')?.value || '';
+    const yesterdayMonth = yesterdayParts.find(part => part.type === 'month')?.value || '';
+    const yesterdayDay = yesterdayParts.find(part => part.type === 'day')?.value || '';
+    
+    // Create start and end of yesterday in PT timezone
+    const startOfYesterday = new Date(`${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}T00:00:00-07:00`);
+    const endOfYesterday = new Date(`${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}T23:59:59.999-07:00`);
+    
     // Find all incomplete tasks for yesterday
     return this.prisma.task.findMany({
       where: {
