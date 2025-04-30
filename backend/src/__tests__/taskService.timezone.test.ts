@@ -291,4 +291,123 @@ describe('TaskService Timezone Handling', () => {
       Date.now = originalDateNow;
     });
   });
+  
+  describe('Task Movement with PT Timezone', () => {
+    it('should correctly handle moving tasks between days in PT timezone', async () => {
+      // Mock the current time to be 9:00 AM PT (16:00 UTC)
+      // April 28, 2025 9:00 AM PT = April 28, 2025 16:00 UTC
+      const mockPTMorningTime = new Date('2025-04-28T16:00:00.000Z');
+      const originalDateNow = Date.now;
+      Date.now = jest.fn(() => mockPTMorningTime.getTime());
+      
+      // Create a task due today (April 28, 2025) in PT
+      const userId = 'test-user-id';
+      const taskData = {
+        title: 'Task to Move',
+        status: 'incomplete',
+        dueDate: new Date('2025-04-28T07:00:00.000Z'), // PT morning
+        category: 'Roo Code',
+        isPriority: false,
+        displayOrder: 0
+      };
+      
+      // Mock the created task
+      const createdTask = {
+        id: 'task-to-move',
+        ...taskData,
+        userId,
+        createdAt: mockPTMorningTime,
+        completedAt: null,
+        isRolledOver: false
+      };
+      
+      // Mock task retrieval
+      mockPrismaTask.findUnique.mockResolvedValue(createdTask);
+      
+      // Tomorrow's date in PT timezone
+      const tomorrowDate = new Date('2025-04-29T07:00:00.000Z');
+      
+      // Mock the moved task
+      const movedTask = {
+        ...createdTask,
+        dueDate: tomorrowDate,
+        isRolledOver: false
+      };
+      
+      // Mock the update operation
+      mockPrismaTask.update.mockResolvedValue(movedTask);
+      
+      // Test moving the task to tomorrow
+      const moveData = {
+        dueDate: tomorrowDate,
+        isRolledOver: false
+      };
+      
+      // Log the dates for debugging
+      console.log('Task move test - Before move:', {
+        originalDueDate: createdTask.dueDate.toISOString(),
+        targetDueDate: tomorrowDate.toISOString(),
+        userTimezone: 'America/Los_Angeles',
+        serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
+      
+      // Move the task
+      const result = await TaskService.moveTask('task-to-move', userId, moveData);
+      
+      // Log the result
+      console.log('Task move test - After move:', {
+        resultDueDate: result.dueDate.toISOString(),
+        expectedDueDate: tomorrowDate.toISOString()
+      });
+      
+      // Verify the task was moved to tomorrow
+      expect(result.dueDate).toEqual(tomorrowDate);
+      expect(result.isRolledOver).toBe(false);
+      
+      // Verify the update was called with the correct parameters
+      expect(mockPrismaTask.update).toHaveBeenCalledWith({
+        where: { id: 'task-to-move' },
+        data: {
+          dueDate: tomorrowDate,
+          isRolledOver: false
+        }
+      });
+      
+      // Now test that the task appears in tomorrow's tasks
+      mockPrismaTask.findMany.mockImplementation((params: any) => {
+        // Check if the query is for tomorrow's date range
+        const queryStartDate = params.where.dueDate.gte;
+        const queryEndDate = params.where.dueDate.lte;
+        
+        console.log('Query date range for moved task:', {
+          start: queryStartDate.toISOString(),
+          end: queryEndDate.toISOString(),
+          movedTaskDueDate: movedTask.dueDate.toISOString()
+        });
+        
+        // Check if our moved task's dueDate falls within the query range
+        if (movedTask.dueDate >= queryStartDate && movedTask.dueDate <= queryEndDate) {
+          return [movedTask];
+        }
+        return [];
+      });
+      
+      // Get tasks for tomorrow
+      const tasksForTomorrow = await TaskService.getTasksByUserIdAndDate(userId, tomorrowDate);
+      
+      // The task should be found in tomorrow's tasks
+      expect(tasksForTomorrow).toHaveLength(1);
+      expect(tasksForTomorrow[0].id).toBe('task-to-move');
+      
+      // Get tasks for today
+      const todayDate = new Date('2025-04-28T07:00:00.000Z');
+      const tasksForToday = await TaskService.getTasksByUserIdAndDate(userId, todayDate);
+      
+      // No tasks should be found for today
+      expect(tasksForToday).toHaveLength(0);
+      
+      // Restore original Date.now
+      Date.now = originalDateNow;
+    });
+  });
 });

@@ -145,8 +145,13 @@ export const todoApi = {
       dueDate: ptDate.toISOString()
     };
     
-    const response = await api.put<Task>(`/api/tasks/${id}/move`, ptMoveData);
-    return response.data;
+    try {
+      const response = await api.put<Task>(`/api/tasks/${id}/move`, ptMoveData);
+      return response.data;
+    } catch (error) {
+      console.error('todoApi.moveTask error:', error);
+      throw error;
+    }
   },
 
   /**

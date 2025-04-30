@@ -260,10 +260,39 @@ export const TaskListContainer: React.FC = () => {
     // Reset visual state
     setDropTarget(null);
     
-    if (!draggedTask) return;
+    if (!draggedTask) {
+      console.error('Drop event occurred but draggedTask is null');
+      return;
+    }
     
     const taskId = e.dataTransfer.getData('taskId');
-    const currentDayKey = new Date(draggedTask.dueDate).toISOString().split('T')[0];
+    
+    // Create a date with explicit PT timezone handling for the current day
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Get date parts in PT timezone for the dragged task's due date
+    const parts = formatter.formatToParts(new Date(draggedTask.dueDate));
+    const ptYear = parts.find(part => part.type === 'year')?.value || '';
+    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+    const ptDay = parts.find(part => part.type === 'day')?.value || '';
+    
+    // Create a date string in PT timezone
+    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
+    const currentDayKey = ptDate.toISOString().split('T')[0];
+    
+    console.log('Drop event:', {
+      taskId,
+      taskTitle: draggedTask.title,
+      fromDayKey: currentDayKey,
+      toDayKey: dayKey,
+      draggedTaskDueDate: draggedTask.dueDate,
+      userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
     
     try {
       // Get the tasks for the target day
@@ -378,13 +407,45 @@ export const TaskListContainer: React.FC = () => {
         // Use the utility function to calculate the new display order
         const newDisplayOrder = calculateDisplayOrder(prevDisplayOrder, nextDisplayOrder);
         
-        const destinationDate = new Date(dayKey);
-        
-        // First move the task to the new day
-        await moveTask(taskId, {
-          dueDate: destinationDate.toISOString(),
-          isRolledOver: false
+        // Create a date with explicit PT timezone handling
+        const formatter = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'America/Los_Angeles',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
         });
+        
+        // Parse the dayKey (YYYY-MM-DD) into a proper PT date
+        const [year, month, day] = dayKey.split('-');
+        const ptDate = new Date(`${year}-${month}-${day}T00:00:00-07:00`);
+        
+        console.log('Task move timezone debug:', {
+          taskId,
+          originalDueDate: draggedTask.dueDate,
+          dayKey,
+          ptDateISO: ptDate.toISOString(),
+          userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+        
+        try {
+          // First move the task to the new day with explicit PT timezone
+          const updatedTask = await moveTask(taskId, {
+            dueDate: ptDate.toISOString(),
+            isRolledOver: false
+          });
+          
+          console.log('Task moved successfully:', {
+            taskId,
+            newDueDate: updatedTask.dueDate,
+            originalDay: currentDayKey,
+            targetDay: dayKey
+          });
+          
+          // Force a refresh of the tasks to ensure UI is updated
+          await fetchTasks();
+        } catch (error) {
+          console.error('Error in task movement:', error);
+        }
         
         // Then update its display order
         await reorderTask(taskId, {

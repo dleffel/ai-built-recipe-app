@@ -159,10 +159,23 @@ export class TaskService {
     // When manually moving a task, clear the rolled over flag unless explicitly set
     const isRolledOver = data.isRolledOver !== undefined ? data.isRolledOver : false;
 
+    // Fix timezone handling by creating date boundaries in PT timezone
+    // Extract the date part in YYYY-MM-DD format from the incoming date
+    const dateStr = new Date(data.dueDate).toISOString().split('T')[0];
+    
+    // Create a date with explicit PT timezone (-07:00)
+    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    
+    console.log('Task move timezone conversion:', {
+      incomingDate: data.dueDate,
+      extractedDateStr: dateStr,
+      ptDateISO: ptDate.toISOString()
+    });
+
     return this.prisma.task.update({
       where: { id },
       data: {
-        dueDate: data.dueDate,
+        dueDate: ptDate,
         isRolledOver
       }
     });
