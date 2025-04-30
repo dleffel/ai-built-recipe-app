@@ -37,16 +37,43 @@ export const TaskListContainer: React.FC = () => {
   
   // Helper function to create a date in PT timezone
   const createPTDate = (date: Date): Date => {
-    const dateStr = date.toISOString().split('T')[0];
-    return new Date(`${dateStr}T00:00:00-07:00`);
+    // Format the date in PT timezone directly
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Get date parts in PT timezone
+    const parts = formatter.formatToParts(date);
+    const ptYear = parts.find(part => part.type === 'year')?.value || '';
+    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+    const ptDay = parts.find(part => part.type === 'day')?.value || '';
+    
+    // Create a date string in PT timezone
+    return new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
   };
 
   // Generate date array for the fixed range
   const dateArray = React.useMemo(() => {
-    // Get today's date in PT timezone
+    // Get today's date in PT timezone using the formatter
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const today = new Date(`${todayStr}T00:00:00-07:00`);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Get date parts in PT timezone
+    const parts = formatter.formatToParts(now);
+    const ptYear = parts.find(part => part.type === 'year')?.value || '';
+    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+    const ptDay = parts.find(part => part.type === 'day')?.value || '';
+    
+    // Create today's date in PT timezone
+    const today = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
     
     const dates = [];
     
@@ -75,11 +102,35 @@ export const TaskListContainer: React.FC = () => {
     dateArray.map(date => date.toISOString().split('T')[0]),
   [dateArray]);
 
-  // Get today's key for highlighting
+  // Get today's key for highlighting - fixed for PT timezone
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
-  const today = new Date(`${todayStr}T00:00:00-07:00`);
+  
+  // Format the date in PT timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  
+  // Get date parts in PT timezone
+  const parts = formatter.formatToParts(now);
+  const ptYear = parts.find(part => part.type === 'year')?.value || '';
+  const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+  const ptDay = parts.find(part => part.type === 'day')?.value || '';
+  
+  // Create today's date in PT timezone
+  const today = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
   const todayKey = today.toISOString().split('T')[0];
+  
+  // Debug logs for timezone issue
+  console.log('Timezone debug (fixed):', {
+    userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    userLocalTime: new Date().toLocaleString(),
+    ptDateParts: `${ptYear}-${ptMonth}-${ptDay}`,
+    calculatedTodayKey: todayKey,
+    ptTime: today.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+  });
 
   // Fetch tasks on component mount
   useEffect(() => {

@@ -21,10 +21,25 @@ export const calculateDisplayOrder = (
 
 // Helper function to create a date in PT timezone
 const createPTDate = (dateStr: string): Date => {
-  // Extract the date part (YYYY-MM-DD)
-  const datePart = new Date(dateStr).toISOString().split('T')[0];
+  // Create a date object from the input string
+  const inputDate = new Date(dateStr);
+  
+  // Format the date in PT timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  
+  // Get date parts in PT timezone
+  const parts = formatter.formatToParts(inputDate);
+  const ptYear = parts.find(part => part.type === 'year')?.value || '';
+  const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+  const ptDay = parts.find(part => part.type === 'day')?.value || '';
+  
   // Create a new date with explicit PT timezone
-  return new Date(`${datePart}T00:00:00-07:00`);
+  return new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
 };
 
 // Group tasks by day - optimized version
