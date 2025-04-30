@@ -50,9 +50,22 @@ export const todoApi = {
    * Fetch tasks for a specific date
    */
   async fetchTasksByDate(date: Date): Promise<Task[]> {
-    // Ensure the date is in PT timezone
-    const dateStr = date.toISOString().split('T')[0];
-    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    // Ensure the date is in PT timezone using Intl.DateTimeFormat
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Get date parts in PT timezone
+    const parts = formatter.formatToParts(date);
+    const ptYear = parts.find(part => part.type === 'year')?.value || '';
+    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+    const ptDay = parts.find(part => part.type === 'day')?.value || '';
+    
+    // Create a date string in PT timezone
+    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
     const formattedDate = ptDate.toISOString().split('T')[0];
     
     const response = await api.get<Task[]>(`/api/tasks/${formattedDate}`);
@@ -63,9 +76,23 @@ export const todoApi = {
    * Create a new task
    */
   async createTask(task: CreateTaskDTO): Promise<Task> {
-    // Ensure the date is in PT timezone
-    const dateStr = new Date(task.dueDate).toISOString().split('T')[0];
-    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    // Ensure the date is in PT timezone using Intl.DateTimeFormat
+    const inputDate = new Date(task.dueDate);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Get date parts in PT timezone
+    const parts = formatter.formatToParts(inputDate);
+    const ptYear = parts.find(part => part.type === 'year')?.value || '';
+    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+    const ptDay = parts.find(part => part.type === 'day')?.value || '';
+    
+    // Create a date string in PT timezone
+    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
     
     const ptTask = {
       ...task,
@@ -95,9 +122,23 @@ export const todoApi = {
    * Move a task to a different date
    */
   async moveTask(id: string, moveData: MoveTaskDTO): Promise<Task> {
-    // Ensure the date is in PT timezone
-    const dateStr = new Date(moveData.dueDate).toISOString().split('T')[0];
-    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    // Ensure the date is in PT timezone using Intl.DateTimeFormat
+    const inputDate = new Date(moveData.dueDate);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Get date parts in PT timezone
+    const parts = formatter.formatToParts(inputDate);
+    const ptYear = parts.find(part => part.type === 'year')?.value || '';
+    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
+    const ptDay = parts.find(part => part.type === 'day')?.value || '';
+    
+    // Create a date string in PT timezone
+    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
     
     const ptMoveData = {
       ...moveData,
