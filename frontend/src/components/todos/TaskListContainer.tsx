@@ -35,9 +35,19 @@ export const TaskListContainer: React.FC = () => {
   // Ref to track if component has mounted
   const hasMountedRef = useRef<boolean>(false);
   
+  // Helper function to create a date in PT timezone
+  const createPTDate = (date: Date): Date => {
+    const dateStr = date.toISOString().split('T')[0];
+    return new Date(`${dateStr}T00:00:00-07:00`);
+  };
+
   // Generate date array for the fixed range
   const dateArray = React.useMemo(() => {
-    const today = new Date();
+    // Get today's date in PT timezone
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const today = new Date(`${todayStr}T00:00:00-07:00`);
+    
     const dates = [];
     
     // Add days before today
@@ -66,7 +76,9 @@ export const TaskListContainer: React.FC = () => {
   [dateArray]);
 
   // Get today's key for highlighting
-  const today = new Date();
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const today = new Date(`${todayStr}T00:00:00-07:00`);
   const todayKey = today.toISOString().split('T')[0];
 
   // Fetch tasks on component mount

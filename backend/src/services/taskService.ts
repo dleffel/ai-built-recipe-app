@@ -86,13 +86,6 @@ export class TaskService {
     const startOfDay = new Date(`${dateStr}T00:00:00-07:00`);
     const endOfDay = new Date(`${dateStr}T23:59:59.999-07:00`);
 
-    console.log('Getting tasks by date:', {
-      requestedDate: date.toISOString(),
-      startOfDay: startOfDay.toISOString(),
-      endOfDay: endOfDay.toISOString(),
-      serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    });
-
     return this.prisma.task.findMany({
       where: {
         userId,
@@ -216,7 +209,7 @@ export class TaskService {
         }
       }
     });
-
+    
     if (incompleteTasks.length === 0) {
       return 0;
     }
