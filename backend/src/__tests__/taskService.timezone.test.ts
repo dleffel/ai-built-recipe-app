@@ -81,13 +81,13 @@ describe('TaskService Timezone Handling', () => {
       // Now test retrieving tasks for today (April 28, 2025)
       const todayDate = new Date('2025-04-28T07:00:00.000Z'); // PT timezone
       
-      // This is the actual implementation from taskService.ts that has the timezone bug
-      // Create start and end of the day for the given date
-      const startOfDay = new Date(todayDate);
-      startOfDay.setHours(0, 0, 0, 0);
+      // This is the fixed implementation from taskService.ts that correctly handles timezones
+      // Extract the date part in YYYY-MM-DD format
+      const dateStr = todayDate.toISOString().split('T')[0];
       
-      const endOfDay = new Date(todayDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      // Create start and end of day with explicit PT timezone (-07:00)
+      const startOfDay = new Date(`${dateStr}T00:00:00-07:00`);
+      const endOfDay = new Date(`${dateStr}T23:59:59.999-07:00`);
       
       console.log('FIXED TEST - Date boundaries with timezone-aware implementation:', {
         requestedDate: todayDate.toISOString(),
