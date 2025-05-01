@@ -5,6 +5,7 @@ import { TaskEdit } from './TaskEdit';
 import { TaskCreation } from './TaskCreation';
 import styles from './TaskListContainer.module.css';
 import './TodoVariables.css';
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface DayContainerProps {
   dayKey: string;
@@ -22,6 +23,8 @@ interface DayContainerProps {
   onDragStart: (e: React.DragEvent, task: Task) => void;
   onDragOver: (e: React.DragEvent, dayKey: string) => void;
   onDrop: (e: React.DragEvent, dayKey: string) => void;
+  className?: string; // Optional class name for animation
+  movingTaskId?: string | null; // ID of task being moved for animation
 }
 
 export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
@@ -39,16 +42,13 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
   onCreateTask,
   onDragStart,
   onDragOver,
-  onDrop
+  onDrop,
+  className = '',
+  movingTaskId = null
 }, ref) => {
-  // Format date for display
+  // Format date for display using date-fns-tz for consistent timezone handling
   const formatDate = (date: Date): string => {
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric'
-    };
-    return date.toLocaleDateString('en-US', options);
+    return formatInTimeZone(date, 'America/Los_Angeles', 'EEEE, MMMM d');
   };
   
   // Count completed and total tasks
@@ -59,7 +59,7 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
   return (
     <div
       ref={ref}
-      className={`${styles.dayContainer}`}
+      className={`${styles.dayContainer} ${className}`}
       data-day={dayKey}
       onDragOver={(e) => onDragOver(e, dayKey)}
       onDrop={(e) => onDrop(e, dayKey)}
@@ -100,6 +100,7 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
               onDragStart={(e) => onDragStart(e, task)}
               onDragOver={(e) => onDragOver(e, dayKey)}
               onDrop={(e) => onDrop(e, dayKey)}
+              isMoving={movingTaskId === task.id}
             />
           )
         ))}

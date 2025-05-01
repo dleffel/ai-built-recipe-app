@@ -9,6 +9,7 @@ interface TaskItemProps {
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
+  isMoving?: boolean; // Flag to indicate if this task is being moved
 }
 
 export const TaskItem: React.FC<TaskItemProps> = ({
@@ -17,11 +18,12 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   onEdit,
   onDragStart,
   onDragOver,
-  onDrop
+  onDrop,
+  isMoving = false
 }) => {
   return (
     <div
-      className={`${styles.taskItem} ${task.status === 'complete' ? styles.completed : ''}`}
+      className={`${styles.taskItem} ${task.status === 'complete' ? styles.completed : ''} ${isMoving ? styles.moving : ''}`}
       data-id={task.id}
       draggable={true}
       onDragStart={onDragStart}

@@ -24,6 +24,13 @@
   box-shadow: 0 0 0 2px var(--button-primary-bg);
 }
 
+/* Animation style for day receiving a task */
+.dayContainer.dayReceiving {
+  background-color: var(--feedback-info-bg);
+  transition: background-color var(--transition-normal);
+  box-shadow: var(--shadow-md);
+}
+
 .dayHeader {
   margin-bottom: var(--spacing-2);
   display: flex;

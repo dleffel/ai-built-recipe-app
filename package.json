@@ -32,6 +32,8 @@
   },
   "dependencies": {
     "@types/react-beautiful-dnd": "^13.1.8",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "react-beautiful-dnd": "^13.1.1"
   }
 }

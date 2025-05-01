@@ -1,4 +1,5 @@
 import api from './api';
+import { createPTDate } from '../utils/timezoneUtils';
 
 export interface Task {
   id: string;
@@ -50,22 +51,8 @@ export const todoApi = {
    * Fetch tasks for a specific date
    */
   async fetchTasksByDate(date: Date): Promise<Task[]> {
-    // Ensure the date is in PT timezone using Intl.DateTimeFormat
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    // Get date parts in PT timezone
-    const parts = formatter.formatToParts(date);
-    const ptYear = parts.find(part => part.type === 'year')?.value || '';
-    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-    const ptDay = parts.find(part => part.type === 'day')?.value || '';
-    
-    // Create a date string in PT timezone
-    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
+    // Use our timezone utility to ensure the date is in PT timezone
+    const ptDate = createPTDate(date);
     const formattedDate = ptDate.toISOString().split('T')[0];
     
     const response = await api.get<Task[]>(`/api/tasks/${formattedDate}`);
@@ -76,23 +63,8 @@ export const todoApi = {
    * Create a new task
    */
   async createTask(task: CreateTaskDTO): Promise<Task> {
-    // Ensure the date is in PT timezone using Intl.DateTimeFormat
-    const inputDate = new Date(task.dueDate);
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    // Get date parts in PT timezone
-    const parts = formatter.formatToParts(inputDate);
-    const ptYear = parts.find(part => part.type === 'year')?.value || '';
-    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-    const ptDay = parts.find(part => part.type === 'day')?.value || '';
-    
-    // Create a date string in PT timezone
-    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
+    // Use our timezone utility to ensure the date is in PT timezone
+    const ptDate = createPTDate(task.dueDate);
     
     const ptTask = {
       ...task,
@@ -107,7 +79,14 @@ export const todoApi = {
    * Update an existing task
    */
   async updateTask(id: string, task: UpdateTaskDTO): Promise<Task> {
-    const response = await api.put<Task>(`/api/tasks/${id}`, task);
+    // If the task update includes a due date, ensure it's in PT timezone
+    const updatedTask = { ...task };
+    if (updatedTask.dueDate) {
+      const ptDate = createPTDate(updatedTask.dueDate);
+      updatedTask.dueDate = ptDate.toISOString();
+    }
+    
+    const response = await api.put<Task>(`/api/tasks/${id}`, updatedTask);
     return response.data;
   },
 
@@ -122,23 +101,8 @@ export const todoApi = {
    * Move a task to a different date
    */
   async moveTask(id: string, moveData: MoveTaskDTO): Promise<Task> {
-    // Ensure the date is in PT timezone using Intl.DateTimeFormat
-    const inputDate = new Date(moveData.dueDate);
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    // Get date parts in PT timezone
-    const parts = formatter.formatToParts(inputDate);
-    const ptYear = parts.find(part => part.type === 'year')?.value || '';
-    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-    const ptDay = parts.find(part => part.type === 'day')?.value || '';
-    
-    // Create a date string in PT timezone
-    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
+    // Use our timezone utility to ensure the date is in PT timezone
+    const ptDate = createPTDate(moveData.dueDate);
     
     const ptMoveData = {
       ...moveData,
