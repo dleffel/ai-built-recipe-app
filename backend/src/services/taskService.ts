@@ -1,5 +1,6 @@
 import { prisma as defaultPrisma } from '../lib/prisma';
 import type { Task, PrismaClient, Prisma } from '@prisma/client';
+import { getStartOfDayPT, getEndOfDayPT, createPTDate, toDateStringPT } from '../utils/timezoneUtils';
 
 export interface CreateTaskDTO {
   title: string;
@@ -77,14 +78,9 @@ export class TaskService {
    * Get tasks for a user on a specific date
    */
   static async getTasksByUserIdAndDate(userId: string, date: Date): Promise<Task[]> {
-    // Fix timezone handling by creating date boundaries in PT timezone
-    // Extract the date part in YYYY-MM-DD format
-    const dateStr = date.toISOString().split('T')[0];
-    
-    // Create start and end of day with explicit PT timezone (-07:00)
-    // This ensures consistent date boundaries regardless of server timezone
-    const startOfDay = new Date(`${dateStr}T00:00:00-07:00`);
-    const endOfDay = new Date(`${dateStr}T23:59:59.999-07:00`);
+    // Use timezone utility to get start and end of day in PT timezone
+    const startOfDay = getStartOfDayPT(date);
+    const endOfDay = getEndOfDayPT(date);
 
     return this.prisma.task.findMany({
       where: {
@@ -159,16 +155,11 @@ export class TaskService {
     // When manually moving a task, clear the rolled over flag unless explicitly set
     const isRolledOver = data.isRolledOver !== undefined ? data.isRolledOver : false;
 
-    // Fix timezone handling by creating date boundaries in PT timezone
-    // Extract the date part in YYYY-MM-DD format from the incoming date
-    const dateStr = new Date(data.dueDate).toISOString().split('T')[0];
-    
-    // Create a date with explicit PT timezone (-07:00)
-    const ptDate = new Date(`${dateStr}T00:00:00-07:00`);
+    // Use timezone utility to create a date in PT timezone
+    const ptDate = createPTDate(data.dueDate);
     
     console.log('Task move timezone conversion:', {
       incomingDate: data.dueDate,
-      extractedDateStr: dateStr,
       ptDateISO: ptDate.toISOString()
     });
 
@@ -204,13 +195,9 @@ export class TaskService {
    * Updates incomplete tasks to move them to the next day instead of creating copies
    */
   static async rollOverTasks(fromDate: Date, toDate: Date): Promise<number> {
-    // Fix timezone handling by creating date boundaries in PT timezone
-    // Extract the date part in YYYY-MM-DD format
-    const fromDateStr = fromDate.toISOString().split('T')[0];
-    
-    // Create start and end of day with explicit PT timezone (-07:00)
-    const startOfDay = new Date(`${fromDateStr}T00:00:00-07:00`);
-    const endOfDay = new Date(`${fromDateStr}T23:59:59.999-07:00`);
+    // Use timezone utility to get start and end of day in PT timezone
+    const startOfDay = getStartOfDayPT(fromDate);
+    const endOfDay = getEndOfDayPT(fromDate);
 
     // Find all incomplete tasks for the fromDate
     const incompleteTasks = await this.prisma.task.findMany({
@@ -228,10 +215,9 @@ export class TaskService {
     }
 
     // Get the highest display order for the target date to ensure new tasks are added at the end
-    // Fix timezone handling for target date as well
-    const toDateStr = toDate.toISOString().split('T')[0];
-    const targetStartOfDay = new Date(`${toDateStr}T00:00:00-07:00`);
-    const targetEndOfDay = new Date(`${toDateStr}T23:59:59.999-07:00`);
+    // Use timezone utility for target date as well
+    const targetStartOfDay = getStartOfDayPT(toDate);
+    const targetEndOfDay = getEndOfDayPT(toDate);
     
     const tasksForTargetDate = await this.prisma.task.findMany({
       where: {
@@ -271,39 +257,16 @@ export class TaskService {
    * Get tasks that need to be rolled over (incomplete tasks from yesterday)
    */
   static async getTasksToRollOver(): Promise<Task[]> {
-    // Get yesterday's date in PT timezone using DateTimeFormat
-    const now = new Date();
-    
-    // Format the date in PT timezone
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    // Get date parts in PT timezone
-    const parts = formatter.formatToParts(now);
-    const ptYear = parts.find(part => part.type === 'year')?.value || '';
-    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-    const ptDay = parts.find(part => part.type === 'day')?.value || '';
-    
-    // Create today's date in PT timezone
-    const today = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
+    // Get today's date in PT timezone using our utility
+    const today = createPTDate(new Date());
     
     // Get yesterday by subtracting 1 day
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    // Create yesterday's date string in YYYY-MM-DD format
-    const yesterdayParts = formatter.formatToParts(yesterday);
-    const yesterdayYear = yesterdayParts.find(part => part.type === 'year')?.value || '';
-    const yesterdayMonth = yesterdayParts.find(part => part.type === 'month')?.value || '';
-    const yesterdayDay = yesterdayParts.find(part => part.type === 'day')?.value || '';
-    
-    // Create start and end of yesterday in PT timezone
-    const startOfYesterday = new Date(`${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}T00:00:00-07:00`);
-    const endOfYesterday = new Date(`${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}T23:59:59.999-07:00`);
+    // Get start and end of yesterday in PT timezone
+    const startOfYesterday = getStartOfDayPT(yesterday);
+    const endOfYesterday = getEndOfDayPT(yesterday);
     
     // Find all incomplete tasks for yesterday
     return this.prisma.task.findMany({

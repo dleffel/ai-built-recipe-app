@@ -1,6 +1,17 @@
 import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
+import { User } from '@prisma/client';
+
+// Extend the Express Request type to include the user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
 import { TaskService, CreateTaskDTO, UpdateTaskDTO, MoveTaskDTO, ReorderTaskDTO } from '../services/taskService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { createPTDate } from '../utils/timezoneUtils';
 
 const router = Router();
 
@@ -25,10 +36,10 @@ const createTask: RequestHandler = async (req, res) => {
       return;
     }
 
-    // Parse date if it's a string
+    // Parse date if it's a string and ensure it's in PT timezone
     const parsedData = {
       ...req.body,
-      dueDate: new Date(req.body.dueDate)
+      dueDate: createPTDate(req.body.dueDate)
     };
 
     const task = await TaskService.createTask(req.user!.id, parsedData);
@@ -67,8 +78,8 @@ const getTasksByDate: RequestHandler = async (req, res) => {
       return;
     }
 
-    // Parse the date parameter
-    const date = new Date(dateParam);
+    // Parse the date parameter and ensure it's in PT timezone
+    const date = createPTDate(dateParam);
     if (isNaN(date.getTime())) {
       res.status(400).json({ error: 'Invalid date format' });
       return;
@@ -88,7 +99,7 @@ const updateTask: RequestHandler = async (req, res) => {
     // Parse date if it's a string and present
     const parsedData: UpdateTaskDTO = { ...req.body };
     if (req.body.dueDate) {
-      parsedData.dueDate = new Date(req.body.dueDate);
+      parsedData.dueDate = createPTDate(req.body.dueDate);
     }
 
     const task = await TaskService.updateTask(
@@ -134,7 +145,7 @@ const moveTask: RequestHandler = async (req, res) => {
     }
 
     const moveData: MoveTaskDTO = {
-      dueDate: new Date(dueDate),
+      dueDate: createPTDate(dueDate),
       isRolledOver
     };
 

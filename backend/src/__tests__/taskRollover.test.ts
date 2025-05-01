@@ -542,8 +542,18 @@ describe('TaskService Rollover Functionality', () => {
     it('should only return incomplete tasks from yesterday in PT timezone', async () => {
       // Mock the current time to be 12:30 AM PT on April 29, 2025
       const mockCurrentTime = new Date('2025-04-29T00:30:00.000-07:00');
-      const originalDateNow = Date.now;
-      Date.now = jest.fn(() => mockCurrentTime.getTime());
+      
+      // Save original Date constructor
+      const originalDate = global.Date;
+      
+      // Mock Date constructor to return fixed date
+      // Mock Date constructor to return fixed date
+      const MockDate = function(this: Date, date?: string | number | Date) {
+        return date ? new originalDate(date) : new originalDate(mockCurrentTime);
+      } as any;
+      
+      MockDate.prototype = originalDate.prototype;
+      global.Date = MockDate as any;
       
       // Yesterday in PT would be April 28, 2025
       const yesterdayPT = new Date('2025-04-28T12:00:00.000-07:00');
@@ -602,11 +612,10 @@ describe('TaskService Rollover Functionality', () => {
         
         // The start date should be 00:00:00 PT yesterday (07:00:00 UTC)
         // Since we're mocking the current date to be April 29, 2025, yesterday should be April 28, 2025
-        // But the actual implementation uses the real current date (April 30, 2025), so yesterday is April 29, 2025
-        expect(startDate.toISOString()).toBe('2025-04-29T07:00:00.000Z');
+        expect(startDate.toISOString()).toBe('2025-04-28T07:00:00.000Z');
         
         // The end date should be 23:59:59.999 PT yesterday (06:59:59.999 UTC today)
-        expect(endDate.toISOString()).toBe('2025-04-30T06:59:59.999Z');
+        expect(endDate.toISOString()).toBe('2025-04-29T06:59:59.999Z');
         
         return [yesterdayIncompleteTask];
       });
@@ -618,8 +627,8 @@ describe('TaskService Rollover Functionality', () => {
       expect(tasksToRollOver).toHaveLength(1);
       expect(tasksToRollOver[0].id).toBe('yesterday-incomplete');
       
-      // Restore original Date.now
-      Date.now = originalDateNow;
+      // Restore original Date constructor
+      global.Date = originalDate;
     });
   });
 });

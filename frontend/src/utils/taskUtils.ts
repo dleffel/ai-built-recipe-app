@@ -1,4 +1,5 @@
 import { Task } from '../services/todoApi';
+import { createPTDate, toDateStringPT } from './timezoneUtils';
 
 // Simple display order calculation for tasks
 export const calculateDisplayOrder = (
@@ -19,35 +20,12 @@ export const calculateDisplayOrder = (
   return Math.floor((prevTask + nextTask) / 2);
 };
 
-// Helper function to create a date in PT timezone
-const createPTDate = (dateStr: string): Date => {
-  // Create a date object from the input string
-  const inputDate = new Date(dateStr);
-  
-  // Format the date in PT timezone
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Los_Angeles',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  
-  // Get date parts in PT timezone
-  const parts = formatter.formatToParts(inputDate);
-  const ptYear = parts.find(part => part.type === 'year')?.value || '';
-  const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-  const ptDay = parts.find(part => part.type === 'day')?.value || '';
-  
-  // Create a new date with explicit PT timezone
-  return new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
-};
 
 // Group tasks by day - optimized version
 export const groupTasksByDay = (tasks: Task[]): Record<string, Task[]> => {
   return tasks.reduce((groups: Record<string, Task[]>, task) => {
-    // Create a date object with explicit PT timezone and get the date key
-    const dateObj = createPTDate(task.dueDate);
-    const dateKey = dateObj.toISOString().split('T')[0];
+    // Use the timezone utility to get the date key in PT timezone
+    const dateKey = toDateStringPT(task.dueDate);
     
     if (!groups[dateKey]) groups[dateKey] = [];
     groups[dateKey].push(task);

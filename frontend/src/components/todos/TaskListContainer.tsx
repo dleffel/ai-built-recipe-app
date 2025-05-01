@@ -3,6 +3,7 @@ import { useTodo } from '../../context/TodoContext';
 import { Task } from '../../services/todoApi';
 import { DayContainer } from './DayContainer';
 import { calculateDisplayOrder, sortTaskGroups } from '../../utils/taskUtils';
+import { createPTDate, toDateStringPT } from '../../utils/timezoneUtils';
 import styles from './TaskListContainer.module.css';
 
 // Simple date range for most users (no infinite scrolling needed)
@@ -29,51 +30,21 @@ export const TaskListContainer: React.FC = () => {
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   
+  // Animation states for smooth transitions
+  const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
+  const [receivingDayKey, setReceivingDayKey] = useState<string | null>(null);
+  
   // Reference to the "today" day container for auto-scrolling
   const todayRef = useRef<HTMLDivElement>(null);
   
   // Ref to track if component has mounted
   const hasMountedRef = useRef<boolean>(false);
   
-  // Helper function to create a date in PT timezone
-  const createPTDate = (date: Date): Date => {
-    // Format the date in PT timezone directly
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    // Get date parts in PT timezone
-    const parts = formatter.formatToParts(date);
-    const ptYear = parts.find(part => part.type === 'year')?.value || '';
-    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-    const ptDay = parts.find(part => part.type === 'day')?.value || '';
-    
-    // Create a date string in PT timezone
-    return new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
-  };
 
   // Generate date array for the fixed range
   const dateArray = React.useMemo(() => {
-    // Get today's date in PT timezone using the formatter
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    // Get date parts in PT timezone
-    const parts = formatter.formatToParts(now);
-    const ptYear = parts.find(part => part.type === 'year')?.value || '';
-    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-    const ptDay = parts.find(part => part.type === 'day')?.value || '';
-    
-    // Create today's date in PT timezone
-    const today = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
+    // Get today's date in PT timezone using our utility
+    const today = createPTDate(new Date());
     
     const dates = [];
     
@@ -99,38 +70,12 @@ export const TaskListContainer: React.FC = () => {
 
   // Format dates as ISO strings for use as keys
   const dateKeys = React.useMemo(() =>
-    dateArray.map(date => date.toISOString().split('T')[0]),
+    dateArray.map(date => toDateStringPT(date)),
   [dateArray]);
 
   // Get today's key for highlighting - fixed for PT timezone
-  const now = new Date();
+  const todayKey = toDateStringPT(new Date());
   
-  // Format the date in PT timezone
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Los_Angeles',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  
-  // Get date parts in PT timezone
-  const parts = formatter.formatToParts(now);
-  const ptYear = parts.find(part => part.type === 'year')?.value || '';
-  const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-  const ptDay = parts.find(part => part.type === 'day')?.value || '';
-  
-  // Create today's date in PT timezone
-  const today = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
-  const todayKey = today.toISOString().split('T')[0];
-  
-  // Debug logs for timezone issue
-  console.log('Timezone debug (fixed):', {
-    userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    userLocalTime: new Date().toLocaleString(),
-    ptDateParts: `${ptYear}-${ptMonth}-${ptDay}`,
-    calculatedTodayKey: todayKey,
-    ptTime: today.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
-  });
 
   // Fetch tasks on component mount
   useEffect(() => {
@@ -244,6 +189,7 @@ export const TaskListContainer: React.FC = () => {
     }, 0);
     
     setDraggedTask(task);
+    setMovingTaskId(task.id);
   };
   
   const handleDragOver = (e: React.DragEvent, dayKey: string) => {
@@ -252,6 +198,7 @@ export const TaskListContainer: React.FC = () => {
     
     // Visual feedback for the current drop target
     setDropTarget(dayKey);
+    setReceivingDayKey(dayKey);
   };
   
   const handleDrop = async (e: React.DragEvent, dayKey: string) => {
@@ -267,23 +214,8 @@ export const TaskListContainer: React.FC = () => {
     
     const taskId = e.dataTransfer.getData('taskId');
     
-    // Create a date with explicit PT timezone handling for the current day
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    // Get date parts in PT timezone for the dragged task's due date
-    const parts = formatter.formatToParts(new Date(draggedTask.dueDate));
-    const ptYear = parts.find(part => part.type === 'year')?.value || '';
-    const ptMonth = parts.find(part => part.type === 'month')?.value || '';
-    const ptDay = parts.find(part => part.type === 'day')?.value || '';
-    
-    // Create a date string in PT timezone
-    const ptDate = new Date(`${ptYear}-${ptMonth}-${ptDay}T00:00:00-07:00`);
-    const currentDayKey = ptDate.toISOString().split('T')[0];
+    // Get the current day key for the dragged task using our timezone utility
+    const currentDayKey = toDateStringPT(draggedTask.dueDate);
     
     console.log('Drop event:', {
       taskId,
@@ -407,17 +339,8 @@ export const TaskListContainer: React.FC = () => {
         // Use the utility function to calculate the new display order
         const newDisplayOrder = calculateDisplayOrder(prevDisplayOrder, nextDisplayOrder);
         
-        // Create a date with explicit PT timezone handling
-        const formatter = new Intl.DateTimeFormat('en-US', {
-          timeZone: 'America/Los_Angeles',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        });
-        
-        // Parse the dayKey (YYYY-MM-DD) into a proper PT date
-        const [year, month, day] = dayKey.split('-');
-        const ptDate = new Date(`${year}-${month}-${day}T00:00:00-07:00`);
+        // Parse the dayKey (YYYY-MM-DD) into a proper PT date using our utility
+        const ptDate = createPTDate(dayKey);
         
         console.log('Task move timezone debug:', {
           taskId,
@@ -441,8 +364,7 @@ export const TaskListContainer: React.FC = () => {
             targetDay: dayKey
           });
           
-          // Force a refresh of the tasks to ensure UI is updated
-          await fetchTasks();
+          // Removed redundant fetchTasks() call that was causing jarring refresh
         } catch (error) {
           console.error('Error in task movement:', error);
         }
@@ -453,7 +375,12 @@ export const TaskListContainer: React.FC = () => {
         });
       }
       
-      setDraggedTask(null);
+      // Reset animation states after a short delay to allow animations to complete
+      setTimeout(() => {
+        setMovingTaskId(null);
+        setReceivingDayKey(null);
+        setDraggedTask(null);
+      }, 300); // Slightly longer than the transition duration
     } catch (error) {
       console.error('Error moving task:', error);
     }
@@ -474,25 +401,31 @@ export const TaskListContainer: React.FC = () => {
         const isToday = key === todayKey;
         
         return (
-          <DayContainer
+          <div
             key={key}
-            dayKey={key}
-            date={date}
-            isToday={isToday}
-            ref={isToday ? todayRef : undefined}
-            tasks={tasksForDay}
-            editingTaskId={editingTaskId}
-            creatingTaskForDay={creatingTaskForDay}
-            onToggleComplete={handleToggleComplete}
-            onEdit={handleEditTask}
-            onUpdate={handleUpdateTask}
-            onDelete={handleDeleteTask}
-            onAddTaskClick={handleAddTaskClick}
-            onCreateTask={handleCreateTask}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          />
+            className={key === receivingDayKey ? styles.dayReceiving : ''}
+          >
+            <DayContainer
+              key={key}
+              dayKey={key}
+              date={date}
+              isToday={isToday}
+              ref={isToday ? todayRef : undefined}
+              tasks={tasksForDay}
+              editingTaskId={editingTaskId}
+              creatingTaskForDay={creatingTaskForDay}
+              onToggleComplete={handleToggleComplete}
+              onEdit={handleEditTask}
+              onUpdate={handleUpdateTask}
+              onDelete={handleDeleteTask}
+              onAddTaskClick={handleAddTaskClick}
+              onCreateTask={handleCreateTask}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              movingTaskId={movingTaskId}
+            />
+          </div>
         );
       })}
     </div>
