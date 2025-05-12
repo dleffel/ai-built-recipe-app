@@ -60,12 +60,35 @@ const getUserTasks: RequestHandler = async (req, res) => {
     const skip = parseInt(req.query.skip as string) || 0;
     const take = parseInt(req.query.take as string) || 100;
     const status = req.query.status as string | undefined;
+    const startDate = req.query.startDate ? createPTDate(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? createPTDate(req.query.endDate as string) : undefined;
     
-    const tasks = await TaskService.getTasksByUserId(req.user!.id, { skip, take, status });
+    const tasks = await TaskService.getTasksByUserId(req.user!.id, {
+      skip,
+      take,
+      status,
+      startDate,
+      endDate
+    });
     res.json(tasks);
   } catch (error: unknown) {
     console.error('Get tasks error:', error);
     res.status(500).json({ error: 'Failed to fetch tasks' });
+  }
+};
+
+// Get task count
+const getTaskCount: RequestHandler = async (req, res) => {
+  try {
+    const status = req.query.status as string | undefined;
+    const startDate = req.query.startDate ? createPTDate(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? createPTDate(req.query.endDate as string) : undefined;
+    
+    const count = await TaskService.getTaskCount(req.user!.id, { status, startDate, endDate });
+    res.json({ count });
+  } catch (error: unknown) {
+    console.error('Get task count error:', error);
+    res.status(500).json({ error: 'Failed to fetch task count' });
   }
 };
 
@@ -198,6 +221,7 @@ const reorderTask: RequestHandler = async (req, res) => {
 router.use(requireAuth);
 router.post('/', createTask);
 router.get('/', getUserTasks);
+router.get('/count', getTaskCount);
 router.get('/:date', getTasksByDate);
 router.put('/:id', updateTask);
 router.delete('/:id', deleteTask);

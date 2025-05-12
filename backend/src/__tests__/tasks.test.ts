@@ -20,7 +20,8 @@ jest.mock('../services/taskService', () => ({
     deleteTask: jest.fn(),
     moveTask: jest.fn(),
     reorderTask: jest.fn(),
-    findById: jest.fn()
+    findById: jest.fn(),
+    getTaskCount: jest.fn()
   }
 }));
 
@@ -65,12 +66,34 @@ jest.mock('../routes/tasks', () => {
       const skip = parseInt(req.query.skip as string) || 0;
       const take = parseInt(req.query.take as string) || 100;
       const status = req.query.status as string | undefined;
+      const startDate = req.query.startDate ? new Date(req.query.startDate) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate) : undefined;
       
-      const tasks = await TaskService.getTasksByUserId(req.user.id, { skip, take, status });
+      const tasks = await TaskService.getTasksByUserId(req.user.id, {
+        skip,
+        take,
+        status,
+        startDate,
+        endDate
+      });
       res.json(tasks);
     } catch (error: any) {
       console.error('Get tasks error:', error);
       res.status(500).json({ error: 'Failed to fetch tasks' });
+    }
+  });
+  
+  router.get('/count', async (req: any, res: any) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const startDate = req.query.startDate ? new Date(req.query.startDate) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate) : undefined;
+      
+      const count = await TaskService.getTaskCount(req.user.id, { status, startDate, endDate });
+      res.json({ count });
+    } catch (error: any) {
+      console.error('Get task count error:', error);
+      res.status(500).json({ error: 'Failed to fetch task count' });
     }
   });
   
@@ -248,7 +271,148 @@ describe('Tasks API', () => {
       expect(TaskService.getTasksByUserId).toHaveBeenCalledWith('test-user-id', {
         skip: 0,
         take: 100,
-        status: undefined
+        status: undefined,
+        startDate: undefined,
+        endDate: undefined
+      });
+    });
+
+    it('should support pagination with skip and take parameters', async () => {
+      const mockTasks = [
+        {
+          id: 'task-2',
+          title: 'Test Task 2',
+          status: 'incomplete',
+          dueDate: new Date(),
+          category: 'Roo Code',
+          isPriority: false,
+          createdAt: new Date(),
+          completedAt: null,
+          isRolledOver: false,
+          displayOrder: 0,
+          userId: 'test-user-id'
+        }
+      ];
+
+      (TaskService.getTasksByUserId as jest.Mock).mockReturnValue(mockTasks);
+
+      const response = await request(app)
+        .get('/api/tasks?skip=10&take=5')
+        .expect(200);
+
+      expect(TaskService.getTasksByUserId).toHaveBeenCalledWith('test-user-id', {
+        skip: 10,
+        take: 5,
+        status: undefined,
+        startDate: undefined,
+        endDate: undefined
+      });
+    });
+
+    it('should filter tasks by status', async () => {
+      const mockTasks = [
+        {
+          id: 'task-3',
+          title: 'Test Task 3',
+          status: 'complete',
+          dueDate: new Date(),
+          category: 'Roo Code',
+          isPriority: false,
+          createdAt: new Date(),
+          completedAt: new Date(),
+          isRolledOver: false,
+          displayOrder: 0,
+          userId: 'test-user-id'
+        }
+      ];
+
+      (TaskService.getTasksByUserId as jest.Mock).mockReturnValue(mockTasks);
+
+      const response = await request(app)
+        .get('/api/tasks?status=complete')
+        .expect(200);
+
+      expect(TaskService.getTasksByUserId).toHaveBeenCalledWith('test-user-id', {
+        skip: 0,
+        take: 100,
+        status: 'complete',
+        startDate: undefined,
+        endDate: undefined
+      });
+    });
+
+    it('should filter tasks by date range', async () => {
+      const mockTasks = [
+        {
+          id: 'task-4',
+          title: 'Test Task 4',
+          status: 'incomplete',
+          dueDate: new Date('2025-05-10'),
+          category: 'Roo Code',
+          isPriority: false,
+          createdAt: new Date(),
+          completedAt: null,
+          isRolledOver: false,
+          displayOrder: 0,
+          userId: 'test-user-id'
+        }
+      ];
+
+      (TaskService.getTasksByUserId as jest.Mock).mockReturnValue(mockTasks);
+
+      const response = await request(app)
+        .get('/api/tasks?startDate=2025-05-01&endDate=2025-05-15')
+        .expect(200);
+
+      expect(TaskService.getTasksByUserId).toHaveBeenCalledWith('test-user-id', {
+        skip: 0,
+        take: 100,
+        status: undefined,
+        startDate: expect.any(Date),
+        endDate: expect.any(Date)
+      });
+      
+      // Verify the dates were parsed correctly
+      const callArgs = (TaskService.getTasksByUserId as jest.Mock).mock.calls[0][1] as {
+        skip: number;
+        take: number;
+        status?: string;
+        startDate?: Date;
+        endDate?: Date;
+      };
+      expect(callArgs.startDate?.toISOString().substring(0, 10)).toBe('2025-05-01');
+      expect(callArgs.endDate?.toISOString().substring(0, 10)).toBe('2025-05-15');
+    });
+
+    it('should combine all filter parameters', async () => {
+      const mockTasks = [
+        {
+          id: 'task-5',
+          title: 'Test Task 5',
+          status: 'complete',
+          dueDate: new Date('2025-05-10'),
+          category: 'Roo Code',
+          isPriority: false,
+          createdAt: new Date(),
+          completedAt: new Date(),
+          isRolledOver: false,
+          displayOrder: 0,
+          userId: 'test-user-id'
+        }
+      ];
+
+      (TaskService.getTasksByUserId as jest.Mock).mockReturnValue(mockTasks);
+
+      const response = await request(app)
+        .get('/api/tasks?skip=5&take=10&status=complete&startDate=2025-05-01&endDate=2025-05-15')
+        .expect(200);
+
+      expect(TaskService.getTasksByUserId).toHaveBeenCalledWith('test-user-id', {
+        skip: 5,
+        take: 10,
+        status: 'complete',
+        startDate: expect.any(Date),
+        endDate: expect.any(Date)
       });
     });
 
@@ -262,6 +426,89 @@ describe('Tasks API', () => {
         .expect(500);
 
       expect(response.body).toEqual({ error: 'Failed to fetch tasks' });
+    });
+  });
+
+  describe('GET /api/tasks/count', () => {
+    it('should return the total count of tasks', async () => {
+      (TaskService.getTaskCount as jest.Mock).mockReturnValue(42);
+
+      const response = await request(app)
+        .get('/api/tasks/count')
+        .expect(200);
+
+      expect(response.body).toEqual({ count: 42 });
+      expect(TaskService.getTaskCount).toHaveBeenCalledWith('test-user-id', {
+        status: undefined,
+        startDate: undefined,
+        endDate: undefined
+      });
+    });
+
+    it('should filter count by status', async () => {
+      (TaskService.getTaskCount as jest.Mock).mockReturnValue(15);
+
+      const response = await request(app)
+        .get('/api/tasks/count?status=complete')
+        .expect(200);
+
+      expect(response.body).toEqual({ count: 15 });
+      expect(TaskService.getTaskCount).toHaveBeenCalledWith('test-user-id', {
+        status: 'complete',
+        startDate: undefined,
+        endDate: undefined
+      });
+    });
+
+    it('should filter count by date range', async () => {
+      (TaskService.getTaskCount as jest.Mock).mockReturnValue(7);
+
+      const response = await request(app)
+        .get('/api/tasks/count?startDate=2025-05-01&endDate=2025-05-15')
+        .expect(200);
+
+      expect(response.body).toEqual({ count: 7 });
+      expect(TaskService.getTaskCount).toHaveBeenCalledWith('test-user-id', {
+        status: undefined,
+        startDate: expect.any(Date),
+        endDate: expect.any(Date)
+      });
+      
+      // Verify the dates were parsed correctly
+      const callArgs = (TaskService.getTaskCount as jest.Mock).mock.calls[0][1] as {
+        status?: string;
+        startDate?: Date;
+        endDate?: Date;
+      };
+      expect(callArgs.startDate?.toISOString().substring(0, 10)).toBe('2025-05-01');
+      expect(callArgs.endDate?.toISOString().substring(0, 10)).toBe('2025-05-15');
+    });
+
+    it('should combine all filter parameters for count', async () => {
+      (TaskService.getTaskCount as jest.Mock).mockReturnValue(3);
+
+      const response = await request(app)
+        .get('/api/tasks/count?status=complete&startDate=2025-05-01&endDate=2025-05-15')
+        .expect(200);
+
+      expect(response.body).toEqual({ count: 3 });
+      expect(TaskService.getTaskCount).toHaveBeenCalledWith('test-user-id', {
+        status: 'complete',
+        startDate: expect.any(Date),
+        endDate: expect.any(Date)
+      });
+    });
+
+    it('should handle errors when getting count', async () => {
+      (TaskService.getTaskCount as jest.Mock).mockImplementation(() => {
+        throw new Error('Database error');
+      });
+
+      const response = await request(app)
+        .get('/api/tasks/count')
+        .expect(500);
+
+      expect(response.body).toEqual({ error: 'Failed to fetch task count' });
     });
   });
 

@@ -40,8 +40,19 @@ export const todoApi = {
   /**
    * Fetch all tasks for the current user
    */
-  async fetchTasks(options?: { status?: string }): Promise<Task[]> {
-    const queryParams = options ? new URLSearchParams(options as Record<string, string>).toString() : '';
+  async fetchTasks(options?: {
+    status?: string,
+    skip?: number,
+    take?: number,
+    startDate?: string,
+    endDate?: string
+  }): Promise<Task[]> {
+    const queryParams = options ? new URLSearchParams(
+      Object.entries(options)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => [key, String(value)])
+    ).toString() : '';
+    
     const url = `/api/tasks${queryParams ? `?${queryParams}` : ''}`;
     const response = await api.get<Task[]>(url);
     return response.data;
@@ -124,5 +135,24 @@ export const todoApi = {
   async reorderTask(id: string, reorderData: ReorderTaskDTO): Promise<Task> {
     const response = await api.put<Task>(`/api/tasks/${id}/reorder`, reorderData);
     return response.data;
+  },
+
+  /**
+   * Get the total count of tasks with optional filtering
+   */
+  async getTaskCount(options?: {
+    status?: string,
+    startDate?: string,
+    endDate?: string
+  }): Promise<number> {
+    const queryParams = options ? new URLSearchParams(
+      Object.entries(options)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => [key, String(value)])
+    ).toString() : '';
+    
+    const url = `/api/tasks/count${queryParams ? `?${queryParams}` : ''}`;
+    const response = await api.get<{ count: number }>(url);
+    return response.data.count;
   }
 };

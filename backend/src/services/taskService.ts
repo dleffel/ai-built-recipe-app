@@ -59,12 +59,29 @@ export class TaskService {
     skip?: number;
     take?: number;
     status?: string;
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<Task[]> {
+    const whereClause: Prisma.TaskWhereInput = { userId };
+    
+    if (options?.status) {
+      whereClause.status = options.status;
+    }
+    
+    if (options?.startDate || options?.endDate) {
+      whereClause.dueDate = {};
+      
+      if (options?.startDate) {
+        whereClause.dueDate.gte = options.startDate;
+      }
+      
+      if (options?.endDate) {
+        whereClause.dueDate.lte = options.endDate;
+      }
+    }
+    
     return this.prisma.task.findMany({
-      where: {
-        userId,
-        status: options?.status
-      },
+      where: whereClause,
       skip: options?.skip,
       take: options?.take,
       orderBy: [
@@ -72,6 +89,35 @@ export class TaskService {
         { displayOrder: 'asc' }
       ]
     });
+  }
+
+  /**
+   * Get task count for a user with optional filters
+   */
+  static async getTaskCount(userId: string, options?: {
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<number> {
+    const whereClause: Prisma.TaskWhereInput = { userId };
+    
+    if (options?.status) {
+      whereClause.status = options.status;
+    }
+    
+    if (options?.startDate || options?.endDate) {
+      whereClause.dueDate = {};
+      
+      if (options?.startDate) {
+        whereClause.dueDate.gte = options.startDate;
+      }
+      
+      if (options?.endDate) {
+        whereClause.dueDate.lte = options.endDate;
+      }
+    }
+    
+    return this.prisma.task.count({ where: whereClause });
   }
 
   /**
