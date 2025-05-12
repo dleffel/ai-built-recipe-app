@@ -178,6 +178,8 @@ const mockUpdateTask = jest.fn();
 const mockDeleteTask = jest.fn();
 const mockMoveTask = jest.fn();
 const mockReorderTask = jest.fn();
+const mockLoadMorePastTasks = jest.fn();
+const mockLoadMoreFutureTasks = jest.fn();
 
 // Default mock implementation
 const mockUseTodo = (overrides = {}) => ({
@@ -191,6 +193,11 @@ const mockUseTodo = (overrides = {}) => ({
   deleteTask: mockDeleteTask,
   moveTask: mockMoveTask,
   reorderTask: mockReorderTask,
+  loadMorePastTasks: mockLoadMorePastTasks,
+  loadMoreFutureTasks: mockLoadMoreFutureTasks,
+  hasMorePastTasks: false,
+  hasMoreFutureTasks: false,
+  isLoadingMore: false,
   ...overrides
 });
 
@@ -232,10 +239,9 @@ describe('TaskListContainer', () => {
     expect(screen.getByTestId('task-item-task-2')).toHaveAttribute('data-priority', 'true');
   });
 
-  it('fetches tasks on mount', () => {
-    render(<TaskListContainer />);
-    expect(mockFetchTasks).toHaveBeenCalledTimes(1);
-  });
+  // Note: We removed the test for 'fetches tasks on mount' since the component
+  // no longer directly calls fetchTasks on mount. This functionality is now
+  // handled by the TodoContext provider.
 
   it('shows loading state when loading', async () => {
     // Clear any previous renders
@@ -461,5 +467,84 @@ describe('TaskListContainer', () => {
     
     // Restore original confirm
     window.confirm = originalConfirm;
+  });
+  
+  describe('Progressive loading functionality', () => {
+    it('should render load more buttons when there are more tasks to load', async () => {
+      const { useTodo } = require('../context/TodoContext');
+      (useTodo as jest.Mock).mockImplementation(() => mockUseTodo({
+        hasMorePastTasks: true,
+        hasMoreFutureTasks: true
+      }));
+      
+      render(<TaskListContainer />);
+      
+      // Check if both load more buttons are displayed
+      expect(screen.getByText('Load earlier tasks')).toBeInTheDocument();
+      expect(screen.getByText('Load more future tasks')).toBeInTheDocument();
+    });
+    
+    it('should not render load more buttons when there are no more tasks to load', async () => {
+      const { useTodo } = require('../context/TodoContext');
+      (useTodo as jest.Mock).mockImplementation(() => mockUseTodo({
+        hasMorePastTasks: false,
+        hasMoreFutureTasks: false
+      }));
+      
+      render(<TaskListContainer />);
+      
+      // Check that load more buttons are not displayed
+      expect(screen.queryByText('Load earlier tasks')).not.toBeInTheDocument();
+      expect(screen.queryByText('Load more future tasks')).not.toBeInTheDocument();
+    });
+    
+    it('should show loading indicators when loading more tasks', async () => {
+      const { useTodo } = require('../context/TodoContext');
+      (useTodo as jest.Mock).mockImplementation(() => mockUseTodo({
+        hasMorePastTasks: true,
+        hasMoreFutureTasks: true,
+        isLoadingMore: true
+      }));
+      
+      render(<TaskListContainer />);
+      
+      // Check if loading indicators are displayed
+      const loadingElements = screen.getAllByText('Loading...');
+      expect(loadingElements.length).toBeGreaterThan(0);
+    });
+    
+    it('should call loadMorePastTasks when past load more button is clicked', async () => {
+      const { useTodo } = require('../context/TodoContext');
+      (useTodo as jest.Mock).mockImplementation(() => mockUseTodo({
+        hasMorePastTasks: true,
+        hasMoreFutureTasks: false
+      }));
+      
+      render(<TaskListContainer />);
+      
+      // Click the load more past tasks button
+      const loadMorePastButton = screen.getByText('Load earlier tasks');
+      await userEvent.click(loadMorePastButton);
+      
+      // Check if loadMorePastTasks was called
+      expect(mockLoadMorePastTasks).toHaveBeenCalledTimes(1);
+    });
+    
+    it('should call loadMoreFutureTasks when future load more button is clicked', async () => {
+      const { useTodo } = require('../context/TodoContext');
+      (useTodo as jest.Mock).mockImplementation(() => mockUseTodo({
+        hasMorePastTasks: false,
+        hasMoreFutureTasks: true
+      }));
+      
+      render(<TaskListContainer />);
+      
+      // Click the load more future tasks button
+      const loadMoreFutureButton = screen.getByText('Load more future tasks');
+      await userEvent.click(loadMoreFutureButton);
+      
+      // Check if loadMoreFutureTasks was called
+      expect(mockLoadMoreFutureTasks).toHaveBeenCalledTimes(1);
+    });
   });
 });

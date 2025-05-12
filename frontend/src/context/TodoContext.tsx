@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useState } from 'react';
 import { todoApi, Task, CreateTaskDTO, UpdateTaskDTO, MoveTaskDTO, ReorderTaskDTO } from '../services/todoApi';
 import { groupTasksByDay } from '../utils/taskUtils';
+import { createPTDate, toDateStringPT } from '../utils/timezoneUtils';
 
 // Define action types
 type TodoAction =
@@ -10,7 +11,8 @@ type TodoAction =
   | { type: 'ADD_TASK', task: Task }
   | { type: 'UPDATE_TASK', taskId: string, updates: Partial<Task> }
   | { type: 'DELETE_TASK', taskId: string }
-  | { type: 'MOVE_TASK', taskId: string, updates: Partial<Task> };
+  | { type: 'MOVE_TASK', taskId: string, updates: Partial<Task> }
+  | { type: 'APPEND_TASKS', tasks: Task[] };
 
 // Define state type
 interface TodoState {
@@ -87,6 +89,24 @@ const todoReducer = (state: TodoState, action: TodoAction): TodoState => {
         tasksByDay: groupTasksByDay(tasksAfterMove),
       };
       
+    case 'APPEND_TASKS':
+      // Combine existing tasks with new tasks, avoiding duplicates
+      const combinedTasks = [...state.tasks];
+      action.tasks.forEach(newTask => {
+        // Only add if not already in the array
+        if (!combinedTasks.some(task => task.id === newTask.id)) {
+          combinedTasks.push(newTask);
+        }
+      });
+      
+      return {
+        ...state,
+        tasks: combinedTasks,
+        tasksByDay: groupTasksByDay(combinedTasks),
+        loading: false,
+        error: null,
+      };
+      
     default:
       return state;
   }
@@ -98,17 +118,107 @@ const TodoContext = createContext<any>(null);
 // Create provider component
 export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(todoReducer, initialState);
+  const [loadedDateRanges, setLoadedDateRanges] = useState<Array<{start: string, end: string}>>([]);
+  const [hasMorePastTasks, setHasMorePastTasks] = useState<boolean>(true);
+  const [hasMoreFutureTasks, setHasMoreFutureTasks] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   
-  // Fetch tasks
-  const fetchTasks = useCallback(async () => {
-    dispatch({ type: 'LOADING' });
+  // Fetch tasks for a specific date range
+  const fetchTasksForDateRange = useCallback(async (startDate: Date, endDate: Date, append: boolean = false) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      dispatch({ type: 'LOADING' });
+    }
+    
     try {
-      const tasks = await todoApi.fetchTasks();
-      dispatch({ type: 'FETCH_SUCCESS', tasks });
+      const formattedStartDate = toDateStringPT(startDate);
+      const formattedEndDate = toDateStringPT(endDate);
+      
+      const tasks = await todoApi.fetchTasks({
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        take: 500 // Increased limit for date range
+      });
+      
+      if (append) {
+        dispatch({ type: 'APPEND_TASKS', tasks });
+      } else {
+        dispatch({ type: 'FETCH_SUCCESS', tasks });
+      }
+      
+      // Update loaded date ranges
+      setLoadedDateRanges(prev => {
+        const newRange = { start: formattedStartDate, end: formattedEndDate };
+        return [...prev.filter(range =>
+          !(range.start >= formattedStartDate && range.end <= formattedEndDate)
+        ), newRange];
+      });
+      
+      // Check if we have more tasks in either direction
+      const pastCount = await todoApi.getTaskCount({
+        endDate: new Date(startDate.getTime() - 86400000).toISOString().split('T')[0]
+      });
+      
+      const futureCount = await todoApi.getTaskCount({
+        startDate: new Date(endDate.getTime() + 86400000).toISOString().split('T')[0]
+      });
+      
+      setHasMorePastTasks(pastCount > 0);
+      setHasMoreFutureTasks(futureCount > 0);
     } catch (error: any) {
       dispatch({ type: 'FETCH_ERROR', error: error.message || 'Failed to fetch tasks' });
+    } finally {
+      setIsLoadingMore(false);
     }
-  }, []);
+  }, [dispatch]);
+  
+  // Load more tasks in the past direction
+  const loadMorePastTasks = useCallback(async (days: number = 30) => {
+    if (!hasMorePastTasks || isLoadingMore) return;
+    
+    // Find earliest loaded date
+    const earliestRange = loadedDateRanges.reduce((earliest, range) =>
+      range.start < earliest ? range.start : earliest,
+      loadedDateRanges[0]?.start || toDateStringPT(new Date())
+    );
+    
+    const earliestDate = new Date(earliestRange);
+    const newStartDate = new Date(earliestDate);
+    newStartDate.setDate(newStartDate.getDate() - days);
+    
+    await fetchTasksForDateRange(newStartDate, new Date(earliestDate.getTime() - 86400000), true);
+  }, [hasMorePastTasks, isLoadingMore, loadedDateRanges, fetchTasksForDateRange]);
+  
+  // Load more tasks in the future direction
+  const loadMoreFutureTasks = useCallback(async (days: number = 30) => {
+    if (!hasMoreFutureTasks || isLoadingMore) return;
+    
+    // Find latest loaded date
+    const latestRange = loadedDateRanges.reduce((latest, range) =>
+      range.end > latest ? range.end : latest,
+      loadedDateRanges[0]?.end || toDateStringPT(new Date())
+    );
+    
+    const latestDate = new Date(latestRange);
+    const newEndDate = new Date(latestDate);
+    newEndDate.setDate(newEndDate.getDate() + days);
+    
+    await fetchTasksForDateRange(new Date(latestDate.getTime() + 86400000), newEndDate, true);
+  }, [hasMoreFutureTasks, isLoadingMore, loadedDateRanges, fetchTasksForDateRange]);
+  
+  // Fetch tasks with initial date range
+  const fetchTasks = useCallback(async () => {
+    // Calculate initial date range (e.g., 3 months back, 3 months forward)
+    const today = createPTDate(new Date());
+    const pastDate = new Date(today);
+    pastDate.setDate(today.getDate() - 90); // 3 months back
+    
+    const futureDate = new Date(today);
+    futureDate.setDate(today.getDate() + 90); // 3 months forward
+    
+    await fetchTasksForDateRange(pastDate, futureDate);
+  }, [fetchTasksForDateRange]);
   
   // Create task
   const createTask = useCallback(async (taskData: CreateTaskDTO) => {
@@ -182,6 +292,12 @@ export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deleteTask,
     moveTask,
     reorderTask,
+    loadMorePastTasks,
+    loadMoreFutureTasks,
+    hasMorePastTasks,
+    hasMoreFutureTasks,
+    isLoadingMore,
+    fetchTasksForDateRange
   };
   
   return <TodoContext.Provider value={contextValue}>{children}</TodoContext.Provider>;

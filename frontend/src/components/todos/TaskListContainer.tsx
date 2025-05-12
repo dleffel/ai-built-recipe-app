@@ -21,7 +21,12 @@ export const TaskListContainer: React.FC = () => {
     updateTask,
     deleteTask,
     moveTask,
-    reorderTask
+    reorderTask,
+    loadMorePastTasks,
+    loadMoreFutureTasks,
+    hasMorePastTasks,
+    hasMoreFutureTasks,
+    isLoadingMore
   } = useTodo();
 
   // State for task creation and editing
@@ -76,11 +81,6 @@ export const TaskListContainer: React.FC = () => {
   // Get today's key for highlighting - fixed for PT timezone
   const todayKey = toDateStringPT(new Date());
   
-
-  // Fetch tasks on component mount
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
   
   // Auto-scroll to today's tasks ONLY when component initially mounts and tasks are loaded
   useEffect(() => {
@@ -395,6 +395,21 @@ export const TaskListContainer: React.FC = () => {
   
   return (
     <div className={styles.taskListContainer}>
+      {hasMorePastTasks && (
+        <div
+          className={styles.loadMoreButton}
+          onClick={() => loadMorePastTasks()}
+          aria-disabled={isLoadingMore}
+        >
+          {isLoadingMore ? (
+            <>
+              <span className={styles.loadingIndicator}></span>
+              Loading...
+            </>
+          ) : 'Load earlier tasks'}
+        </div>
+      )}
+      
       {dateArray.map((date, index) => {
         const key = dateKeys[index];
         const tasksForDay = sortedTasksByDay[key] || [];
@@ -428,6 +443,21 @@ export const TaskListContainer: React.FC = () => {
           </div>
         );
       })}
+      
+      {hasMoreFutureTasks && (
+        <div
+          className={styles.loadMoreButton}
+          onClick={() => loadMoreFutureTasks()}
+          aria-disabled={isLoadingMore}
+        >
+          {isLoadingMore ? (
+            <>
+              <span className={styles.loadingIndicator}></span>
+              Loading...
+            </>
+          ) : 'Load more future tasks'}
+        </div>
+      )}
     </div>
   );
 };
