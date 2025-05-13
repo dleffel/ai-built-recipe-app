@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import styles from './TaskCreation.module.css';
+import { toDateStringPT, createPTDate } from '../../utils/timezoneUtils';
 
 interface TaskCreationProps {
+  dayKey: string; // The day for which the task is being created
   onCancel?: () => void;
   onSave?: (taskData: {
     title: string;
     category: string;
     isPriority: boolean;
+    dueDate?: string;
   }) => void;
-  // These props will be used when functionality is implemented
-  // For now, they're just placeholders
 }
 
 export const TaskCreation: React.FC<TaskCreationProps> = ({
+  dayKey,
   onCancel,
   onSave,
 }) => {
@@ -20,6 +22,7 @@ export const TaskCreation: React.FC<TaskCreationProps> = ({
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Roo Code');
   const [isPriority, setIsPriority] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(dayKey);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
 
@@ -35,6 +38,7 @@ export const TaskCreation: React.FC<TaskCreationProps> = ({
           title: title.trim(),
           category,
           isPriority,
+          dueDate: createPTDate(selectedDate).toISOString(),
         });
         
         // Show success feedback briefly
@@ -94,6 +98,18 @@ export const TaskCreation: React.FC<TaskCreationProps> = ({
             />
             High Priority
           </label>
+        </div>
+        
+        <div className={styles.datePickerRow}>
+          <label htmlFor="task-creation-date" className={styles.datePickerLabel}>Due Date:</label>
+          <input
+            id="task-creation-date"
+            type="date"
+            className={styles.datePicker}
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            aria-label="Task due date"
+          />
         </div>
         
         {feedback && (

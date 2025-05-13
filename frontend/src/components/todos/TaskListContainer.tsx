@@ -150,11 +150,18 @@ export const TaskListContainer: React.FC = () => {
 
   const handleUpdateTask = async (taskData: any) => {
     try {
-      await updateTask(taskData.id, {
+      const updates: any = {
         title: taskData.title,
         category: taskData.category as 'Roo Vet' | 'Roo Code' | 'Personal',
         isPriority: taskData.isPriority
-      });
+      };
+      
+      // If dueDate is provided, include it in the update
+      if (taskData.dueDate) {
+        updates.dueDate = taskData.dueDate;
+      }
+      
+      await updateTask(taskData.id, updates);
       
       setEditingTaskId(null);
     } catch (error) {

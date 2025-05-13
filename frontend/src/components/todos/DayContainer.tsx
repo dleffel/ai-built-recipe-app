@@ -87,6 +87,7 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
               title={task.title}
               category={task.category as 'Roo Vet' | 'Roo Code' | 'Personal'}
               isPriority={task.isPriority}
+              dueDate={task.dueDate}
               onCancel={() => onEdit('')}
               onSave={onUpdate}
               onDelete={() => onDelete(task.id)}
@@ -113,6 +114,7 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
         
         {creatingTaskForDay === dayKey && (
           <TaskCreation
+            dayKey={dayKey}
             onCancel={() => onAddTaskClick(dayKey)}
             onSave={(taskData) => onCreateTask(dayKey, taskData)}
           />

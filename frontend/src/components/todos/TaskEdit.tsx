@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './TaskEdit.module.css';
+import { toDateStringPT, createPTDate } from '../../utils/timezoneUtils';
 
 // Define the task category types
 type TaskCategory = 'Roo Vet' | 'Roo Code' | 'Personal';
@@ -9,16 +10,16 @@ interface TaskEditProps {
   title: string;
   category: TaskCategory;
   isPriority: boolean;
+  dueDate: string;
   onCancel?: () => void;
   onSave?: (taskData: {
     id: string;
     title: string;
     category: string;
     isPriority: boolean;
+    dueDate?: string;
   }) => void;
   onDelete?: (id: string) => void;
-  // These props will be used when functionality is implemented
-  // For now, they're just placeholders
 }
 
 export const TaskEdit: React.FC<TaskEditProps> = ({
@@ -26,6 +27,7 @@ export const TaskEdit: React.FC<TaskEditProps> = ({
   title: initialTitle,
   category: initialCategory,
   isPriority: initialIsPriority,
+  dueDate: initialDueDate,
   onCancel,
   onSave,
   onDelete,
@@ -34,6 +36,7 @@ export const TaskEdit: React.FC<TaskEditProps> = ({
   const [title, setTitle] = useState(initialTitle);
   const [category, setCategory] = useState(initialCategory);
   const [isPriority, setIsPriority] = useState(initialIsPriority);
+  const [selectedDate, setSelectedDate] = useState(toDateStringPT(initialDueDate));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
@@ -43,7 +46,8 @@ export const TaskEdit: React.FC<TaskEditProps> = ({
     setTitle(initialTitle);
     setCategory(initialCategory);
     setIsPriority(initialIsPriority);
-  }, [initialTitle, initialCategory, initialIsPriority]);
+    setSelectedDate(toDateStringPT(initialDueDate));
+  }, [initialTitle, initialCategory, initialIsPriority, initialDueDate]);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +62,7 @@ export const TaskEdit: React.FC<TaskEditProps> = ({
           title: title.trim(),
           category,
           isPriority,
+          dueDate: createPTDate(selectedDate).toISOString(),
         });
         
         // Show success feedback briefly
@@ -144,6 +149,18 @@ export const TaskEdit: React.FC<TaskEditProps> = ({
             />
             High Priority
           </label>
+        </div>
+        
+        <div className={styles.datePickerRow}>
+          <label htmlFor="task-date" className={styles.datePickerLabel}>Due Date:</label>
+          <input
+            id="task-date"
+            type="date"
+            className={styles.datePicker}
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            aria-label="Task due date"
+          />
         </div>
         
         {feedback && (
