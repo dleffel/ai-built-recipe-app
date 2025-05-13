@@ -52,6 +52,40 @@
   gap: var(--spacing-2);
 }
 
+.datePickerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.datePickerLabel {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  color: var(--todo-text-color);
+  font-weight: var(--font-weight-medium);
+  min-width: 70px;
+}
+
+.datePicker {
+  flex: 1;
+  padding: var(--spacing-1) var(--spacing-2);
+  border: 1px solid var(--todo-border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  color: var(--todo-text-color);
+  background-color: white;
+  transition: all var(--transition-fast);
+  height: 36px;
+}
+
+.datePicker:focus {
+  outline: none;
+  border-color: var(--button-primary-bg);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
 .categorySelect {
   padding: var(--spacing-1) var(--spacing-2);
   border: 1px solid var(--todo-border-color);
@@ -252,6 +286,16 @@
   }
   
   .categorySelect {
+    width: 100%;
+  }
+  
+  .datePickerRow {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .datePicker {
     width: 100%;
   }
   
