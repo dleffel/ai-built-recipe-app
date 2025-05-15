@@ -39,6 +39,9 @@ export const TaskListContainer: React.FC = () => {
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
   const [receivingDayKey, setReceivingDayKey] = useState<string | null>(null);
   
+  // State to track if today's tasks are visible
+  const [isTodayVisible, setIsTodayVisible] = useState(true);
+  
   // Reference to the "today" day container for auto-scrolling
   const todayRef = useRef<HTMLDivElement>(null);
   
@@ -101,6 +104,26 @@ export const TaskListContainer: React.FC = () => {
       hasMountedRef.current = true;
     }
   }, [loading, error]); // Removed tasks.length dependency
+  
+  // Use Intersection Observer to detect when today's tasks are visible
+  useEffect(() => {
+    if (!todayRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsTodayVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 } // Consider visible when at least 10% is in view
+    );
+    
+    observer.observe(todayRef.current);
+    
+    return () => {
+      if (todayRef.current) {
+        observer.unobserve(todayRef.current);
+      }
+    };
+  }, [todayRef.current]);
 
   // Task action handlers
   const handleAddTaskClick = (day: string) => {
@@ -464,6 +487,23 @@ export const TaskListContainer: React.FC = () => {
             </>
           ) : 'Load more future tasks'}
         </div>
+      )}
+      
+      {/* Floating "Jump to Today" button */}
+      {!isTodayVisible && (
+        <button
+          className={styles.jumpToTodayButton}
+          onClick={() => {
+            todayRef.current?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }}
+          aria-label="Jump to today's tasks"
+        >
+          <span className={styles.jumpToTodayIcon}>↑</span>
+          Today
+        </button>
       )}
     </div>
   );
