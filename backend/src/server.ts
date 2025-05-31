@@ -75,7 +75,7 @@ app.use(express.urlencoded({ extended: true }));
 const cookieConfig = {
   name: 'session',
   keys: [serverConfig.sessionSecret],
-  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
   domain: process.env.NODE_ENV === 'production' ? 'api.organizer.dannyleffel.com' : undefined,

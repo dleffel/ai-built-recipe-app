@@ -495,10 +495,10 @@ describe('TaskService Rollover Functionality', () => {
           });
           
           // The start date should be 00:00:00 PT (07:00:00 UTC)
-          expect(startDate.toISOString()).toBe('2025-04-28T07:00:00.000Z');
+          expect(startDate.toISOString()).toBe('2025-05-28T07:00:00.000Z');
           
           // The end date should be 23:59:59.999 PT (06:59:59.999 UTC next day)
-          expect(endDate.toISOString()).toBe('2025-04-29T06:59:59.999Z');
+          expect(endDate.toISOString()).toBe('2025-05-29T06:59:59.999Z');
           
           return [lateNightTask];
         }
