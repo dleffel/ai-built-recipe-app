@@ -34,17 +34,17 @@ describe('TaskService Timezone Handling', () => {
     // This test verifies that our timezone fix works correctly
     it('should correctly handle tasks created in morning PT and show them in the current day', async () => {
       // Mock the current time to be 9:00 AM PT (16:00 UTC)
-      // April 28, 2025 9:00 AM PT = April 28, 2025 16:00 UTC
-      const mockPTMorningTime = new Date('2025-04-28T16:00:00.000Z');
+      // May 28, 2025 9:00 AM PT = May 28, 2025 16:00 UTC
+      const mockPTMorningTime = new Date('2025-05-28T16:00:00.000Z');
       const originalDateNow = Date.now;
       Date.now = jest.fn(() => mockPTMorningTime.getTime());
       
-      // Create a task due today (April 28, 2025) in PT
+      // Create a task due today (May 28, 2025) in PT
       const userId = 'test-user-id';
       const taskData = {
         title: 'Morning PT Task',
         status: 'incomplete',
-        dueDate: new Date('2025-04-28T07:00:00.000Z'), // PT morning
+        dueDate: new Date('2025-05-28T07:00:00.000Z'), // PT morning
         category: 'Roo Code',
         isPriority: false,
         displayOrder: 0
@@ -66,7 +66,7 @@ describe('TaskService Timezone Handling', () => {
       const task = await TaskService.createTask(userId, taskData);
       
       // Now mark the task as complete at 9:05 AM PT
-      const completionTime = new Date('2025-04-28T16:05:00.000Z'); // 9:05 AM PT
+      const completionTime = new Date('2025-05-28T16:05:00.000Z'); // 9:05 AM PT
       const updatedTask = {
         ...createdTask,
         status: 'complete',
@@ -78,8 +78,8 @@ describe('TaskService Timezone Handling', () => {
       
       const completedTask = await TaskService.updateTask(task.id, userId, { status: 'complete' });
       
-      // Now test retrieving tasks for today (April 28, 2025)
-      const todayDate = new Date('2025-04-28T07:00:00.000Z'); // PT timezone
+      // Now test retrieving tasks for today (May 28, 2025)
+      const todayDate = new Date('2025-05-28T07:00:00.000Z'); // PT timezone
       
       // This is the fixed implementation from taskService.ts that correctly handles timezones
       // Extract the date part in YYYY-MM-DD format
@@ -119,17 +119,17 @@ describe('TaskService Timezone Handling', () => {
     });
     it('should correctly handle tasks created in PT timezone', async () => {
       // Mock the current time to be 9:00 AM PT (16:00 UTC)
-      // April 28, 2025 9:00 AM PT = April 28, 2025 16:00 UTC
-      const mockPTMorningTime = new Date('2025-04-28T16:00:00.000Z');
+      // May 28, 2025 9:00 AM PT = May 28, 2025 16:00 UTC
+      const mockPTMorningTime = new Date('2025-05-28T16:00:00.000Z');
       const originalDateNow = Date.now;
       Date.now = jest.fn(() => mockPTMorningTime.getTime());
       
-      // Create a task due today (April 28, 2025) in PT
+      // Create a task due today (May 28, 2025) in PT
       const userId = 'test-user-id';
       const taskData = {
         title: 'Test Task',
         status: 'incomplete',
-        dueDate: new Date('2025-04-28T07:00:00.000Z'), // PT morning
+        dueDate: new Date('2025-05-28T07:00:00.000Z'), // PT morning
         category: 'Roo Code',
         isPriority: false,
         displayOrder: 0
@@ -165,9 +165,9 @@ describe('TaskService Timezone Handling', () => {
       expect(completedTask.status).toBe('complete');
       expect(completedTask.completedAt).toEqual(mockPTMorningTime);
       
-      // Now test retrieving tasks for today (April 28, 2025)
+      // Now test retrieving tasks for today (May 28, 2025)
       // This should include our completed task
-      const todayDate = new Date('2025-04-28T07:00:00.000Z'); // PT timezone
+      const todayDate = new Date('2025-05-28T07:00:00.000Z'); // PT timezone
       
       // Mock findMany to return our task when querying for today
       mockPrismaTask.findMany.mockImplementation((params: any) => {
@@ -196,9 +196,9 @@ describe('TaskService Timezone Handling', () => {
       expect(tasksForToday).toHaveLength(1);
       expect(tasksForToday[0].id).toBe('task-1');
       
-      // Now test retrieving tasks for yesterday (April 27, 2025)
+      // Now test retrieving tasks for yesterday (May 27, 2025)
       // This should NOT include our task
-      const yesterdayDate = new Date('2025-04-27T07:00:00.000Z'); // PT timezone
+      const yesterdayDate = new Date('2025-05-27T07:00:00.000Z'); // PT timezone
       
       // Get tasks for yesterday
       const tasksForYesterday = await TaskService.getTasksByUserIdAndDate(userId, yesterdayDate);
@@ -212,17 +212,17 @@ describe('TaskService Timezone Handling', () => {
     
     it('should correctly handle tasks completed near day boundary in PT timezone', async () => {
       // Mock the current time to be 11:55 PM PT (06:55 UTC next day)
-      // April 28, 2025 11:55 PM PT = April 29, 2025 06:55 UTC
-      const mockPTLateNightTime = new Date('2025-04-29T06:55:00.000Z');
+      // May 28, 2025 11:55 PM PT = May 29, 2025 06:55 UTC
+      const mockPTLateNightTime = new Date('2025-05-29T06:55:00.000Z');
       const originalDateNow = Date.now;
       Date.now = jest.fn(() => mockPTLateNightTime.getTime());
       
-      // Create a task due today (April 28, 2025) in PT
+      // Create a task due today (May 28, 2025) in PT
       const userId = 'test-user-id';
       const taskData = {
         title: 'Late Night Task',
         status: 'incomplete',
-        dueDate: new Date('2025-04-28T07:00:00.000Z'), // PT morning
+        dueDate: new Date('2025-05-28T07:00:00.000Z'), // PT morning
         category: 'Roo Code',
         isPriority: false,
         displayOrder: 0
@@ -233,7 +233,7 @@ describe('TaskService Timezone Handling', () => {
         id: 'task-2',
         ...taskData,
         userId,
-        createdAt: new Date('2025-04-28T15:00:00.000Z'), // Created earlier in the day
+        createdAt: new Date('2025-05-28T15:00:00.000Z'), // Created earlier in the day
         completedAt: null,
         isRolledOver: false
       };
@@ -257,8 +257,8 @@ describe('TaskService Timezone Handling', () => {
       expect(completedTask.status).toBe('complete');
       expect(completedTask.completedAt).toEqual(mockPTLateNightTime);
       
-      // Now test retrieving tasks for today (April 28, 2025)
-      const todayDate = new Date('2025-04-28T07:00:00.000Z'); // PT timezone
+      // Now test retrieving tasks for today (May 28, 2025)
+      const todayDate = new Date('2025-05-28T07:00:00.000Z'); // PT timezone
       
       // Mock findMany to return our task when querying for today
       mockPrismaTask.findMany.mockImplementation((params: any) => {
@@ -295,17 +295,17 @@ describe('TaskService Timezone Handling', () => {
   describe('Task Movement with PT Timezone', () => {
     it('should correctly handle moving tasks between days in PT timezone', async () => {
       // Mock the current time to be 9:00 AM PT (16:00 UTC)
-      // April 28, 2025 9:00 AM PT = April 28, 2025 16:00 UTC
-      const mockPTMorningTime = new Date('2025-04-28T16:00:00.000Z');
+      // May 28, 2025 9:00 AM PT = May 28, 2025 16:00 UTC
+      const mockPTMorningTime = new Date('2025-05-28T16:00:00.000Z');
       const originalDateNow = Date.now;
       Date.now = jest.fn(() => mockPTMorningTime.getTime());
       
-      // Create a task due today (April 28, 2025) in PT
+      // Create a task due today (May 28, 2025) in PT
       const userId = 'test-user-id';
       const taskData = {
         title: 'Task to Move',
         status: 'incomplete',
-        dueDate: new Date('2025-04-28T07:00:00.000Z'), // PT morning
+        dueDate: new Date('2025-05-28T07:00:00.000Z'), // PT morning
         category: 'Roo Code',
         isPriority: false,
         displayOrder: 0
@@ -325,7 +325,7 @@ describe('TaskService Timezone Handling', () => {
       mockPrismaTask.findUnique.mockResolvedValue(createdTask);
       
       // Tomorrow's date in PT timezone
-      const tomorrowDate = new Date('2025-04-29T07:00:00.000Z');
+      const tomorrowDate = new Date('2025-05-29T07:00:00.000Z');
       
       // Mock the moved task
       const movedTask = {
@@ -400,7 +400,7 @@ describe('TaskService Timezone Handling', () => {
       expect(tasksForTomorrow[0].id).toBe('task-to-move');
       
       // Get tasks for today
-      const todayDate = new Date('2025-04-28T07:00:00.000Z');
+      const todayDate = new Date('2025-05-28T07:00:00.000Z');
       const tasksForToday = await TaskService.getTasksByUserIdAndDate(userId, todayDate);
       
       // No tasks should be found for today
