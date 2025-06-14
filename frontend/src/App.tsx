@@ -11,6 +11,7 @@ import { recipeApi } from './services/api';
 import Layout from './components/layout/Layout';
 import HomePage from './components/HomePage';
 import { TodoPlaceholder } from './components/todos/TodoPlaceholder';
+import TrainerPage from './components/trainer/TrainerPage';
 
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -219,6 +220,16 @@ const AppContent: React.FC = () => {
             <Layout>
               <ProtectedRoute>
                 <TodoPlaceholder />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/trainer/*"
+          element={
+            <Layout>
+              <ProtectedRoute>
+                <TrainerPage />
               </ProtectedRoute>
             </Layout>
           }

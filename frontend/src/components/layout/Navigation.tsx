@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import styles from './Navigation.module.css';
 import useMediaQuery from '../../hooks/useMediaQuery';
-import { FaHome, FaUtensils, FaListUl } from 'react-icons/fa';
+import { FaHome, FaUtensils, FaListUl, FaDumbbell } from 'react-icons/fa';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -54,6 +54,16 @@ const Navigation: React.FC = () => {
             To-Do
           </NavLink>
         </li>
+        <li className={styles.navItem}>
+          <NavLink
+            to="/trainer"
+            className={({ isActive }) =>
+              isActive ? `${styles.navLink} ${styles.activeLink}` : styles.navLink
+            }
+          >
+            Trainer
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );
@@ -100,6 +110,19 @@ const Navigation: React.FC = () => {
               {FaListUl({ 'aria-hidden': 'true' })}
             </span>
             <span className={styles.mobileNavText}>To-Do</span>
+          </NavLink>
+        </li>
+        <li className={styles.mobileNavItem}>
+          <NavLink
+            to="/trainer"
+            className={({ isActive }) =>
+              isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
+            }
+          >
+            <span className={styles.mobileNavIcon}>
+              {FaDumbbell({ 'aria-hidden': 'true' })}
+            </span>
+            <span className={styles.mobileNavText}>Trainer</span>
           </NavLink>
         </li>
       </ul>

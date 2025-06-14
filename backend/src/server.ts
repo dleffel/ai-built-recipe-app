@@ -5,6 +5,7 @@ import passport from './config/passport';
 import authRoutes from './routes/auth';
 import recipeRoutes from './routes/recipes';
 import taskRoutes from './routes/tasks';
+import trainerRoutes from './routes/trainer';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
 
@@ -257,6 +258,9 @@ app.use('/api/recipes', recipeRoutes);
 
 // Task routes
 app.use('/api/tasks', taskRoutes);
+
+// Trainer routes
+app.use('/api/trainer', trainerRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

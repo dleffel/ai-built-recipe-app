@@ -21,8 +21,13 @@ model User {
   lastLoginAt DateTime?
 
   // Relations
-  recipes     Recipe[]
-  tasks       Task[]
+  recipes              Recipe[]
+  tasks                Task[]
+  trainerConversations TrainerConversation[]
+  dailyMetrics         DailyMetrics[]
+  workoutSessions      WorkoutSession[]
+  dailyMacros          DailyMacros[]
+  trainerSettings      TrainerSettings?
 
   @@map("users")
 }
@@ -69,4 +74,143 @@ model Task {
   @@map("tasks")
   @@index([userId])
   @@index([dueDate])
+}
+
+model TrainerConversation {
+  id          String    @id @default(uuid())
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  messages    TrainerMessage[]
+  
+  @@map("trainer_conversations")
+  @@index([userId])
+}
+
+model TrainerMessage {
+  id             String              @id @default(uuid())
+  conversationId String
+  role           String              // "user" or "trainer"
+  content        String
+  createdAt      DateTime            @default(now())
+  
+  // Relations
+  conversation   TrainerConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@map("trainer_messages")
+  @@index([conversationId])
+}
+
+model DailyMetrics {
+  id            String    @id @default(uuid())
+  userId        String
+  date          DateTime  // Date of the metrics (stored as date)
+  bodyWeight    Float?    // in pounds
+  bodyFatPct    Float?    // percentage
+  sleepHours    Float?
+  fatigueLevel  Int?      // 1-5 scale
+  mood          String?
+  backComfort   Int?      // 0-10 scale
+  trainingWindow String?   // e.g., "AM", "PM", "AM+PM"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  
+  @@map("daily_metrics")
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+model WorkoutSession {
+  id            String    @id @default(uuid())
+  userId        String
+  date          DateTime
+  sessionType   String    // "UP", "LK", "UV", "LH", "Z2", "SPR"
+  completed     Boolean   @default(false)
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  exercises     Exercise[]
+  
+  @@map("workout_sessions")
+  @@index([userId])
+  @@index([date])
+}
+
+model Exercise {
+  id         String         @id @default(uuid())
+  sessionId  String
+  name       String         // e.g., "Bench Press", "Squat"
+  category   String         // "compound" or "accessory"
+  createdAt  DateTime       @default(now())
+  
+  // Relations
+  session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sets       ExerciseSet[]
+  
+  @@map("exercises")
+  @@index([sessionId])
+}
+
+model ExerciseSet {
+  id         String    @id @default(uuid())
+  exerciseId String
+  weight     Float     // in pounds
+  reps       Int
+  rpe        Float?    // Rate of Perceived Exertion (6-10 scale)
+  setNumber  Int       // 1, 2, 3, etc.
+  createdAt  DateTime  @default(now())
+  
+  // Relations
+  exercise   Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  
+  @@map("exercise_sets")
+  @@index([exerciseId])
+}
+
+model DailyMacros {
+  id       String    @id @default(uuid())
+  userId   String
+  date     DateTime  // Date of the macros
+  calories Int
+  protein  Float     // in grams
+  carbs    Float     // in grams  
+  fat      Float     // in grams
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  
+  @@map("daily_macros")
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+model TrainerSettings {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  maintenanceKcal   Int       @default(2200)
+  currentPhase      String    @default("Surplus") // "Surplus" or "Mini-cut"
+  mesoWeek          Int       @default(1) // 1-4, resets after deload
+  currentPress      String    @default("Bench Press")
+  currentHinge      String    @default("Trap Bar Deadlift")
+  lastDeloadWeek    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id])
+  
+  @@map("trainer_settings")
 }
