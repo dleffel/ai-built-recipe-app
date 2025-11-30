@@ -460,9 +460,6 @@ describe('TaskService Rollover Functionality', () => {
     });
     
     it('should respect Pacific timezone when determining day boundaries', async () => {
-      // DEBUG: Print file location to identify what code is running
-      console.log('TEST FILE: Running Pacific timezone test - input dates are April 28-29, 2025');
-      
       // Create a date that's midnight in PT
       const yesterdayPT = new Date('2025-04-28T00:00:00.000-07:00'); // Midnight PT
       const todayPT = new Date('2025-04-29T00:00:00.000-07:00'); // Midnight PT
@@ -498,10 +495,10 @@ describe('TaskService Rollover Functionality', () => {
           });
           
           // The start date should be 00:00:00 PT (07:00:00 UTC)
-          expect(startDate.toISOString()).toBe('2025-05-28T07:00:00.000Z');
+          expect(startDate.toISOString()).toBe('2025-04-28T07:00:00.000Z');
           
           // The end date should be 23:59:59.999 PT (06:59:59.999 UTC next day)
-          expect(endDate.toISOString()).toBe('2025-05-29T06:59:59.999Z');
+          expect(endDate.toISOString()).toBe('2025-04-29T06:59:59.999Z');
           
           return [lateNightTask];
         }
