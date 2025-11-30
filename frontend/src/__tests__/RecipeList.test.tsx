@@ -57,10 +57,13 @@ describe('RecipeList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (mockApi.get as MockFn).mockReset();
+    jest.useFakeTimers();
   });
 
   afterEach(() => {
     cleanup();
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   it('loads and displays recipes', async () => {
