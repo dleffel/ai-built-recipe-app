@@ -81,8 +81,11 @@ export function getStartOfDayPT(date: Date | string): Date {
   // During standard time, PT is UTC-8, so midnight PT is 8am UTC
   const utcHour = isInDST(checkDate) ? 7 : 8;
   
-  // Use Date.UTC to create the date atomically, avoiding date overflow issues
-  const result = new Date(Date.UTC(year, month - 1, day, utcHour, 0, 0, 0));
+  // Create date by setting components in order: year, month, day first, then time
+  // This avoids overflow issues that occur when using new Date() with current date
+  const result = new Date(0); // Start with epoch to avoid current date interference
+  result.setUTCFullYear(year, month - 1, day); // Set year, month, day together atomically
+  result.setUTCHours(utcHour, 0, 0, 0); // Set time components
   
   return result;
 }
@@ -109,9 +112,11 @@ export function getEndOfDayPT(date: Date | string): Date {
   // During standard time, PT is UTC-8, so 11:59:59.999 PT is 7:59:59.999 UTC the next day
   const utcHour = isInDST(checkDate) ? 6 : 7;
   
-  // Use Date.UTC to create the date atomically, avoiding date overflow issues
+  // Create date by setting components in order to avoid overflow
   // End of day is 23:59:59.999 PT, which is 6:59:59.999 or 7:59:59.999 UTC the next day
-  const result = new Date(Date.UTC(year, month - 1, day + 1, utcHour, 59, 59, 999));
+  const result = new Date(0); // Start with epoch to avoid current date interference
+  result.setUTCFullYear(year, month - 1, day + 1); // Set to next day in UTC
+  result.setUTCHours(utcHour, 59, 59, 999); // Set time components
   
   return result;
 }
