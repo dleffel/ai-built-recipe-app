@@ -415,6 +415,12 @@ describe('RecipeList', () => {
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
+    
+    // Wait specifically for recipes to be cleared from DOM before checking empty state
+    await waitFor(() => {
+      const recipeCards = screen.queryAllByText('Edit');
+      expect(recipeCards.length).toBe(0);
+    }, { timeout: 2000 });
 
     // Verify empty state
     expect(screen.getByText('No recipes found. Create your first recipe!')).toBeInTheDocument();
