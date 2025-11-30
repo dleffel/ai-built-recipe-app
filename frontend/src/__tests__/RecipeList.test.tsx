@@ -1,10 +1,10 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react';
-import { render, fireEvent, screen, waitFor } from '@testing-library/react';
+import { render, fireEvent, screen, waitFor, cleanup } from '@testing-library/react';
 import { RecipeList } from '../components/recipes/RecipeList';
 import { mockApi, createMockResponse } from '../setupTests';
 import { Recipe } from '../types/recipe';
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { AxiosResponse } from 'axios';
 
 interface RecipeListResponse {
@@ -57,6 +57,13 @@ describe('RecipeList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (mockApi.get as MockFn).mockReset();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanup();
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   it('loads and displays recipes', async () => {
@@ -415,8 +422,10 @@ describe('RecipeList', () => {
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
-
-    // Verify empty state
-    expect(screen.getByText('No recipes found. Create your first recipe!')).toBeInTheDocument();
+    
+    // Wait for empty state to appear
+    await waitFor(() => {
+      expect(screen.getByText('No recipes found. Create your first recipe!')).toBeInTheDocument();
+    });
   });
 });

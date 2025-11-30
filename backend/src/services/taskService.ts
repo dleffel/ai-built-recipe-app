@@ -1,6 +1,6 @@
-import { prisma as defaultPrisma } from '../lib/prisma';
-import type { Task, PrismaClient, Prisma } from '@prisma/client';
+import type { Task, Prisma } from '@prisma/client';
 import { getStartOfDayPT, getEndOfDayPT, createPTDate, toDateStringPT } from '../utils/timezoneUtils';
+import { BaseService } from './BaseService';
 
 export interface CreateTaskDTO {
   title: string;
@@ -24,13 +24,7 @@ export interface ReorderTaskDTO {
   displayOrder: number;
 }
 
-export class TaskService {
-  static prisma: PrismaClient = defaultPrisma;
-
-  static resetPrisma() {
-    this.prisma = defaultPrisma;
-  }
-
+export class TaskService extends BaseService {
   /**
    * Create a new task
    */

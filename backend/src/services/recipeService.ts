@@ -1,5 +1,5 @@
-import { prisma as defaultPrisma } from '../lib/prisma';
-import type { Recipe, PrismaClient, Prisma } from '@prisma/client';
+import type { Recipe, Prisma } from '@prisma/client';
+import { BaseService } from './BaseService';
 
 export interface CreateRecipeDTO {
   title: string;
@@ -15,13 +15,7 @@ export interface CreateRecipeDTO {
 
 export interface UpdateRecipeDTO extends Partial<CreateRecipeDTO> {}
 
-export class RecipeService {
-  static prisma: PrismaClient = defaultPrisma;
-
-  static resetPrisma() {
-    this.prisma = defaultPrisma;
-  }
-
+export class RecipeService extends BaseService {
   /**
    * Create a new recipe
    */

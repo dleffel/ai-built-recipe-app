@@ -37,22 +37,11 @@ export const RecipeList: React.FC<RecipeListProps> = ({
     try {
       setLoading(true);
       setError(null);
-      console.log('[DEBUG] Loading recipes with params:', {
-        pageNumber,
-        search,
-        pageSize: PAGE_SIZE
-      });
 
       const response = await recipeApi.list({
         skip: pageNumber * PAGE_SIZE,
         take: PAGE_SIZE,
         search
-      });
-      
-      console.log('[DEBUG] Recipe response:', {
-        receivedCount: response.recipes.length,
-        hasMore: response.recipes.length === PAGE_SIZE,
-        searchTerm: search
       });
       
       if (pageNumber === 0) {
@@ -69,14 +58,6 @@ export const RecipeList: React.FC<RecipeListProps> = ({
       setLoading(false);
     }
   }, []);
-
-  // Log when search query changes
-  useEffect(() => {
-    console.log('[DEBUG] Search query changed:', {
-      raw: searchQuery,
-      debounced: debouncedSearch
-    });
-  }, [searchQuery, debouncedSearch]);
 
   // Reset and load recipes when search changes
   useEffect(() => {

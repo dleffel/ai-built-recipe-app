@@ -55,8 +55,10 @@ const scheduleTaskRollover = () => {
   console.log(`Task rollover scheduled for ${midnight.toISOString()} (in ${Math.floor(msUntilMidnight / 60000)} minutes)`);
 };
 
-// Start the task rollover scheduler
-scheduleTaskRollover();
+// Start the task rollover scheduler (but not in test environment)
+if (process.env.NODE_ENV !== 'test') {
+  scheduleTaskRollover();
+}
 
 // Trust proxy - needed for secure cookies behind a proxy
 app.set('trust proxy', 1);

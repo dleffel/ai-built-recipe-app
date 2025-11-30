@@ -1,15 +1,7 @@
-import { prisma as defaultPrisma } from '../lib/prisma';
-import type { User, PrismaClient } from '@prisma/client';
+import type { User } from '@prisma/client';
+import { BaseService } from './BaseService';
 
-export class UserService {
-  // Allow overriding prisma in tests
-  static prisma: PrismaClient = defaultPrisma;
-
-  // Add method to reset prisma instance (for tests)
-  static resetPrisma() {
-    this.prisma = defaultPrisma;
-  }
-
+export class UserService extends BaseService {
   /**
    * Find a user by their email address
    */

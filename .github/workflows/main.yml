@@ -33,6 +33,7 @@ jobs:
       - name: Run Tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TZ: America/Los_Angeles  # Set timezone for consistent test behavior
         run: |
           cd frontend && npm test -- --watchAll=false
           cd ../backend && npm test
