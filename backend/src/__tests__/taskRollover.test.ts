@@ -460,6 +460,9 @@ describe('TaskService Rollover Functionality', () => {
     });
     
     it('should respect Pacific timezone when determining day boundaries', async () => {
+      // DEBUG: Print file location to identify what code is running
+      console.log('TEST FILE: Running Pacific timezone test - input dates are April 28-29, 2025');
+      
       // Create a date that's midnight in PT
       const yesterdayPT = new Date('2025-04-28T00:00:00.000-07:00'); // Midnight PT
       const todayPT = new Date('2025-04-29T00:00:00.000-07:00'); // Midnight PT
