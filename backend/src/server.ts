@@ -73,13 +73,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Enable cross-site cookies for production OR when CROSS_SITE_COOKIES=true (Railway preview envs)
+const enableCrossSiteCookies = process.env.NODE_ENV === 'production' || process.env.CROSS_SITE_COOKIES === 'true';
+
 // Log cookie configuration
 const cookieConfig = {
   name: 'session',
   keys: [serverConfig.sessionSecret],
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
+  secure: enableCrossSiteCookies,
+  sameSite: enableCrossSiteCookies ? 'none' as const : 'lax' as const,
+  // Only set domain for production (same domain as frontend)
   domain: process.env.NODE_ENV === 'production' ? 'api.organizer.dannyleffel.com' : undefined,
   path: '/',
   httpOnly: true,
