@@ -3,53 +3,48 @@
 .taskItem {
   display: flex;
   align-items: center;
-  padding: var(--spacing-1) var(--spacing-2);
-  margin-bottom: var(--spacing-1);
+  padding: 4px 8px;
+  margin-bottom: 0;
   background-color: white;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: 0;
+  box-shadow: none;
   cursor: grab;
-  transition: box-shadow var(--transition-fast),
-              transform var(--transition-fast),
+  transition: background-color var(--transition-fast),
               opacity var(--transition-normal);
-  border: 1px solid var(--todo-border-color);
+  border: none;
+  border-bottom: 1px solid var(--todo-border-color);
+  min-height: 32px;
 }
 
 .taskItem:hover {
-  box-shadow: var(--shadow-md);
+  background-color: #f9fafb;
 }
 
 .taskItem:active {
   cursor: grabbing;
-  box-shadow: var(--shadow-lg);
+  background-color: #f3f4f6;
 }
 
 /* Add styling for when item is being dragged */
 .taskItem.dragging {
   opacity: 0.8;
-  transform: scale(1.02);
-  box-shadow: var(--shadow-lg);
+  background-color: #f3f4f6;
 }
 
 /* Add styling for when item is being moved between days */
 .taskItem.moving {
   opacity: 0.6;
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
   background-color: var(--feedback-info-bg);
-  border-color: var(--button-primary-bg);
+  border-bottom-color: var(--button-primary-bg);
   transition: opacity var(--transition-normal),
-              transform var(--transition-normal),
-              box-shadow var(--transition-normal),
               background-color var(--transition-normal),
               border-color var(--transition-normal);
 }
 
 /* Rest of styling remains mostly the same */
 .completed {
-  opacity: 0.85;
-  background-color: #F9FAFB;
-  border-color: var(--todo-border-color);
+  opacity: 0.75;
+  background-color: #fafafa;
 }
 
 .completed .taskTitle {
@@ -61,14 +56,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: var(--spacing-1);
+  margin-right: 4px;
   color: var(--todo-muted-color);
   cursor: grab;
   font-size: var(--font-size-base);
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast), opacity var(--transition-fast);
+  opacity: 0;
+}
+
+.taskItem:hover .dragHandle {
+  opacity: 1;
 }
 
 .dragHandle:hover {
@@ -108,20 +108,20 @@
 .checkbox {
   appearance: none;
   -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--todo-muted-color);
-  border-radius: var(--radius-sm);
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--todo-muted-color);
+  border-radius: 3px;
   cursor: pointer;
   position: relative;
   transition: all var(--transition-fast);
   flex-shrink: 0;
-  margin-right: var(--spacing-2);
+  margin-right: 8px;
 }
 
 .checkbox:focus {
   outline: 2px solid var(--button-primary-bg);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 
 .checkbox:checked {
@@ -136,7 +136,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: var(--font-weight-bold);
 }
 
@@ -145,32 +145,34 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
+  gap: 6px;
 }
 
 .taskTitle {
-  font-size: var(--font-size-sm);
+  font-size: 13px;
   color: var(--todo-text-color);
   margin: 0;
   overflow: hidden;
   overflow-wrap: break-word;
   word-break: break-word;
   cursor: pointer;
-  padding: var(--spacing-1) 0;
+  padding: 2px 0;
   font-family: var(--font-family-ui);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.3;
 }
 
 .categoryIndicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: var(--font-size-xs);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
   font-weight: var(--font-weight-semibold);
-  min-width: 70px;
-  letter-spacing: 0.5px;
+  min-width: auto;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
 }
 
 .categoryFullName {
@@ -198,14 +200,19 @@
 
 .priorityIndicator {
   color: var(--priority-color);
-  font-size: var(--font-size-base);
-  margin-left: var(--spacing-1);
-  margin-right: var(--spacing-1);
+  font-size: 12px;
+  margin-left: 4px;
+  margin-right: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
+}
+
+.priorityIndicator svg {
+  width: 12px;
+  height: 12px;
 }
 
 .rolledOver {
@@ -213,12 +220,12 @@
 }
 
 .rolledOverIndicator {
-  font-size: var(--font-size-xs);
+  font-size: 9px;
   color: var(--todo-muted-color);
-  margin-left: var(--spacing-1);
+  margin-left: 4px;
   background-color: var(--button-secondary-bg);
   padding: 1px 4px;
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
 }
 
 .actionButton {
@@ -226,53 +233,64 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   color: var(--todo-muted-color);
   cursor: pointer;
   padding: 4px;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
-  min-width: 32px;
-  height: 32px;
+  min-width: 24px;
+  height: 24px;
   position: relative;
+  opacity: 0;
+}
+
+.taskItem:hover .actionButton {
+  opacity: 1;
 }
 
 .actionButton:hover {
   background-color: var(--button-secondary-bg);
   color: var(--todo-text-color);
-  border-color: var(--todo-border-color);
 }
 
 .actionButton:focus {
   outline: 2px solid var(--button-primary-bg);
-  outline-offset: 2px;
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+.actionButton svg {
+  width: 14px;
+  height: 14px;
 }
 
 .actionButtonLabel {
-  position: absolute;
-  font-size: var(--font-size-xs);
-  bottom: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  color: var(--todo-muted-color);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.actionButton:hover .actionButtonLabel {
-  opacity: 1;
+  display: none;
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
   .taskItem {
-    padding: calc(var(--spacing-1) * 0.75);
+    padding: 6px 8px;
+    min-height: 38px;
+  }
+  
+  .checkbox {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .dragHandle {
+    opacity: 0;
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
   }
   
   .categoryIndicator {
-    padding: 2px 6px;
-    font-size: var(--font-size-xs);
+    padding: 2px 4px;
+    font-size: 9px;
   }
   
   .categoryFullName {
@@ -284,10 +302,27 @@
   }
   
   .taskTitle {
-    font-size: var(--font-size-xs);
+    font-size: 12px;
   }
   
-  .actionButtonLabel {
-    display: none;
+  .actionButton {
+    opacity: 1;
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .actionButton svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .priorityIndicator {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .priorityIndicator svg {
+    width: 10px;
+    height: 10px;
   }
 }

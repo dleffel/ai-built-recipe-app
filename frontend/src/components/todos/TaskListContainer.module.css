@@ -3,17 +3,17 @@
 .taskListContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-3);
-  padding: var(--spacing-2);
+  gap: 16px;
+  padding: 12px;
   max-width: 800px;
   margin: 0 auto;
 }
 
 .dayContainer {
-  background-color: #f8f9fa;
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-2);
-  box-shadow: var(--shadow-sm);
+  background-color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  box-shadow: none;
   transition: all var(--transition-normal);
   border: 1px solid var(--todo-border-color);
 }
@@ -32,18 +32,18 @@
 }
 
 .dayHeader {
-  margin-bottom: var(--spacing-2);
+  margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: var(--spacing-1);
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--todo-border-color);
 }
 
 .dayTitle {
   margin: 0;
   color: var(--todo-text-color);
-  font-size: var(--font-size-lg);
+  font-size: 14px;
   font-weight: var(--font-weight-medium);
 }
 
@@ -51,21 +51,21 @@
   color: var(--button-primary-bg);
   font-weight: var(--font-weight-bold);
   position: relative;
-  padding-left: var(--spacing-1);
+  padding-left: 6px;
   border-left: 3px solid var(--button-primary-bg);
   background-color: rgba(37, 99, 235, 0.05);
-  padding: var(--spacing-1) var(--spacing-2);
-  border-radius: var(--radius-md);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
 }
 
 .taskCounter {
   display: flex;
   align-items: center;
-  font-size: var(--font-size-sm);
+  font-size: 11px;
   font-weight: var(--font-weight-medium);
   background-color: var(--button-secondary-bg);
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 2px 6px;
+  border-radius: 8px;
   color: var(--todo-muted-color);
 }
 
@@ -84,33 +84,33 @@
 }
 
 .taskList {
-  min-height: 40px;
-  margin: var(--spacing-2) 0;
+  min-height: 32px;
+  margin: 4px 0;
 }
 
 .emptyState {
   color: var(--todo-muted-color);
   font-style: italic;
-  padding: var(--spacing-1) 0;
+  padding: 8px 0;
   text-align: center;
-  font-size: var(--font-size-sm);
+  font-size: 12px;
 }
 
 /* Add task button styling */
 .addTaskButton {
   background: transparent;
   border: 1px dashed var(--todo-border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
   width: 100%;
-  margin-top: var(--spacing-2);
+  margin-top: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--todo-muted-color);
   transition: all var(--transition-fast);
-  font-size: var(--font-size-sm);
+  font-size: 12px;
   font-weight: var(--font-weight-medium);
 }
 
@@ -121,8 +121,8 @@
 }
 
 .addTaskIcon {
-  margin-right: var(--spacing-1);
-  font-size: var(--font-size-base);
+  margin-right: 4px;
+  font-size: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -215,23 +215,44 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .taskListContainer {
-    padding: var(--spacing-1);
-    gap: var(--spacing-2);
+    padding: 8px;
+    gap: 12px;
     max-width: 100%;
     width: 100%;
   }
   
   .dayContainer {
-    padding: var(--spacing-1);
-    border-radius: var(--radius-md);
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .dayHeader {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
   }
   
   .dayTitle {
-    font-size: var(--font-size-base);
+    font-size: 13px;
+  }
+  
+  .taskCounter {
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+  
+  .taskList {
+    margin: 2px 0;
   }
   
   .addTaskButton {
-    padding: calc(var(--spacing-1) * 0.75) var(--spacing-1);
+    padding: 5px 6px;
+    margin-top: 6px;
+    font-size: 11px;
+  }
+  
+  .emptyState {
+    padding: 6px 0;
+    font-size: 11px;
   }
 }
 
