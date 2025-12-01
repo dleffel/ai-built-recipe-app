@@ -58,29 +58,34 @@
   border-radius: var(--radius-sm);
 }
 
-.taskCounter {
+.headerAddButton {
   display: flex;
   align-items: center;
-  font-size: 11px;
-  font-weight: var(--font-weight-medium);
-  background-color: var(--button-secondary-bg);
-  padding: 2px 6px;
-  border-radius: 8px;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
   color: var(--todo-muted-color);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  padding: 0;
 }
 
-.completedCount {
-  color: var(--feedback-success-text);
-  font-weight: var(--font-weight-semibold);
+.headerAddButton:hover {
+  background-color: var(--button-secondary-bg);
+  color: var(--button-primary-bg);
 }
 
-.countDivider {
-  margin: 0 2px;
-  opacity: 0.7;
+.headerAddButton:focus {
+  outline: 2px solid var(--button-primary-bg);
+  outline-offset: 1px;
 }
 
-.totalCount {
-  color: var(--todo-text-color);
+.headerAddButton svg {
+  width: 14px;
+  height: 14px;
 }
 
 .taskList {
