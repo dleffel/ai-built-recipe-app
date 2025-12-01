@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTodo } from '../../context/TodoContext';
 import { Task } from '../../services/todoApi';
+import { TaskCategory } from '../../types/task';
 import { DayContainer } from './DayContainer';
 import { BulkActionBar } from './BulkActionBar';
 import { BulkMoveDatePicker } from './BulkMoveDatePicker';
@@ -171,7 +172,7 @@ export const TaskListContainer: React.FC = () => {
       
       await createTask({
         title: taskData.title,
-        category: taskData.category as 'Roo Vet' | 'Roo Code' | 'Personal',
+        category: taskData.category as TaskCategory,
         isPriority: taskData.isPriority,
         status: 'incomplete',
         dueDate: dayDate.toISOString(),
@@ -188,7 +189,7 @@ export const TaskListContainer: React.FC = () => {
     try {
       const updates: any = {
         title: taskData.title,
-        category: taskData.category as 'Roo Vet' | 'Roo Code' | 'Personal',
+        category: taskData.category as TaskCategory,
         isPriority: taskData.isPriority
       };
       

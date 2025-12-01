@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { Task } from '../../services/todoApi';
+import { TaskCategory } from '../../types/task';
 import { TaskItem } from './TaskItem';
 import { TaskEdit } from './TaskEdit';
 import { TaskCreation } from './TaskCreation';
@@ -91,7 +92,7 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
               key={task.id}
               id={task.id}
               title={task.title}
-              category={task.category as 'Roo Vet' | 'Roo Code' | 'Personal'}
+              category={task.category}
               isPriority={task.isPriority}
               dueDate={task.dueDate}
               onCancel={() => onEdit('')}

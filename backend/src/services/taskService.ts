@@ -1,12 +1,13 @@
 import type { Task, Prisma } from '@prisma/client';
 import { getStartOfDayPT, getEndOfDayPT, createPTDate, toDateStringPT } from '../utils/timezoneUtils';
 import { BaseService } from './BaseService';
+import { TaskCategory, TaskStatus } from '../types/task';
 
 export interface CreateTaskDTO {
   title: string;
-  status: string; // "complete" or "incomplete"
+  status: TaskStatus;
   dueDate: Date;
-  category: string; // "Roo Vet", "Roo Code", "Personal"
+  category: TaskCategory;
   isPriority?: boolean;
   displayOrder: number;
   isRolledOver?: boolean;

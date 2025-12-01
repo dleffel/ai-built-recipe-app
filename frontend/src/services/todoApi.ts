@@ -1,12 +1,13 @@
 import api from './api';
 import { createPTDate } from '../utils/timezoneUtils';
+import { TaskCategory, TaskStatus } from '../types/task';
 
 export interface Task {
   id: string;
   title: string;
-  status: 'complete' | 'incomplete';
+  status: TaskStatus;
   dueDate: string;
-  category: 'Roo Vet' | 'Roo Code' | 'Personal';
+  category: TaskCategory;
   isPriority: boolean;
   createdAt: string;
   completedAt: string | null;
@@ -17,9 +18,9 @@ export interface Task {
 
 export interface CreateTaskDTO {
   title: string;
-  status: 'complete' | 'incomplete';
+  status: TaskStatus;
   dueDate: string;
-  category: 'Roo Vet' | 'Roo Code' | 'Personal';
+  category: TaskCategory;
   isPriority?: boolean;
   displayOrder: number;
   isRolledOver?: boolean;
