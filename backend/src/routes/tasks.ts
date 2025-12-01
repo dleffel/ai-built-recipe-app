@@ -9,7 +9,7 @@ declare global {
     }
   }
 }
-import { TaskService, CreateTaskDTO, UpdateTaskDTO, MoveTaskDTO, ReorderTaskDTO } from '../services/taskService';
+import { TaskService, CreateTaskDTO, UpdateTaskDTO, MoveTaskDTO, ReorderTaskDTO, BulkMoveTasksDTO } from '../services/taskService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { createPTDate } from '../utils/timezoneUtils';
 
@@ -217,9 +217,44 @@ const reorderTask: RequestHandler = async (req, res) => {
   }
 };
 
+// Bulk move tasks to a different date
+const bulkMoveTasks: RequestHandler = async (req, res) => {
+  try {
+    const { taskIds, targetDate } = req.body;
+    
+    if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
+      res.status(400).json({ error: 'taskIds must be a non-empty array' });
+      return;
+    }
+    
+    if (!targetDate) {
+      res.status(400).json({ error: 'targetDate is required' });
+      return;
+    }
+
+    const bulkMoveData: BulkMoveTasksDTO = {
+      taskIds,
+      targetDate: createPTDate(targetDate)
+    };
+
+    const result = await TaskService.bulkMoveTasks(req.user!.id, bulkMoveData);
+    
+    res.json({
+      success: result.errors.length === 0,
+      movedCount: result.tasks.length,
+      tasks: result.tasks,
+      errors: result.errors.length > 0 ? result.errors : undefined
+    });
+  } catch (error: unknown) {
+    console.error('Bulk move tasks error:', error);
+    res.status(500).json({ error: 'Failed to bulk move tasks' });
+  }
+};
+
 // Apply routes with auth middleware
 router.use(requireAuth);
 router.post('/', createTask);
+router.post('/bulk-move', bulkMoveTasks);
 router.get('/', getUserTasks);
 router.get('/count', getTaskCount);
 router.get('/:date', getTasksByDate);

@@ -1,0 +1,250 @@
+@import './TodoVariables.css';
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 400px;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from { 
+    transform: translateY(-20px); 
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--todo-border-color);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--todo-text-color);
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--todo-muted-color);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.closeButton:hover {
+  background-color: var(--button-secondary-bg);
+  color: var(--todo-text-color);
+}
+
+.closeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.content {
+  padding: 20px;
+}
+
+.quickSelectSection {
+  margin-bottom: 20px;
+}
+
+.sectionLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  color: var(--todo-muted-color);
+  margin-bottom: 8px;
+}
+
+.quickSelectButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.quickSelectButton {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--todo-border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--todo-text-color);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.quickSelectButton:hover:not(:disabled) {
+  background-color: var(--button-secondary-bg);
+  border-color: var(--todo-muted-color);
+}
+
+.quickSelectButton.active {
+  background-color: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
+  color: white;
+}
+
+.quickSelectButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.datePickerSection {
+  margin-top: 16px;
+}
+
+.datePicker {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--todo-border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--todo-text-color);
+  transition: all var(--transition-fast);
+}
+
+.datePicker:focus {
+  outline: none;
+  border-color: var(--button-primary-bg);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.datePicker:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--button-secondary-bg);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--todo-border-color);
+}
+
+.cancelButton {
+  padding: 10px 20px;
+  border: 1px solid var(--todo-border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--todo-text-color);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background-color: var(--button-secondary-bg);
+}
+
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--button-primary-bg);
+  color: white;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.confirmButton:hover:not(:disabled) {
+  background: var(--button-primary-hover);
+}
+
+.confirmButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loadingSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    max-width: none;
+    margin: 16px;
+  }
+  
+  .quickSelectButtons {
+    flex-direction: column;
+  }
+  
+  .quickSelectButton {
+    padding: 12px;
+  }
+  
+  .footer {
+    flex-direction: column-reverse;
+  }
+  
+  .cancelButton,
+  .confirmButton {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+}

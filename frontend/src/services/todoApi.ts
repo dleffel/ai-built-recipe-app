@@ -36,6 +36,18 @@ export interface ReorderTaskDTO {
   displayOrder: number;
 }
 
+export interface BulkMoveDTO {
+  taskIds: string[];
+  targetDate: string;
+}
+
+export interface BulkMoveResponse {
+  success: boolean;
+  movedCount: number;
+  tasks: Task[];
+  errors?: Array<{ taskId: string; error: string }>;
+}
+
 export const todoApi = {
   /**
    * Fetch all tasks for the current user
@@ -154,5 +166,26 @@ export const todoApi = {
     const url = `/api/tasks/count${queryParams ? `?${queryParams}` : ''}`;
     const response = await api.get<{ count: number }>(url);
     return response.data.count;
+  },
+
+  /**
+   * Bulk move multiple tasks to a target date
+   */
+  async bulkMoveTasks(data: BulkMoveDTO): Promise<BulkMoveResponse> {
+    // Use our timezone utility to ensure the date is in PT timezone
+    const ptDate = createPTDate(data.targetDate);
+    
+    const ptData = {
+      taskIds: data.taskIds,
+      targetDate: ptDate.toISOString()
+    };
+    
+    try {
+      const response = await api.post<BulkMoveResponse>('/api/tasks/bulk-move', ptData);
+      return response.data;
+    } catch (error) {
+      console.error('todoApi.bulkMoveTasks error:', error);
+      throw error;
+    }
   }
 };

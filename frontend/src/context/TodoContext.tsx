@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useState } from 'react';
-import { todoApi, Task, CreateTaskDTO, UpdateTaskDTO, MoveTaskDTO, ReorderTaskDTO } from '../services/todoApi';
+import { todoApi, Task, CreateTaskDTO, UpdateTaskDTO, MoveTaskDTO, ReorderTaskDTO, BulkMoveDTO } from '../services/todoApi';
 import { groupTasksByDay } from '../utils/taskUtils';
 import { createPTDate, toDateStringPT } from '../utils/timezoneUtils';
 
@@ -12,7 +12,8 @@ type TodoAction =
   | { type: 'UPDATE_TASK', taskId: string, updates: Partial<Task> }
   | { type: 'DELETE_TASK', taskId: string }
   | { type: 'MOVE_TASK', taskId: string, updates: Partial<Task> }
-  | { type: 'APPEND_TASKS', tasks: Task[] };
+  | { type: 'APPEND_TASKS', tasks: Task[] }
+  | { type: 'BULK_MOVE_TASKS', tasks: Task[] };
 
 // Define state type
 interface TodoState {
@@ -107,6 +108,18 @@ const todoReducer = (state: TodoState, action: TodoAction): TodoState => {
         error: null,
       };
       
+    case 'BULK_MOVE_TASKS':
+      // Update multiple tasks at once (for bulk move)
+      const taskMap = new Map(action.tasks.map(t => [t.id, t]));
+      const tasksAfterBulkMove = state.tasks.map(task =>
+        taskMap.has(task.id) ? taskMap.get(task.id)! : task
+      );
+      return {
+        ...state,
+        tasks: tasksAfterBulkMove,
+        tasksByDay: groupTasksByDay(tasksAfterBulkMove),
+      };
+      
     default:
       return state;
   }
@@ -122,6 +135,11 @@ export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [hasMorePastTasks, setHasMorePastTasks] = useState<boolean>(true);
   const [hasMoreFutureTasks, setHasMoreFutureTasks] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  
+  // Bulk selection state
+  const [isSelectMode, setIsSelectMode] = useState<boolean>(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [isBulkMoving, setIsBulkMoving] = useState<boolean>(false);
   
   // Fetch tasks for a specific date range
   const fetchTasksForDateRange = useCallback(async (startDate: Date, endDate: Date, append: boolean = false) => {
@@ -279,6 +297,60 @@ export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
   
+  // Enter select mode
+  const enterSelectMode = useCallback(() => {
+    setIsSelectMode(true);
+  }, []);
+  
+  // Exit select mode and clear selection
+  const exitSelectMode = useCallback(() => {
+    setIsSelectMode(false);
+    setSelectedTaskIds(new Set());
+  }, []);
+  
+  // Toggle task selection
+  const toggleTaskSelection = useCallback((taskId: string) => {
+    setSelectedTaskIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId);
+      } else {
+        newSet.add(taskId);
+      }
+      return newSet;
+    });
+  }, []);
+  
+  // Clear all selections
+  const clearSelection = useCallback(() => {
+    setSelectedTaskIds(new Set());
+  }, []);
+  
+  // Bulk move tasks
+  const bulkMoveTasks = useCallback(async (targetDate: string) => {
+    if (selectedTaskIds.size === 0) return;
+    
+    setIsBulkMoving(true);
+    try {
+      const taskIds = Array.from(selectedTaskIds);
+      const result = await todoApi.bulkMoveTasks({ taskIds, targetDate });
+      
+      if (result.tasks.length > 0) {
+        dispatch({ type: 'BULK_MOVE_TASKS', tasks: result.tasks });
+      }
+      
+      // Exit select mode and clear selection on success
+      exitSelectMode();
+      
+      return result;
+    } catch (error: any) {
+      console.error('Error bulk moving tasks:', error);
+      throw error;
+    } finally {
+      setIsBulkMoving(false);
+    }
+  }, [selectedTaskIds, exitSelectMode]);
+  
   // Load tasks on mount
   useEffect(() => {
     fetchTasks();
@@ -297,7 +369,16 @@ export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     hasMorePastTasks,
     hasMoreFutureTasks,
     isLoadingMore,
-    fetchTasksForDateRange
+    fetchTasksForDateRange,
+    // Bulk selection
+    isSelectMode,
+    selectedTaskIds,
+    isBulkMoving,
+    enterSelectMode,
+    exitSelectMode,
+    toggleTaskSelection,
+    clearSelection,
+    bulkMoveTasks
   };
   
   return <TodoContext.Provider value={contextValue}>{children}</TodoContext.Provider>;
