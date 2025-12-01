@@ -2,17 +2,9 @@ import { Router, Request, Response, NextFunction, RequestHandler } from 'express
 import { RecipeService, CreateRecipeDTO, UpdateRecipeDTO } from '../services/recipeService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { RecipeExtractionService, URLFetchError, RecipeExtractionError } from '../services/recipeExtractionService';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
-
-// Middleware to ensure user is authenticated
-const requireAuth: RequestHandler = (req, res, next) => {
-  if (!req.user) {
-    res.status(401).json({ error: 'Not authenticated' });
-    return;
-  }
-  next();
-};
 
 // Extract recipe from URL
 const extractRecipeFromUrl: RequestHandler = async (req, res) => {
