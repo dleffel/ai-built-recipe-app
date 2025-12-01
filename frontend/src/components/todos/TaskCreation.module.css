@@ -1,297 +1,195 @@
 @import './TodoVariables.css';
 
-.container {
-  margin: var(--spacing-2) 0;
-  animation: slideDown 0.3s ease-out;
+/* Inline container - matches TaskItem row styling */
+.inlineContainer {
+  animation: slideDown 0.15s ease-out;
 }
 
-.form {
+.inlineForm {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-3);
-  background-color: var(--feedback-success-bg);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--todo-border-color);
-  box-shadow: var(--shadow-md);
-}
-
-.inputRow {
-  display: flex;
-  gap: var(--spacing-2);
   align-items: center;
+  /* Left padding aligns category dropdown with category indicators in TaskItem */
+  /* TaskItem: dragHandle (18px + 4px margin) + checkbox (16px + 8px margin) = 46px */
+  padding: 4px 8px 4px 54px;
+  background-color: white;
+  border-bottom: 1px solid var(--todo-border-color);
+  min-height: 32px;
+  gap: 8px;
 }
 
-.titleInput {
-  flex: 1;
-  padding: var(--spacing-2) var(--spacing-3);
-  border: 1px solid var(--todo-border-color);
-  border-radius: var(--radius-md);
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-base);
-  color: var(--todo-text-color);
+/* Category dropdown styled like category indicator but functional */
+.inlineCategorySelect {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 2px 20px 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.3px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-width: 70px;
+  height: 22px;
   transition: all var(--transition-fast);
-  height: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
 }
 
-.titleInput:focus {
+.inlineCategorySelect:hover {
+  border-color: var(--todo-border-color);
+}
+
+.inlineCategorySelect:focus {
   outline: none;
   border-color: var(--button-primary-bg);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
-.titleInput::placeholder {
+/* Category color variants - matching TaskItem.module.css */
+.roovet {
+  background-color: var(--category-roovet-bg);
+  color: var(--category-roovet-text);
+}
+
+.roocode {
+  background-color: var(--category-roocode-bg);
+  color: var(--category-roocode-text);
+}
+
+.personal {
+  background-color: var(--category-personal-bg);
+  color: var(--category-personal-text);
+}
+
+/* Inline text input - blends into row */
+.inlineTitleInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-family: var(--font-family-ui);
+  color: var(--todo-text-color);
+  padding: 4px 0;
+  outline: none;
+  min-width: 0;
+}
+
+.inlineTitleInput::placeholder {
   color: var(--todo-muted-color);
+  font-style: italic;
   opacity: 0.7;
 }
 
-.optionsRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-2);
+.inlineTitleInput:disabled {
+  opacity: 0.6;
 }
 
-.datePickerRow {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-2);
-}
-
-.datePickerLabel {
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-sm);
-  color: var(--todo-text-color);
-  font-weight: var(--font-weight-medium);
-  min-width: 70px;
-}
-
-.datePicker {
-  flex: 1;
-  padding: var(--spacing-1) var(--spacing-2);
-  border: 1px solid var(--todo-border-color);
-  border-radius: var(--radius-md);
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-sm);
-  color: var(--todo-text-color);
-  background-color: white;
-  transition: all var(--transition-fast);
-  height: 36px;
-}
-
-.datePicker:focus {
-  outline: none;
-  border-color: var(--button-primary-bg);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
-
-.categorySelect {
-  padding: var(--spacing-1) var(--spacing-2);
-  border: 1px solid var(--todo-border-color);
-  border-radius: var(--radius-md);
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-sm);
-  color: var(--todo-text-color);
-  background-color: white;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  height: 36px;
-}
-
-.categorySelect:focus {
-  outline: none;
-  border-color: var(--button-primary-bg);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
-
-.priorityToggle {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-sm);
-  color: var(--todo-text-color);
-  font-weight: var(--font-weight-medium);
-}
-
-.priorityCheckbox {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--todo-muted-color);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  position: relative;
-  transition: all var(--transition-fast);
-}
-
-.priorityCheckbox:checked {
-  background-color: var(--priority-color);
-  border-color: var(--priority-color);
-}
-
-.priorityCheckbox:checked::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 12px;
-  height: 12px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-}
-
-.priorityCheckbox:focus {
-  outline: 2px solid rgba(227, 160, 8, 0.3);
-  outline-offset: 2px;
-}
-
-.buttonRow {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-1);
-}
-
-.button {
-  padding: var(--spacing-1) var(--spacing-3);
-  border-radius: var(--radius-md);
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  border: none;
-  height: 36px;
+/* Priority toggle - star icon button */
+.inlinePriorityToggle {
+  width: 24px;
+  height: 24px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 80px;
-}
-
-.button:focus {
-  outline: 2px solid var(--button-primary-bg);
-  outline-offset: 2px;
-}
-
-.cancelButton {
-  background-color: var(--button-secondary-bg);
+  cursor: pointer;
+  border: none;
+  background: transparent;
   color: var(--todo-muted-color);
-  border: 1px solid var(--todo-border-color);
+  border-radius: 3px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
-.cancelButton:hover {
-  background-color: var(--button-secondary-hover);
-  color: var(--todo-text-color);
+.inlinePriorityToggle:hover {
+  background-color: var(--button-secondary-bg);
+  color: var(--priority-color);
 }
 
-.saveButton {
-  background-color: var(--button-primary-bg);
-  color: white;
+.inlinePriorityToggle:focus {
+  outline: 2px solid rgba(227, 160, 8, 0.3);
+  outline-offset: 1px;
 }
 
-.saveButton:hover {
-  background-color: var(--button-primary-hover);
-  transform: translateY(-1px);
+.inlinePriorityToggle.active {
+  color: var(--priority-color);
 }
 
-.saveButton:active {
-  transform: translateY(0);
-  filter: brightness(95%);
+.inlinePriorityToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-/* Loading state */
-.loadingButton {
-  position: relative;
-  pointer-events: none;
-  opacity: 0.8;
+.inlinePriorityToggle svg {
+  width: 14px;
+  height: 14px;
 }
 
-.loadingButton::after {
-  content: "";
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+/* Submit hint */
+.inlineSubmitHint {
+  font-size: 11px;
+  color: var(--todo-muted-color);
+  white-space: nowrap;
+  font-family: var(--font-family-ui);
+  opacity: 0.7;
+  min-width: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading spinner */
+.loadingSpinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--todo-border-color);
   border-radius: 50%;
-  border-top-color: white;
+  border-top-color: var(--button-primary-bg);
   animation: spin 0.8s linear infinite;
-  right: 10px;
-}
-
-/* Feedback states */
-.successFeedback {
-  background-color: var(--feedback-success-bg);
-  color: var(--feedback-success-text);
-  padding: var(--spacing-2);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  margin-top: var(--spacing-2);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  animation: slideIn 0.3s ease-out;
-}
-
-.errorFeedback {
-  background-color: var(--feedback-error-bg);
-  color: var(--feedback-error-text);
-  padding: var(--spacing-2);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  margin-top: var(--spacing-2);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  animation: slideIn 0.3s ease-out;
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
-  .form {
-    padding: var(--spacing-2);
+  .inlineForm {
+    /* Mobile: dragHandle hidden (0px) + checkbox (18px + 8px margin) = 26px */
+    padding: 6px 8px 6px 34px;
+    min-height: 38px;
+    gap: 6px;
   }
   
-  .optionsRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-2);
+  .inlineCategorySelect {
+    min-width: 55px;
+    font-size: 9px;
+    padding: 2px 16px 2px 4px;
+    height: 24px;
   }
   
-  .categorySelect {
-    width: 100%;
+  .inlineTitleInput {
+    font-size: 14px;
   }
   
-  .datePickerRow {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
+  .inlinePriorityToggle {
+    width: 28px;
+    height: 28px;
   }
   
-  .datePicker {
-    width: 100%;
+  .inlinePriorityToggle svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .inlineSubmitHint {
+    font-size: 12px;
   }
 }
 
+/* Animations */
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
