@@ -16,6 +16,8 @@
   box-shadow: none;
   transition: all var(--transition-normal);
   border: 1px solid var(--todo-border-color);
+  /* Account for fixed header (60px) plus some padding when scrolling into view */
+  scroll-margin-top: 72px;
 }
 
 /* Highlight style for drop target day */
