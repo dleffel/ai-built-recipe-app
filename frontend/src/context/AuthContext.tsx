@@ -94,9 +94,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Helper to check if dev login should be enabled (dev mode OR REACT_APP_ENABLE_DEV_LOGIN)
+  const isDevLoginEnabled = process.env.NODE_ENV === 'development' ||
+    process.env.REACT_APP_ENABLE_DEV_LOGIN === 'true';
+
   /* istanbul ignore next */
   const handleDevLogin = async () => {
-    if (process.env.NODE_ENV !== 'development') {
+    if (!isDevLoginEnabled) {
       return;
     }
 

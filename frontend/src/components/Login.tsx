@@ -16,9 +16,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     onLogin?.();
   };
 
+  // Helper to check if dev login should be enabled (dev mode OR REACT_APP_ENABLE_DEV_LOGIN)
+  const isDevLoginEnabled = process.env.NODE_ENV === 'development' ||
+    process.env.REACT_APP_ENABLE_DEV_LOGIN === 'true';
+
   /* istanbul ignore next */
   const handleDevelopmentLogin = async () => {
-    if (process.env.NODE_ENV === 'development') {
+    if (isDevLoginEnabled) {
       await handleDevLogin();
       onLogin?.();
     }
@@ -107,8 +111,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 Sign in with Google
               </button>
               {/* istanbul ignore next */}
-              {process.env.NODE_ENV === 'development' && (
-                <button 
+              {isDevLoginEnabled && (
+                <button
                   onClick={handleDevelopmentLogin}
                   role="menuitem"
                 >
