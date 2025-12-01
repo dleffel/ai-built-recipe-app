@@ -1,10 +1,10 @@
 [build]
 builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "./Dockerfile"
+watchPatterns = ["src/**", "prisma/**", "package.json", "tsconfig.json"]
 
 [deploy]
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-startCommand = "npx prisma migrate deploy && node dist/index.js"

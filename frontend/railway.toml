@@ -1,6 +1,7 @@
 [build]
 builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "./Dockerfile"
+watchPatterns = ["src/**", "public/**", "package.json", "tsconfig.json"]
 
 [deploy]
 healthcheckPath = "/"
