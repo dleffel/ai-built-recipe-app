@@ -10,6 +10,9 @@ interface TaskItemProps {
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   isMoving?: boolean; // Flag to indicate if this task is being moved
+  isSelectMode?: boolean; // Flag to indicate if bulk select mode is active
+  isSelected?: boolean; // Flag to indicate if this task is selected
+  onSelectionToggle?: () => void; // Callback to toggle selection
 }
 
 export const TaskItem: React.FC<TaskItemProps> = ({
@@ -19,18 +22,39 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   onDragStart,
   onDragOver,
   onDrop,
-  isMoving = false
+  isMoving = false,
+  isSelectMode = false,
+  isSelected = false,
+  onSelectionToggle
 }) => {
+  // Handle click on selection checkbox
+  const handleSelectionClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelectionToggle?.();
+  };
+
   return (
     <div
-      className={`${styles.taskItem} ${task.status === 'complete' ? styles.completed : ''} ${isMoving ? styles.moving : ''}`}
+      className={`${styles.taskItem} ${task.status === 'complete' ? styles.completed : ''} ${isMoving ? styles.moving : ''} ${isSelectMode ? styles.selectMode : ''} ${isSelected ? styles.selected : ''}`}
       data-id={task.id}
-      draggable={true}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
+      draggable={!isSelectMode}
+      onDragStart={isSelectMode ? undefined : onDragStart}
+      onDragOver={isSelectMode ? undefined : onDragOver}
+      onDrop={isSelectMode ? undefined : onDrop}
     >
-      <div className={styles.dragHandle} title="Drag to reorder">
+      {/* Selection checkbox - only visible in select mode */}
+      {isSelectMode && (
+        <input
+          type="checkbox"
+          className={styles.selectionCheckbox}
+          checked={isSelected}
+          onChange={() => onSelectionToggle?.()}
+          onClick={handleSelectionClick}
+          aria-label={`Select "${task.title}" for bulk action`}
+        />
+      )}
+      
+      <div className={`${styles.dragHandle} ${isSelectMode ? styles.hidden : ''}`} title="Drag to reorder">
         <div className={styles.dragHandleIcon}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="4" cy="4" r="1.5" fill="currentColor" />

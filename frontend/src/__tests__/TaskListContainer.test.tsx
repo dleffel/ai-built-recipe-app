@@ -180,6 +180,10 @@ const mockMoveTask = jest.fn();
 const mockReorderTask = jest.fn();
 const mockLoadMorePastTasks = jest.fn();
 const mockLoadMoreFutureTasks = jest.fn();
+const mockToggleSelectMode = jest.fn();
+const mockToggleTaskSelection = jest.fn();
+const mockClearSelection = jest.fn();
+const mockBulkMoveTasks = jest.fn();
 
 // Default mock implementation
 const mockUseTodo = (overrides = {}) => ({
@@ -198,6 +202,14 @@ const mockUseTodo = (overrides = {}) => ({
   hasMorePastTasks: false,
   hasMoreFutureTasks: false,
   isLoadingMore: false,
+  // Bulk move properties
+  isSelectMode: false,
+  selectedTaskIds: new Set<string>(),
+  isBulkMoving: false,
+  toggleSelectMode: mockToggleSelectMode,
+  toggleTaskSelection: mockToggleTaskSelection,
+  clearSelection: mockClearSelection,
+  bulkMoveTasks: mockBulkMoveTasks,
   ...overrides
 });
 

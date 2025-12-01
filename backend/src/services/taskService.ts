@@ -24,6 +24,16 @@ export interface ReorderTaskDTO {
   displayOrder: number;
 }
 
+export interface BulkMoveTasksDTO {
+  taskIds: string[];
+  targetDate: Date;
+}
+
+export interface BulkMoveResult {
+  tasks: Task[];
+  errors: Array<{ taskId: string; error: string }>;
+}
+
 export class TaskService extends BaseService {
   /**
    * Create a new task
@@ -318,5 +328,75 @@ export class TaskService extends BaseService {
         }
       }
     });
+  }
+
+  /**
+   * Bulk move multiple tasks to a target date (verifying ownership for each)
+   */
+  static async bulkMoveTasks(userId: string, data: BulkMoveTasksDTO): Promise<BulkMoveResult> {
+    const { taskIds, targetDate } = data;
+    const tasks: Task[] = [];
+    const errors: Array<{ taskId: string; error: string }> = [];
+
+    // Use timezone utility to create a date in PT timezone
+    const ptDate = createPTDate(targetDate);
+
+    // Get the highest display order for the target date
+    const targetStartOfDay = getStartOfDayPT(ptDate);
+    const targetEndOfDay = getEndOfDayPT(ptDate);
+    
+    const tasksForTargetDate = await this.prisma.task.findMany({
+      where: {
+        userId,
+        dueDate: {
+          gte: targetStartOfDay,
+          lte: targetEndOfDay
+        }
+      },
+      orderBy: {
+        displayOrder: 'desc'
+      },
+      take: 1
+    });
+
+    let baseDisplayOrder = tasksForTargetDate.length > 0
+      ? tasksForTargetDate[0].displayOrder + 1000
+      : 1000;
+
+    // Process each task
+    for (let i = 0; i < taskIds.length; i++) {
+      const taskId = taskIds[i];
+      try {
+        // Verify ownership
+        const task = await this.findById(taskId);
+        if (!task) {
+          errors.push({ taskId, error: 'Task not found' });
+          continue;
+        }
+        if (task.userId !== userId) {
+          errors.push({ taskId, error: 'Unauthorized' });
+          continue;
+        }
+
+        // Update the task
+        const updatedTask = await this.prisma.task.update({
+          where: { id: taskId },
+          data: {
+            dueDate: ptDate,
+            isRolledOver: false,
+            displayOrder: baseDisplayOrder + (i * 1000)
+          }
+        });
+
+        tasks.push(updatedTask);
+      } catch (error) {
+        errors.push({
+          taskId,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+
+    return { tasks, errors };
   }
 }

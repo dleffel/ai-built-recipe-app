@@ -1,0 +1,138 @@
+@import './TodoVariables.css';
+
+.bulkActionBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--todo-border-color);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(100%); 
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1;
+  }
+}
+
+.selectionInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectedCount {
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: var(--todo-text-color);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cancelButton {
+  padding: 8px 16px;
+  border: 1px solid var(--todo-border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--todo-text-color);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cancelButton:hover {
+  background-color: var(--button-secondary-bg);
+  border-color: var(--todo-muted-color);
+}
+
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.moveButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--button-primary-bg);
+  color: white;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.moveButton:hover:not(:disabled) {
+  background: var(--button-primary-hover);
+}
+
+.moveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.moveButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.loadingSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mobile: larger touch targets, full width buttons */
+@media (max-width: 768px) {
+  .bulkActionBar {
+    padding: 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .selectionInfo {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .cancelButton,
+  .moveButton {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+}

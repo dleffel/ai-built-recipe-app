@@ -25,6 +25,10 @@ interface DayContainerProps {
   onDrop: (e: React.DragEvent, dayKey: string) => void;
   className?: string; // Optional class name for animation
   movingTaskId?: string | null; // ID of task being moved for animation
+  // Bulk selection props
+  isSelectMode?: boolean;
+  selectedTaskIds?: Set<string>;
+  onTaskSelectionToggle?: (taskId: string) => void;
 }
 
 export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
@@ -44,7 +48,10 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
   onDragOver,
   onDrop,
   className = '',
-  movingTaskId = null
+  movingTaskId = null,
+  isSelectMode = false,
+  selectedTaskIds = new Set(),
+  onTaskSelectionToggle
 }, ref) => {
   // Format date for display using date-fns-tz for consistent timezone handling
   const formatDate = (date: Date): string => {
@@ -101,6 +108,9 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
               onDragOver={(e) => onDragOver(e, dayKey)}
               onDrop={(e) => onDrop(e, dayKey)}
               isMoving={movingTaskId === task.id}
+              isSelectMode={isSelectMode}
+              isSelected={selectedTaskIds.has(task.id)}
+              onSelectionToggle={() => onTaskSelectionToggle?.(task.id)}
             />
           )
         ))}

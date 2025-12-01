@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTodo } from '../../context/TodoContext';
 import { Task } from '../../services/todoApi';
 import { DayContainer } from './DayContainer';
+import { BulkActionBar } from './BulkActionBar';
+import { BulkMoveDatePicker } from './BulkMoveDatePicker';
 import { calculateDisplayOrder, sortTaskGroups } from '../../utils/taskUtils';
 import { createPTDate, toDateStringPT } from '../../utils/timezoneUtils';
 import styles from './TaskListContainer.module.css';
@@ -26,7 +28,15 @@ export const TaskListContainer: React.FC = () => {
     loadMoreFutureTasks,
     hasMorePastTasks,
     hasMoreFutureTasks,
-    isLoadingMore
+    isLoadingMore,
+    // Bulk selection
+    isSelectMode,
+    selectedTaskIds,
+    isBulkMoving,
+    enterSelectMode,
+    exitSelectMode,
+    toggleTaskSelection,
+    bulkMoveTasks
   } = useTodo();
 
   // State for task creation and editing
@@ -41,6 +51,9 @@ export const TaskListContainer: React.FC = () => {
   
   // State to track if today's tasks are visible
   const [isTodayVisible, setIsTodayVisible] = useState(true);
+  
+  // State for bulk move date picker modal
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   
   // Reference to the "today" day container for auto-scrolling
   const todayRef = useRef<HTMLDivElement>(null);
@@ -416,6 +429,20 @@ export const TaskListContainer: React.FC = () => {
     }
   };
   
+  // Handle bulk move
+  const handleBulkMoveClick = () => {
+    setIsDatePickerOpen(true);
+  };
+  
+  const handleBulkMoveConfirm = async (targetDate: string) => {
+    try {
+      await bulkMoveTasks(targetDate);
+      setIsDatePickerOpen(false);
+    } catch (error) {
+      console.error('Error bulk moving tasks:', error);
+    }
+  };
+  
   // If loading or error, show appropriate UI
   if (loading) return <div className={styles.loading}>Loading tasks...</div>;
   if (error) return <div className={styles.error}>Error loading tasks: {error}</div>;
@@ -425,6 +452,32 @@ export const TaskListContainer: React.FC = () => {
   
   return (
     <div className={styles.taskListContainer}>
+      {/* Header with Select Mode Toggle */}
+      <div className={styles.taskListHeader}>
+        <button
+          className={`${styles.selectModeButton} ${isSelectMode ? styles.active : ''}`}
+          onClick={isSelectMode ? exitSelectMode : enterSelectMode}
+          aria-label={isSelectMode ? 'Exit select mode' : 'Enter select mode'}
+        >
+          {isSelectMode ? (
+            <>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              Cancel
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                <path d="M5 8L7 10L11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Select
+            </>
+          )}
+        </button>
+      </div>
+      
       {hasMorePastTasks && (
         <div
           className={styles.loadMoreButton}
@@ -469,6 +522,9 @@ export const TaskListContainer: React.FC = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               movingTaskId={movingTaskId}
+              isSelectMode={isSelectMode}
+              selectedTaskIds={selectedTaskIds}
+              onTaskSelectionToggle={toggleTaskSelection}
             />
           </div>
         );
@@ -490,7 +546,7 @@ export const TaskListContainer: React.FC = () => {
       )}
       
       {/* Floating "Jump to Today" button */}
-      {!isTodayVisible && (
+      {!isTodayVisible && !isSelectMode && (
         <button
           className={styles.jumpToTodayButton}
           onClick={() => {
@@ -505,6 +561,25 @@ export const TaskListContainer: React.FC = () => {
           Today
         </button>
       )}
+      
+      {/* Bulk Action Bar - shown when in select mode */}
+      {isSelectMode && (
+        <BulkActionBar
+          selectedCount={selectedTaskIds.size}
+          onMoveClick={handleBulkMoveClick}
+          onCancel={exitSelectMode}
+          isMoving={isBulkMoving}
+        />
+      )}
+      
+      {/* Bulk Move Date Picker Modal */}
+      <BulkMoveDatePicker
+        isOpen={isDatePickerOpen}
+        onClose={() => setIsDatePickerOpen(false)}
+        onSelectDate={handleBulkMoveConfirm}
+        selectedCount={selectedTaskIds.size}
+        isMoving={isBulkMoving}
+      />
     </div>
   );
 };

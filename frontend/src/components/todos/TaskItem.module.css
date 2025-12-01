@@ -52,6 +52,66 @@
   color: var(--status-complete-color);
 }
 
+/* Selection checkbox - hidden by default, shown in select mode */
+.selectionCheckbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--button-primary-bg);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  margin-right: 8px;
+  background-color: white;
+}
+
+.selectionCheckbox:hover {
+  border-color: var(--button-primary-hover);
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.selectionCheckbox:focus {
+  outline: 2px solid var(--button-primary-bg);
+  outline-offset: 1px;
+}
+
+.selectionCheckbox:checked {
+  background-color: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
+}
+
+.selectionCheckbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+}
+
+/* Selected task highlight */
+.taskItem.selected {
+  background-color: rgba(37, 99, 235, 0.08);
+}
+
+.taskItem.selected:hover {
+  background-color: rgba(37, 99, 235, 0.12);
+}
+
+/* Select mode styling */
+.taskItem.selectMode {
+  cursor: pointer;
+}
+
+.taskItem.selectMode:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
 .dragHandle {
   display: flex;
   align-items: center;
@@ -67,7 +127,11 @@
   opacity: 0;
 }
 
-.taskItem:hover .dragHandle {
+.dragHandle.hidden {
+  display: none;
+}
+
+.taskItem:hover .dragHandle:not(.hidden) {
   opacity: 1;
 }
 

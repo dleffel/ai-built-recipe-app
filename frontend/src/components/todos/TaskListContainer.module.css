@@ -5,8 +5,54 @@
   flex-direction: column;
   gap: 16px;
   padding: 12px;
+  padding-bottom: 80px; /* Extra padding for bulk action bar */
   max-width: 800px;
   margin: 0 auto;
+}
+
+/* Task list header with select mode toggle */
+.taskListHeader {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 4px;
+  margin-bottom: -8px;
+}
+
+/* Select mode toggle button */
+.selectModeButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--todo-border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--todo-text-color);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.selectModeButton:hover {
+  background-color: var(--button-secondary-bg);
+  border-color: var(--todo-muted-color);
+}
+
+.selectModeButton.active {
+  background-color: var(--button-primary-bg);
+  color: white;
+  border-color: var(--button-primary-bg);
+}
+
+.selectModeButton.active:hover {
+  background-color: var(--button-primary-hover);
+}
+
+.selectModeButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 .dayContainer {
@@ -223,9 +269,20 @@
 @media (max-width: 768px) {
   .taskListContainer {
     padding: 8px;
+    padding-bottom: 120px; /* More padding for mobile bulk action bar */
     gap: 12px;
     max-width: 100%;
     width: 100%;
+  }
+  
+  .taskListHeader {
+    padding: 0;
+    margin-bottom: -4px;
+  }
+  
+  .selectModeButton {
+    padding: 8px 12px;
+    font-size: 14px;
   }
   
   .dayContainer {
