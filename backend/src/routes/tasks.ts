@@ -12,17 +12,9 @@ declare global {
 import { TaskService, CreateTaskDTO, UpdateTaskDTO, MoveTaskDTO, ReorderTaskDTO, BulkMoveTasksDTO } from '../services/taskService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { createPTDate } from '../utils/timezoneUtils';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
-
-// Middleware to ensure user is authenticated
-const requireAuth: RequestHandler = (req, res, next) => {
-  if (!req.user) {
-    res.status(401).json({ error: 'Not authenticated' });
-    return;
-  }
-  next();
-};
 
 // Create task
 const createTask: RequestHandler = async (req, res) => {
