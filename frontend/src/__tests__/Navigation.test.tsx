@@ -50,8 +50,11 @@ describe('Navigation Component', () => {
     expect(hamburgerButton).toBeInTheDocument();
 
     // Side menu should exist but be closed initially
-    const sideMenu = screen.getByRole('navigation', { name: /mobile navigation/i });
+    // When closed, it has aria-hidden="true", so we query by testid
+    const sideMenu = screen.getByTestId('mobile-side-menu');
     expect(sideMenu).toBeInTheDocument();
+    expect(sideMenu).toHaveAttribute('aria-hidden', 'true');
+    expect(sideMenu).toHaveAttribute('aria-label', 'Mobile Navigation');
   });
 
   it('should open side menu when hamburger button is clicked', () => {
@@ -176,7 +179,11 @@ describe('Navigation Component', () => {
       </BrowserRouter>
     );
 
-    // Check mobile links (in side menu)
+    // Open the menu first to make links accessible (they're hidden when menu is closed)
+    const hamburgerButton = screen.getByRole('button', { name: /open menu/i });
+    fireEvent.click(hamburgerButton);
+
+    // Check mobile links (in side menu - now visible after opening)
     const mobileHomeLink = screen.getByRole('link', { name: /home/i });
     const mobileRecipesLink = screen.getByRole('link', { name: /recipes/i });
     const mobileTodoLink = screen.getByRole('link', { name: /to-do/i });
