@@ -160,6 +160,12 @@
   background-color: var(--button-secondary-bg);
 }
 
+.emptyState:focus {
+  outline: none;
+  opacity: 1;
+  background-color: var(--button-secondary-bg);
+}
+
 .emptyStateIcon {
   font-size: 14px;
   font-weight: 300;
