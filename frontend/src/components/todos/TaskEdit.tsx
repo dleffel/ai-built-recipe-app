@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './TaskEdit.module.css';
 import { toDateStringPT, createPTDate } from '../../utils/timezoneUtils';
-
-// Define the task category types
-type TaskCategory = 'Roo Vet' | 'Roo Code' | 'Personal';
+import { TaskCategory } from '../../types/task';
 
 interface TaskEditProps {
   id: string;

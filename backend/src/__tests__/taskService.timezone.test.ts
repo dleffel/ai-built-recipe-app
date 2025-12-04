@@ -1,6 +1,7 @@
 import { jest, describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { TaskService } from '../services/taskService';
 import { prisma } from '../lib/prisma';
+import { TaskCategory, TaskStatus } from '../types/task';
 
 // Mock Prisma
 jest.mock('../lib/prisma', () => ({
@@ -43,9 +44,9 @@ describe('TaskService Timezone Handling', () => {
       const userId = 'test-user-id';
       const taskData = {
         title: 'Morning PT Task',
-        status: 'incomplete',
+        status: 'incomplete' as TaskStatus,
         dueDate: new Date('2025-05-28T07:00:00.000Z'), // PT morning
-        category: 'Roo Code',
+        category: 'Roo Code' as TaskCategory,
         isPriority: false,
         displayOrder: 0
       };
@@ -128,9 +129,9 @@ describe('TaskService Timezone Handling', () => {
       const userId = 'test-user-id';
       const taskData = {
         title: 'Test Task',
-        status: 'incomplete',
+        status: 'incomplete' as TaskStatus,
         dueDate: new Date('2025-05-28T07:00:00.000Z'), // PT morning
-        category: 'Roo Code',
+        category: 'Roo Code' as TaskCategory,
         isPriority: false,
         displayOrder: 0
       };
@@ -221,9 +222,9 @@ describe('TaskService Timezone Handling', () => {
       const userId = 'test-user-id';
       const taskData = {
         title: 'Late Night Task',
-        status: 'incomplete',
+        status: 'incomplete' as TaskStatus,
         dueDate: new Date('2025-05-28T07:00:00.000Z'), // PT morning
-        category: 'Roo Code',
+        category: 'Roo Code' as TaskCategory,
         isPriority: false,
         displayOrder: 0
       };
