@@ -125,6 +125,7 @@ const Navigation: React.FC = () => {
         id="mobile-side-menu"
         className={`${styles.sideMenu} ${isMenuOpen ? styles.sideMenuOpen : ''}`}
         aria-label="Mobile Navigation"
+        aria-hidden={!isMenuOpen}
       >
         <div className={styles.sideMenuHeader}>
           <span className={styles.sideMenuTitle}>Menu</span>
