@@ -76,6 +76,14 @@ app.use(express.urlencoded({ extended: true }));
 // Enable cross-site cookies for production OR when CROSS_SITE_COOKIES=true (Railway preview envs)
 const enableCrossSiteCookies = process.env.NODE_ENV === 'production' || process.env.CROSS_SITE_COOKIES === 'true';
 
+// Determine cookie domain:
+// - For production with custom domain (organizer.dannyleffel.com), don't set domain to allow cookie to work on exact host
+// - For Railway preview environments, don't set domain (cookies will be scoped to exact host)
+// - For development, don't set domain
+// Note: Setting domain to a specific value can cause issues with cross-origin requests
+// When domain is not set, the cookie is scoped to the exact host that set it
+const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
 // Log cookie configuration
 const cookieConfig = {
   name: 'session',
@@ -83,8 +91,9 @@ const cookieConfig = {
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   secure: enableCrossSiteCookies,
   sameSite: enableCrossSiteCookies ? 'none' as const : 'lax' as const,
-  // Only set domain for production (same domain as frontend)
-  domain: process.env.NODE_ENV === 'production' ? 'api.organizer.dannyleffel.com' : undefined,
+  // Only set domain if explicitly configured via COOKIE_DOMAIN env var
+  // Not setting domain allows cookies to work correctly in cross-origin scenarios
+  domain: cookieDomain,
   path: '/',
   httpOnly: true,
   signed: true

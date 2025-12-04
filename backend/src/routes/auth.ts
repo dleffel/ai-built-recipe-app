@@ -109,10 +109,13 @@ router.get('/google/callback',
 
 // Development login route
 const devLogin: RequestHandler = async (req, res) => {
-  console.log('Dev login attempt, NODE_ENV:', process.env.NODE_ENV);
+  console.log('Dev login attempt, NODE_ENV:', process.env.NODE_ENV, 'ENABLE_DEV_LOGIN:', process.env.ENABLE_DEV_LOGIN);
   
-  if (process.env.NODE_ENV === 'production') {
-    console.log('Not in development or test mode');
+  // Allow dev login in development/test mode OR when explicitly enabled via ENABLE_DEV_LOGIN
+  const isDevLoginEnabled = process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEV_LOGIN === 'true';
+  
+  if (!isDevLoginEnabled) {
+    console.log('Dev login not enabled');
     res.status(404).json({ error: 'Not available in production' });
     return;
   }
