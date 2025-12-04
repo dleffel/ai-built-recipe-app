@@ -234,9 +234,10 @@
   border-radius: 3px;
   font-size: 10px;
   font-weight: var(--font-weight-semibold);
-  min-width: auto;
+  min-width: 60px;
   letter-spacing: 0.3px;
   flex-shrink: 0;
+  text-align: center;
 }
 
 .categoryFullName {
@@ -355,6 +356,7 @@
   .categoryIndicator {
     padding: 2px 4px;
     font-size: 9px;
+    min-width: 38px;
   }
   
   .categoryFullName {
