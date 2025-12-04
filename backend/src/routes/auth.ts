@@ -155,17 +155,22 @@ const devLogin: RequestHandler = async (req, res) => {
       // Ensure session is saved before sending response
       // This is critical for cookie-session to properly set the Set-Cookie header
       if (req.session) {
-        await new Promise<void>((resolve, reject) => {
-          req.session!.save((saveErr: Error | null) => {
-            if (saveErr) {
-              console.error('Error saving session after dev login:', saveErr);
-              reject(saveErr);
-              return;
-            }
-            console.log('Session saved successfully after dev login');
-            resolve();
+        try {
+          await new Promise<void>((resolve, reject) => {
+            req.session!.save((saveErr: Error | null) => {
+              if (saveErr) {
+                console.error('Error saving session after dev login:', saveErr);
+                reject(saveErr);
+                return;
+              }
+              console.log('Session saved successfully after dev login');
+              resolve();
+            });
           });
-        });
+        } catch (saveError) {
+          res.status(500).json({ error: 'Failed to save session' });
+          return;
+        }
       }
       
       res.json(user);
