@@ -103,18 +103,28 @@ passport.deserializeUser(async (id: string, done) => {
 
     // Check for mock user when dev login is enabled
     const isDevLoginEnabled = process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEV_LOGIN === 'true';
-    if (isDevLoginEnabled && id === mockUser.id) {
-      console.log('Using mock user for dev login');
-      return done(null, mockUser);
-    }
-
-    // Find user in database by ID
+    
+    // First, try to find user in database by ID
+    // This handles both regular users AND dev login users (who get a real database ID)
     const user = await UserService.findById(id);
     if (user) {
-      // Update last login time
-      await UserService.updateLastLogin(user.id);
-      console.log('Deserialized user:', user);
+      console.log('Deserialized user from database:', user);
+      
+      // For dev login users, check if this is the mock user by googleId
+      // and return the mock user object with updated ID for consistency
+      if (isDevLoginEnabled && user.googleId === 'mock-google-id') {
+        console.log('Found dev login user in database, returning with mock user properties');
+        // Return the database user (which has the correct ID for session consistency)
+        return done(null, user);
+      }
+      
       return done(null, user);
+    }
+    
+    // Fallback: Check for legacy mock user ID (in case session was created before DB user existed)
+    if (isDevLoginEnabled && id === mockUser.id) {
+      console.log('Using legacy mock user for dev login');
+      return done(null, mockUser);
     }
 
     console.log('User not found in database:', { id });
