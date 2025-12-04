@@ -207,7 +207,8 @@
 .taskContent {
   flex: 1;
   min-width: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: 62px 1fr;
   align-items: center;
   gap: 6px;
 }
@@ -230,13 +231,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 10px;
   font-weight: var(--font-weight-semibold);
-  width: 62px;
+  width: fit-content;
   letter-spacing: 0.3px;
-  flex-shrink: 0;
   box-sizing: border-box;
   text-align: center;
 }
@@ -354,10 +355,14 @@
     margin-right: 2px;
   }
   
+  .taskContent {
+    grid-template-columns: 38px 1fr;
+  }
+  
   .categoryIndicator {
     padding: 2px 4px;
     font-size: 9px;
-    width: 38px;
+    width: fit-content;
   }
   
   .categoryFullName {
