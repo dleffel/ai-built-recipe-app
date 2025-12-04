@@ -117,21 +117,8 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
         ))}
         
         {tasks.length === 0 && (
-          <div
-            className={styles.emptyState}
-            onClick={() => onAddTaskClick(dayKey)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onAddTaskClick(dayKey);
-              }
-            }}
-            aria-label="Add a task"
-          >
-            <span className={styles.emptyStateIcon}>+</span>
-            <span>{isToday ? 'Add a task' : 'Add task'}</span>
+          <div className={styles.emptyState}>
+            No tasks
           </div>
         )}
         
