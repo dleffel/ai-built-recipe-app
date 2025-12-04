@@ -215,12 +215,21 @@ app.use((req: any, res: Response, next: NextFunction) => {
       };
     }
 
-    // Add save method
+    // Add save method for cookie-session compatibility
+    // cookie-session doesn't have a native save() method like express-session
+    // We need to ensure the session is marked as modified so the cookie gets updated
     if (!req.session.save) {
       req.session.save = (callback: (err?: any) => void) => {
         console.log('Saving session:', {
           sessionData: { ...req.session }
         });
+        // Touch the session to ensure cookie-session marks it as modified
+        // This forces the Set-Cookie header to be sent with the response
+        if (req.session) {
+          // Setting a timestamp ensures the session is considered "dirty"
+          // and will be re-serialized to the cookie
+          req.session._lastAccess = Date.now();
+        }
         callback();
       };
     }
