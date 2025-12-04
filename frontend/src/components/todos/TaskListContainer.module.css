@@ -139,41 +139,68 @@
   margin: 4px 0;
 }
 
+/* Empty state - clickable, minimal design */
 .emptyState {
   color: var(--todo-muted-color);
-  font-style: italic;
-  padding: 8px 0;
+  padding: 12px 8px;
   text-align: center;
-  font-size: 12px;
-}
-
-/* Add task button styling */
-.addTaskButton {
-  background: transparent;
-  border: 1px dashed var(--todo-border-color);
+  font-size: 13px;
+  cursor: pointer;
   border-radius: var(--radius-sm);
-  padding: 6px 8px;
-  width: 100%;
-  margin-top: 8px;
+  transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  opacity: 0.6;
+}
+
+.emptyState:hover {
+  opacity: 1;
+  background-color: var(--button-secondary-bg);
+}
+
+.emptyStateIcon {
+  font-size: 14px;
+  font-weight: 300;
+  opacity: 0.8;
+}
+
+/* Add task button styling - minimal, text-based */
+.addTaskButton {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  width: 100%;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   cursor: pointer;
   color: var(--todo-muted-color);
   transition: all var(--transition-fast);
-  font-size: 12px;
-  font-weight: var(--font-weight-medium);
+  font-size: 13px;
+  font-weight: var(--font-weight-normal);
+  opacity: 0.6;
 }
 
 .addTaskButton:hover {
+  opacity: 1;
   background-color: var(--button-secondary-bg);
-  border-color: var(--todo-muted-color);
   color: var(--todo-text-color);
 }
 
+.addTaskButton:focus {
+  outline: none;
+  opacity: 1;
+  background-color: var(--button-secondary-bg);
+}
+
 .addTaskIcon {
-  margin-right: 4px;
-  font-size: 12px;
+  margin-right: 6px;
+  font-size: 14px;
+  font-weight: 300;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -307,14 +334,25 @@
   }
   
   .addTaskButton {
-    padding: 5px 6px;
-    margin-top: 6px;
-    font-size: 11px;
+    padding: 10px 8px;
+    margin-top: 4px;
+    font-size: 14px;
+    opacity: 0.7;
   }
   
   .emptyState {
-    padding: 6px 0;
-    font-size: 11px;
+    padding: 14px 8px;
+    font-size: 14px;
+  }
+  
+  .headerAddButton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .headerAddButton svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
