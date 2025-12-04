@@ -8,41 +8,45 @@ import taskRoutes from './routes/tasks';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
 import { UserService } from './services/userService';
+import { createPTDate, toDateStringPT, getEndOfDayPT } from './utils/timezoneUtils';
 
 const app = express();
 
 // Task rollover scheduler
 const scheduleTaskRollover = () => {
-  // Get current time in PT
+  // Get current time
   const now = new Date();
   
-  // Create midnight in PT timezone
-  const todayStr = now.toISOString().split('T')[0];
-  const midnight = new Date(`${todayStr}T23:59:59.999-07:00`);
-  midnight.setSeconds(midnight.getSeconds() + 1); // Add 1 second to get to next day 00:00:00
+  // Get end of today in PT timezone (this correctly handles DST)
+  // Adding 1ms to get to the start of the next day
+  const endOfTodayPT = getEndOfDayPT(now);
+  const midnightPT = new Date(endOfTodayPT.getTime() + 1);
   
   // Calculate milliseconds until midnight PT
-  const msUntilMidnight = midnight.getTime() - now.getTime();
+  const msUntilMidnight = midnightPT.getTime() - now.getTime();
   
   // Schedule the task rollover
   setTimeout(async () => {
     try {
       const { TaskService } = require('./services/taskService');
       
-      // Get yesterday's date in PT
+      // Get today's date in PT timezone (the day we're rolling INTO)
       const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
-      const yesterdayDate = new Date(todayStr);
-      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
+      const todayStr = toDateStringPT(now);
       
-      // Create explicit PT timezone dates
-      const yesterday = new Date(`${yesterdayStr}T00:00:00-07:00`);
-      const today = new Date(`${todayStr}T00:00:00-07:00`);
+      // Get yesterday's date in PT timezone (the day we're rolling FROM)
+      const yesterdayDate = new Date(now);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = toDateStringPT(yesterdayDate);
+      
+      // Create proper PT timezone dates using the utility function
+      // This correctly handles both PST (UTC-8) and PDT (UTC-7)
+      const yesterday = createPTDate(yesterdayStr);
+      const today = createPTDate(todayStr);
       
       // Roll over tasks
       const rolledOverCount = await TaskService.rollOverTasks(yesterday, today);
-      console.log(`Task rollover completed: ${rolledOverCount} tasks rolled over from ${yesterday.toISOString()} to ${today.toISOString()}`);
+      console.log(`Task rollover completed: ${rolledOverCount} tasks rolled over from ${yesterdayStr} to ${todayStr}`);
       
       // Schedule the next rollover
       scheduleTaskRollover();
@@ -53,7 +57,7 @@ const scheduleTaskRollover = () => {
     }
   }, msUntilMidnight);
   
-  console.log(`Task rollover scheduled for ${midnight.toISOString()} (in ${Math.floor(msUntilMidnight / 60000)} minutes)`);
+  console.log(`Task rollover scheduled for ${midnightPT.toISOString()} (in ${Math.floor(msUntilMidnight / 60000)} minutes)`);
 };
 
 // Start the task rollover scheduler (but not in test environment)
