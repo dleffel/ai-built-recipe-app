@@ -1,22 +1,58 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import styles from './Navigation.module.css';
 import useMediaQuery from '../../hooks/useMediaQuery';
-import { FaHome, FaUtensils, FaListUl } from 'react-icons/fa';
+import { FaHome, FaUtensils, FaListUl, FaBars, FaTimes } from 'react-icons/fa';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
-  // Function to determine if a link is active
-  const isActive = (path: string): boolean => {
-    if (path === '/' && location.pathname === '/') {
-      return true;
+  // Close menu when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close menu when switching from mobile to desktop
+  useEffect(() => {
+    if (!isMobile) {
+      setIsMenuOpen(false);
     }
-    if (path !== '/' && location.pathname.startsWith(path)) {
-      return true;
+  }, [isMobile]);
+
+  // Handle escape key to close menu
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape' && isMenuOpen) {
+      setIsMenuOpen(false);
     }
-    return false;
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
   };
 
   // Desktop navigation
@@ -58,52 +94,97 @@ const Navigation: React.FC = () => {
     </nav>
   );
 
-  // Mobile navigation (shown at bottom of screen on small devices)
+  // Mobile navigation (side menu)
   const mobileNav = (
-    <nav className={styles.mobileNavigation} aria-label="Mobile Navigation">
-      <ul className={styles.mobileNavList}>
-        <li className={styles.mobileNavItem}>
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
-            }
-            end
+    <>
+      {/* Hamburger button */}
+      <button
+        className={styles.hamburgerButton}
+        onClick={toggleMenu}
+        aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={isMenuOpen}
+        aria-controls="mobile-side-menu"
+      >
+        {isMenuOpen ? (
+          FaTimes({ 'aria-hidden': 'true' })
+        ) : (
+          FaBars({ 'aria-hidden': 'true' })
+        )}
+      </button>
+
+      {/* Overlay */}
+      <div
+        className={`${styles.overlay} ${isMenuOpen ? styles.overlayVisible : ''}`}
+        onClick={closeMenu}
+        aria-hidden="true"
+        data-testid="side-menu-overlay"
+      />
+
+      {/* Side menu */}
+      <nav
+        id="mobile-side-menu"
+        className={`${styles.sideMenu} ${isMenuOpen ? styles.sideMenuOpen : ''}`}
+        aria-label="Mobile Navigation"
+        aria-hidden={!isMenuOpen}
+        data-testid="mobile-side-menu"
+      >
+        <div className={styles.sideMenuHeader}>
+          <span className={styles.sideMenuTitle}>Menu</span>
+          <button
+            className={styles.closeButton}
+            onClick={closeMenu}
+            aria-label="Close menu"
           >
-            <span className={styles.mobileNavIcon}>
-              {FaHome({ 'aria-hidden': 'true' })}
-            </span>
-            <span className={styles.mobileNavText}>Home</span>
-          </NavLink>
-        </li>
-        <li className={styles.mobileNavItem}>
-          <NavLink
-            to="/recipes"
-            className={({ isActive }) =>
-              isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
-            }
-          >
-            <span className={styles.mobileNavIcon}>
-              {FaUtensils({ 'aria-hidden': 'true' })}
-            </span>
-            <span className={styles.mobileNavText}>Recipes</span>
-          </NavLink>
-        </li>
-        <li className={styles.mobileNavItem}>
-          <NavLink
-            to="/todos"
-            className={({ isActive }) =>
-              isActive ? `${styles.mobileNavLink} ${styles.mobileActiveLink}` : styles.mobileNavLink
-            }
-          >
-            <span className={styles.mobileNavIcon}>
-              {FaListUl({ 'aria-hidden': 'true' })}
-            </span>
-            <span className={styles.mobileNavText}>To-Do</span>
-          </NavLink>
-        </li>
-      </ul>
-    </nav>
+            {FaTimes({ 'aria-hidden': 'true' })}
+          </button>
+        </div>
+        <ul className={styles.sideMenuList}>
+          <li className={styles.sideMenuItem}>
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                isActive ? `${styles.sideMenuLink} ${styles.sideMenuActiveLink}` : styles.sideMenuLink
+              }
+              onClick={closeMenu}
+              end
+            >
+              <span className={styles.sideMenuIcon}>
+                {FaHome({ 'aria-hidden': 'true' })}
+              </span>
+              <span className={styles.sideMenuText}>Home</span>
+            </NavLink>
+          </li>
+          <li className={styles.sideMenuItem}>
+            <NavLink
+              to="/recipes"
+              className={({ isActive }) =>
+                isActive ? `${styles.sideMenuLink} ${styles.sideMenuActiveLink}` : styles.sideMenuLink
+              }
+              onClick={closeMenu}
+            >
+              <span className={styles.sideMenuIcon}>
+                {FaUtensils({ 'aria-hidden': 'true' })}
+              </span>
+              <span className={styles.sideMenuText}>Recipes</span>
+            </NavLink>
+          </li>
+          <li className={styles.sideMenuItem}>
+            <NavLink
+              to="/todos"
+              className={({ isActive }) =>
+                isActive ? `${styles.sideMenuLink} ${styles.sideMenuActiveLink}` : styles.sideMenuLink
+              }
+              onClick={closeMenu}
+            >
+              <span className={styles.sideMenuIcon}>
+                {FaListUl({ 'aria-hidden': 'true' })}
+              </span>
+              <span className={styles.sideMenuText}>To-Do</span>
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
+    </>
   );
 
   // Return the appropriate navigation based on screen size
