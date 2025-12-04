@@ -3,6 +3,47 @@ import passport from '../config/passport';
 import { getMockUser } from '../config/passport';
 import { UserService } from '../services/userService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import crypto from 'crypto';
+
+// Simple token-based auth for dev login (workaround for iOS third-party cookie blocking)
+// This is only used for dev login in Railway preview environments
+const DEV_AUTH_TOKENS: Map<string, { userId: string; expiresAt: number }> = new Map();
+
+// Generate a dev auth token
+const generateDevAuthToken = (userId: string): string => {
+  const token = crypto.randomBytes(32).toString('hex');
+  // Token expires in 30 days (same as session)
+  const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
+  DEV_AUTH_TOKENS.set(token, { userId, expiresAt });
+  return token;
+};
+
+// Validate a dev auth token
+export const validateDevAuthToken = (token: string): string | null => {
+  const tokenData = DEV_AUTH_TOKENS.get(token);
+  if (!tokenData) {
+    return null;
+  }
+  if (Date.now() > tokenData.expiresAt) {
+    DEV_AUTH_TOKENS.delete(token);
+    return null;
+  }
+  return tokenData.userId;
+};
+
+// Clean up expired tokens periodically (only in non-test environments)
+// Use .unref() to prevent the interval from keeping the process alive
+if (process.env.NODE_ENV !== 'test') {
+  const cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [token, data] of DEV_AUTH_TOKENS.entries()) {
+      if (now > data.expiresAt) {
+        DEV_AUTH_TOKENS.delete(token);
+      }
+    }
+  }, 60 * 60 * 1000); // Clean up every hour
+  cleanupInterval.unref(); // Don't keep the process alive just for cleanup
+}
 
 const router = Router();
 
@@ -109,10 +150,13 @@ router.get('/google/callback',
 
 // Development login route
 const devLogin: RequestHandler = async (req, res) => {
-  console.log('Dev login attempt, NODE_ENV:', process.env.NODE_ENV);
+  console.log('Dev login attempt, NODE_ENV:', process.env.NODE_ENV, 'ENABLE_DEV_LOGIN:', process.env.ENABLE_DEV_LOGIN);
   
-  if (process.env.NODE_ENV === 'production') {
-    console.log('Not in development or test mode');
+  // Allow dev login in development/test mode OR when explicitly enabled via ENABLE_DEV_LOGIN
+  const isDevLoginEnabled = process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEV_LOGIN === 'true';
+  
+  if (!isDevLoginEnabled) {
+    console.log('Dev login not enabled');
     res.status(404).json({ error: 'Not available in production' });
     return;
   }
@@ -142,13 +186,43 @@ const devLogin: RequestHandler = async (req, res) => {
     user.displayName = formatted.displayName;
     user.photoUrl = formatted.photo;
 
-    req.login(user, (err) => {
+    req.login(user, async (err) => {
       if (err) {
         console.error(`Dev login error: ${err}`);
         res.status(500).json({ error: 'Failed to login' });
         return;
       }
-      res.json(user);
+      
+      // Ensure session is saved before sending response
+      // This is critical for cookie-session to properly set the Set-Cookie header
+      if (req.session) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            req.session!.save((saveErr: Error | null) => {
+              if (saveErr) {
+                console.error('Error saving session after dev login:', saveErr);
+                reject(saveErr);
+                return;
+              }
+              console.log('Session saved successfully after dev login');
+              resolve();
+            });
+          });
+        } catch (saveError) {
+          res.status(500).json({ error: 'Failed to save session' });
+          return;
+        }
+      }
+      
+      // Generate a dev auth token as fallback for iOS third-party cookie blocking
+      // This token can be used via Authorization header when cookies don't work
+      const devAuthToken = generateDevAuthToken(user.id);
+      console.log('Generated dev auth token for user:', user.id);
+      
+      res.json({
+        ...user,
+        devAuthToken // Include token in response for frontend to store
+      });
     });
   } catch (error) {
     console.error('Dev login database error:', error);

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import api, { setDevAuthToken, clearDevAuthToken } from '../services/api';
 
 interface User {
   id: string;
@@ -86,9 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       await api.get('/auth/logout');
       setUser(null);
+      // Clear dev auth token on logout
+      clearDevAuthToken();
     } catch (error) {
       console.error('Error logging out:', error);
       setError('Failed to logout');
+      // Still clear the token even if logout fails
+      clearDevAuthToken();
     } finally {
       setLoading(false);
     }
@@ -108,7 +112,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       const response = await api.post('/auth/dev-login');
-      setUser(response.data);
+      
+      // Store dev auth token if provided (fallback for iOS third-party cookie blocking)
+      if (response.data.devAuthToken) {
+        setDevAuthToken(response.data.devAuthToken);
+        console.log('Stored dev auth token for future requests');
+      }
+      
+      // Remove the token from user data before setting state
+      const { devAuthToken, ...userData } = response.data;
+      setUser(userData);
     } catch (error) {
       console.error('Error during dev login:', error);
       setError('Failed to perform dev login');

@@ -2,11 +2,12 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieSession from 'cookie-session';
 import passport from './config/passport';
-import authRoutes from './routes/auth';
+import authRoutes, { validateDevAuthToken } from './routes/auth';
 import recipeRoutes from './routes/recipes';
 import taskRoutes from './routes/tasks';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
+import { UserService } from './services/userService';
 
 const app = express();
 
@@ -76,6 +77,14 @@ app.use(express.urlencoded({ extended: true }));
 // Enable cross-site cookies for production OR when CROSS_SITE_COOKIES=true (Railway preview envs)
 const enableCrossSiteCookies = process.env.NODE_ENV === 'production' || process.env.CROSS_SITE_COOKIES === 'true';
 
+// Determine cookie domain:
+// - For production with custom domain (organizer.dannyleffel.com), don't set domain to allow cookie to work on exact host
+// - For Railway preview environments, don't set domain (cookies will be scoped to exact host)
+// - For development, don't set domain
+// Note: Setting domain to a specific value can cause issues with cross-origin requests
+// When domain is not set, the cookie is scoped to the exact host that set it
+const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
 // Log cookie configuration
 const cookieConfig = {
   name: 'session',
@@ -83,8 +92,9 @@ const cookieConfig = {
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   secure: enableCrossSiteCookies,
   sameSite: enableCrossSiteCookies ? 'none' as const : 'lax' as const,
-  // Only set domain for production (same domain as frontend)
-  domain: process.env.NODE_ENV === 'production' ? 'api.organizer.dannyleffel.com' : undefined,
+  // Only set domain if explicitly configured via COOKIE_DOMAIN env var
+  // Not setting domain allows cookies to work correctly in cross-origin scenarios
+  domain: cookieDomain,
   path: '/',
   httpOnly: true,
   signed: true
@@ -206,12 +216,21 @@ app.use((req: any, res: Response, next: NextFunction) => {
       };
     }
 
-    // Add save method
+    // Add save method for cookie-session compatibility
+    // cookie-session doesn't have a native save() method like express-session
+    // We need to ensure the session is marked as modified so the cookie gets updated
     if (!req.session.save) {
       req.session.save = (callback: (err?: any) => void) => {
         console.log('Saving session:', {
           sessionData: { ...req.session }
         });
+        // Touch the session to ensure cookie-session marks it as modified
+        // This forces the Set-Cookie header to be sent with the response
+        if (req.session) {
+          // Setting a timestamp ensures the session is considered "dirty"
+          // and will be re-serialized to the cookie
+          req.session._lastAccess = Date.now();
+        }
         callback();
       };
     }
@@ -228,6 +247,37 @@ app.use((req: any, res: Response, next: NextFunction) => {
 // Initialize passport and restore authentication state from session
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Dev auth token middleware - fallback for iOS third-party cookie blocking
+// This checks for Authorization: Bearer <token> header and authenticates if valid
+app.use(async (req: any, res: Response, next: NextFunction) => {
+  // Skip if already authenticated via session
+  if (req.user) {
+    return next();
+  }
+  
+  // Check for dev auth token in Authorization header
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const userId = validateDevAuthToken(token);
+    
+    if (userId) {
+      try {
+        // Look up user from database
+        const user = await UserService.findById(userId);
+        if (user) {
+          console.log('Authenticated via dev auth token:', userId);
+          req.user = user;
+        }
+      } catch (error) {
+        console.error('Error looking up user for dev auth token:', error);
+      }
+    }
+  }
+  
+  next();
+});
 
 // Health check endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
