@@ -61,7 +61,6 @@
   padding: 8px 12px;
   box-shadow: none;
   transition: all var(--transition-normal);
-  border: 1px solid var(--todo-border-color);
   /* Account for fixed header (60px) plus some padding when scrolling into view */
   scroll-margin-top: 72px;
 }
@@ -85,7 +84,6 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 6px;
-  border-bottom: 1px solid var(--todo-border-color);
 }
 
 .dayTitle {
