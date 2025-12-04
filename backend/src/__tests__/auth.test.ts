@@ -229,11 +229,13 @@ describe('Auth Routes', () => {
 
       await devLoginHandler(req as Request, res as Response, nextMock);
       
+      // Response includes devAuthToken for iOS third-party cookie workaround
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         id: 'test-id',
         email: 'test@example.com',
         displayName: 'Test User',
-        photoUrl: 'https://test-photo.jpg'
+        photoUrl: 'https://test-photo.jpg',
+        devAuthToken: expect.any(String)
       }));
     });
   });
@@ -280,7 +282,11 @@ describe('Auth Routes', () => {
       
       expect(res.status).not.toHaveBeenCalled();
       expect(req.login).toHaveBeenCalledWith(mockUser, expect.any(Function));
-      expect(res.json).toHaveBeenCalledWith(mockUser);
+      // Response includes devAuthToken for iOS third-party cookie workaround
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        ...mockUser,
+        devAuthToken: expect.any(String)
+      }));
       
       process.env.NODE_ENV = originalEnv;
     });
@@ -325,7 +331,11 @@ describe('Auth Routes', () => {
         googleId: 'mock-google-id'
       });
       expect(req.login).toHaveBeenCalledWith(mockUser, expect.any(Function));
-      expect(res.json).toHaveBeenCalledWith(mockUser);
+      // Response includes devAuthToken for iOS third-party cookie workaround
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        ...mockUser,
+        devAuthToken: expect.any(String)
+      }));
     });
 
     it('should handle missing email in mock user', async () => {

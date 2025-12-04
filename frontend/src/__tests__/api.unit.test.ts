@@ -15,6 +15,14 @@ jest.mock('axios', () => {
       },
     },
     interceptors: {
+      request: {
+        use: jest.fn((onFulfilled, onRejected) => {
+          mockAxios.interceptors.request.onFulfilled = onFulfilled;
+          mockAxios.interceptors.request.onRejected = onRejected;
+        }),
+        onFulfilled: null,
+        onRejected: null
+      },
       response: {
         use: jest.fn((onFulfilled, onRejected) => {
           mockAxios.interceptors.response.onFulfilled = onFulfilled;
@@ -30,6 +38,14 @@ jest.mock('axios', () => {
     delete: jest.fn(),
   }));
   mockAxios.interceptors = {
+    request: {
+      use: jest.fn((onFulfilled, onRejected) => {
+        mockAxios.interceptors.request.onFulfilled = onFulfilled;
+        mockAxios.interceptors.request.onRejected = onRejected;
+      }),
+      onFulfilled: null,
+      onRejected: null
+    },
     response: {
       use: jest.fn((onFulfilled, onRejected) => {
         mockAxios.interceptors.response.onFulfilled = onFulfilled;

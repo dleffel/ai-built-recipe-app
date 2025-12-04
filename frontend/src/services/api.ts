@@ -1,6 +1,24 @@
 import axios from 'axios';
 import { Recipe, CreateRecipeDTO, UpdateRecipeDTO, RecipeListResponse } from '../types/recipe';
 
+// Dev auth token storage key
+const DEV_AUTH_TOKEN_KEY = 'dev_auth_token';
+
+// Get stored dev auth token
+export const getDevAuthToken = (): string | null => {
+  return localStorage.getItem(DEV_AUTH_TOKEN_KEY);
+};
+
+// Store dev auth token
+export const setDevAuthToken = (token: string): void => {
+  localStorage.setItem(DEV_AUTH_TOKEN_KEY, token);
+};
+
+// Clear dev auth token
+export const clearDevAuthToken = (): void => {
+  localStorage.removeItem(DEV_AUTH_TOKEN_KEY);
+};
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001', // Use environment variable with fallback
@@ -9,6 +27,21 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Add request interceptor to include dev auth token if available
+// This is a fallback for iOS third-party cookie blocking in Railway preview environments
+api.interceptors.request.use(
+  (config) => {
+    const token = getDevAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add response interceptor for error handling
 api.interceptors.response.use(

@@ -2,11 +2,12 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieSession from 'cookie-session';
 import passport from './config/passport';
-import authRoutes from './routes/auth';
+import authRoutes, { validateDevAuthToken } from './routes/auth';
 import recipeRoutes from './routes/recipes';
 import taskRoutes from './routes/tasks';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
+import { UserService } from './services/userService';
 
 const app = express();
 
@@ -246,6 +247,37 @@ app.use((req: any, res: Response, next: NextFunction) => {
 // Initialize passport and restore authentication state from session
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Dev auth token middleware - fallback for iOS third-party cookie blocking
+// This checks for Authorization: Bearer <token> header and authenticates if valid
+app.use(async (req: any, res: Response, next: NextFunction) => {
+  // Skip if already authenticated via session
+  if (req.user) {
+    return next();
+  }
+  
+  // Check for dev auth token in Authorization header
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const userId = validateDevAuthToken(token);
+    
+    if (userId) {
+      try {
+        // Look up user from database
+        const user = await UserService.findById(userId);
+        if (user) {
+          console.log('Authenticated via dev auth token:', userId);
+          req.user = user;
+        }
+      } catch (error) {
+        console.error('Error looking up user for dev auth token:', error);
+      }
+    }
+  }
+  
+  next();
+});
 
 // Health check endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
