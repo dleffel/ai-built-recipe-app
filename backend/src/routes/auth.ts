@@ -145,12 +145,29 @@ const devLogin: RequestHandler = async (req, res) => {
     user.displayName = formatted.displayName;
     user.photoUrl = formatted.photo;
 
-    req.login(user, (err) => {
+    req.login(user, async (err) => {
       if (err) {
         console.error(`Dev login error: ${err}`);
         res.status(500).json({ error: 'Failed to login' });
         return;
       }
+      
+      // Ensure session is saved before sending response
+      // This is critical for cookie-session to properly set the Set-Cookie header
+      if (req.session) {
+        await new Promise<void>((resolve, reject) => {
+          req.session!.save((saveErr: Error | null) => {
+            if (saveErr) {
+              console.error('Error saving session after dev login:', saveErr);
+              reject(saveErr);
+              return;
+            }
+            console.log('Session saved successfully after dev login');
+            resolve();
+          });
+        });
+      }
+      
       res.json(user);
     });
   } catch (error) {
