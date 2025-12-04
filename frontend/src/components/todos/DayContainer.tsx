@@ -118,7 +118,7 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
         
         {tasks.length === 0 && (
           <div className={styles.emptyState}>
-            {isToday ? 'No tasks for today. Add a task to get started.' : 'No tasks scheduled.'}
+            No tasks
           </div>
         )}
         

@@ -61,7 +61,6 @@
   padding: 8px 12px;
   box-shadow: none;
   transition: all var(--transition-normal);
-  border: 1px solid var(--todo-border-color);
   /* Account for fixed header (60px) plus some padding when scrolling into view */
   scroll-margin-top: 72px;
 }
@@ -85,7 +84,6 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 6px;
-  border-bottom: 1px solid var(--todo-border-color);
 }
 
 .dayTitle {
@@ -141,41 +139,50 @@
   margin: 4px 0;
 }
 
+/* Empty state - simple, non-interactive text */
 .emptyState {
   color: var(--todo-muted-color);
-  font-style: italic;
   padding: 8px 0;
-  text-align: center;
-  font-size: 12px;
+  font-size: 13px;
+  font-style: italic;
+  opacity: 0.7;
 }
 
-/* Add task button styling */
+/* Add task button styling - minimal, text-based */
 .addTaskButton {
   background: transparent;
-  border: 1px dashed var(--todo-border-color);
+  border: none;
   border-radius: var(--radius-sm);
-  padding: 6px 8px;
+  padding: 8px 12px;
   width: 100%;
-  margin-top: 8px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   cursor: pointer;
   color: var(--todo-muted-color);
   transition: all var(--transition-fast);
-  font-size: 12px;
-  font-weight: var(--font-weight-medium);
+  font-size: 13px;
+  font-weight: var(--font-weight-normal);
+  opacity: 0.6;
 }
 
 .addTaskButton:hover {
+  opacity: 1;
   background-color: var(--button-secondary-bg);
-  border-color: var(--todo-muted-color);
   color: var(--todo-text-color);
 }
 
+.addTaskButton:focus {
+  outline: none;
+  opacity: 1;
+  background-color: var(--button-secondary-bg);
+}
+
 .addTaskIcon {
-  margin-right: 4px;
-  font-size: 12px;
+  margin-right: 6px;
+  font-size: 14px;
+  font-weight: 300;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -309,14 +316,25 @@
   }
   
   .addTaskButton {
-    padding: 5px 6px;
-    margin-top: 6px;
-    font-size: 11px;
+    padding: 10px 8px;
+    margin-top: 4px;
+    font-size: 14px;
+    opacity: 0.7;
   }
   
   .emptyState {
     padding: 6px 0;
-    font-size: 11px;
+    font-size: 12px;
+  }
+  
+  .headerAddButton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .headerAddButton svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
