@@ -1,7 +1,9 @@
 import React, { forwardRef } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Task } from '../../services/todoApi';
 import { TaskCategory } from '../../types/task';
-import { TaskItem } from './TaskItem';
+import { SortableTaskItem } from './SortableTaskItem';
 import { TaskEdit } from './TaskEdit';
 import { TaskCreation } from './TaskCreation';
 import styles from './TaskListContainer.module.css';
@@ -21,9 +23,6 @@ interface DayContainerProps {
   onDelete: (taskId: string) => void;
   onAddTaskClick: (day: string) => void;
   onCreateTask: (day: string, taskData: any) => void;
-  onDragStart: (e: React.DragEvent, task: Task) => void;
-  onDragOver: (e: React.DragEvent, dayKey: string) => void;
-  onDrop: (e: React.DragEvent, dayKey: string) => void;
   className?: string; // Optional class name for animation
   movingTaskId?: string | null; // ID of task being moved for animation
   // Bulk selection props
@@ -45,9 +44,6 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
   onDelete,
   onAddTaskClick,
   onCreateTask,
-  onDragStart,
-  onDragOver,
-  onDrop,
   className = '',
   movingTaskId = null,
   isSelectMode = false,
@@ -59,13 +55,31 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
     return formatInTimeZone(date, 'America/Los_Angeles', 'EEEE, MMMM d');
   };
   
+  // Set up droppable for cross-day drag and drop
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `day-${dayKey}`,
+    data: {
+      type: 'day',
+      dayKey,
+    },
+  });
+
+  // Get task IDs for SortableContext
+  const taskIds = tasks.map(task => task.id);
+  
   return (
     <div
-      ref={ref}
-      className={`${styles.dayContainer} ${className}`}
+      ref={(node) => {
+        // Combine refs: forward ref and droppable ref
+        setDroppableRef(node);
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      }}
+      className={`${styles.dayContainer} ${className} ${isOver ? styles.dayDropTarget : ''}`}
       data-day={dayKey}
-      onDragOver={(e) => onDragOver(e, dayKey)}
-      onDrop={(e) => onDrop(e, dayKey)}
     >
       <div className={styles.dayHeader}>
         <h2 className={`${styles.dayTitle} ${isToday ? styles.today : ''}`}>
@@ -86,35 +100,34 @@ export const DayContainer = forwardRef<HTMLDivElement, DayContainerProps>(({
       </div>
       
       <div className={styles.taskList}>
-        {tasks.map(task => (
-          editingTaskId === task.id ? (
-            <TaskEdit
-              key={task.id}
-              id={task.id}
-              title={task.title}
-              category={task.category}
-              isPriority={task.isPriority}
-              dueDate={task.dueDate}
-              onCancel={() => onEdit('')}
-              onSave={onUpdate}
-              onDelete={() => onDelete(task.id)}
-            />
-          ) : (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onToggleComplete={() => onToggleComplete(task)}
-              onEdit={() => onEdit(task.id)}
-              onDragStart={(e) => onDragStart(e, task)}
-              onDragOver={(e) => onDragOver(e, dayKey)}
-              onDrop={(e) => onDrop(e, dayKey)}
-              isMoving={movingTaskId === task.id}
-              isSelectMode={isSelectMode}
-              isSelected={selectedTaskIds.has(task.id)}
-              onSelectionToggle={() => onTaskSelectionToggle?.(task.id)}
-            />
-          )
-        ))}
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          {tasks.map(task => (
+            editingTaskId === task.id ? (
+              <TaskEdit
+                key={task.id}
+                id={task.id}
+                title={task.title}
+                category={task.category}
+                isPriority={task.isPriority}
+                dueDate={task.dueDate}
+                onCancel={() => onEdit('')}
+                onSave={onUpdate}
+                onDelete={() => onDelete(task.id)}
+              />
+            ) : (
+              <SortableTaskItem
+                key={task.id}
+                task={task}
+                onToggleComplete={() => onToggleComplete(task)}
+                onEdit={() => onEdit(task.id)}
+                isMoving={movingTaskId === task.id}
+                isSelectMode={isSelectMode}
+                isSelected={selectedTaskIds.has(task.id)}
+                onSelectionToggle={() => onTaskSelectionToggle?.(task.id)}
+              />
+            )
+          ))}
+        </SortableContext>
         
         {tasks.length === 0 && (
           <div className={styles.emptyState}>

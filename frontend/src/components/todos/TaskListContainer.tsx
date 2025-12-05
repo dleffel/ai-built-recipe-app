@@ -1,4 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  DragOverlay,
+} from '@dnd-kit/core';
 import { useTodo } from '../../context/TodoContext';
 import { Task } from '../../services/todoApi';
 import { TaskCategory } from '../../types/task';
@@ -43,12 +55,13 @@ export const TaskListContainer: React.FC = () => {
   // State for task creation and editing
   const [creatingTaskForDay, setCreatingTaskForDay] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
   
   // Animation states for smooth transitions
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
   const [receivingDayKey, setReceivingDayKey] = useState<string | null>(null);
+  
+  // State for @dnd-kit drag and drop
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
   
   // State to track if today's tasks are visible
   const [isTodayVisible, setIsTodayVisible] = useState(true);
@@ -139,6 +152,26 @@ export const TaskListContainer: React.FC = () => {
     };
   }, [todayRef.current]);
 
+  // Configure sensors for both mouse/pointer and touch
+  // TouchSensor is specifically optimized for mobile touch devices
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      // Require a small movement before starting drag to allow clicks
+      distance: 8,
+    },
+  });
+  
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      // Delay before drag starts on touch to distinguish from scroll
+      delay: 200,
+      // Allow some movement tolerance during the delay
+      tolerance: 8,
+    },
+  });
+  
+  const sensors = useSensors(pointerSensor, touchSensor);
+
   // Task action handlers
   const handleAddTaskClick = (day: string) => {
     setCreatingTaskForDay(creatingTaskForDay === day ? null : day);
@@ -215,220 +248,184 @@ export const TaskListContainer: React.FC = () => {
     }
   };
 
-  // Drag and drop handlers - simplified HTML5 Drag and Drop API
-  const handleDragStart = (e: React.DragEvent, task: Task) => {
-    e.dataTransfer.setData('taskId', task.id);
-    e.dataTransfer.effectAllowed = 'move';
+  // @dnd-kit drag and drop handlers
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event;
+    const taskId = active.id as string;
     
-    // Add a custom drag ghost if needed
-    const dragGhost = document.createElement('div');
-    dragGhost.classList.add(styles.dragGhost);
-    dragGhost.textContent = task.title;
-    document.body.appendChild(dragGhost);
-    e.dataTransfer.setDragImage(dragGhost, 20, 20);
+    // Find the task being dragged
+    let foundTask: Task | null = null;
+    let foundDayKey: string | null = null;
     
-    // Clean up the ghost element after drag starts
-    setTimeout(() => {
-      document.body.removeChild(dragGhost);
-    }, 0);
+    for (const [dayKey, dayTasks] of Object.entries(tasksByDay) as [string, Task[]][]) {
+      const task = dayTasks.find((t: Task) => t.id === taskId);
+      if (task) {
+        foundTask = task;
+        foundDayKey = dayKey;
+        break;
+      }
+    }
     
-    setDraggedTask(task);
-    setMovingTaskId(task.id);
-  };
+    if (foundTask) {
+      setActiveTask(foundTask);
+      setMovingTaskId(taskId);
+    }
+  }, [tasksByDay]);
   
-  const handleDragOver = (e: React.DragEvent, dayKey: string) => {
-    e.preventDefault(); // Allow drop
-    e.dataTransfer.dropEffect = 'move';
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const { over } = event;
     
-    // Visual feedback for the current drop target
-    setDropTarget(dayKey);
-    setReceivingDayKey(dayKey);
-  };
+    if (over) {
+      // Check if we're over a day container
+      const overId = over.id as string;
+      if (overId.startsWith('day-')) {
+        const dayKey = overId.replace('day-', '');
+        setReceivingDayKey(dayKey);
+      } else {
+        // We're over a task, find its day
+        for (const [dayKey, dayTasks] of Object.entries(tasksByDay) as [string, Task[]][]) {
+          if (dayTasks.some((t: Task) => t.id === overId)) {
+            setReceivingDayKey(dayKey);
+            break;
+          }
+        }
+      }
+    }
+  }, [tasksByDay]);
   
-  const handleDrop = async (e: React.DragEvent, dayKey: string) => {
-    e.preventDefault();
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
     
-    // Reset visual state
-    setDropTarget(null);
+    // Reset visual states
+    setActiveTask(null);
+    setReceivingDayKey(null);
     
-    if (!draggedTask) {
-      console.error('Drop event occurred but draggedTask is null');
+    if (!over || !activeTask) {
+      setMovingTaskId(null);
       return;
     }
     
-    const taskId = e.dataTransfer.getData('taskId');
+    const taskId = active.id as string;
+    const overId = over.id as string;
     
-    // Get the current day key for the dragged task using our timezone utility
-    const currentDayKey = toDateStringPT(draggedTask.dueDate);
+    // Get the current day key for the dragged task
+    const currentDayKey = toDateStringPT(activeTask.dueDate);
     
-    console.log('Drop event:', {
+    // Determine target day key
+    let targetDayKey: string;
+    let targetTaskId: string | null = null;
+    
+    if (overId.startsWith('day-')) {
+      // Dropped on a day container
+      targetDayKey = overId.replace('day-', '');
+    } else {
+      // Dropped on a task - find its day
+      targetTaskId = overId;
+      let foundDayKey: string | null = null;
+      for (const [dayKey, dayTasks] of Object.entries(tasksByDay) as [string, Task[]][]) {
+        if (dayTasks.some((t: Task) => t.id === overId)) {
+          foundDayKey = dayKey;
+          break;
+        }
+      }
+      if (!foundDayKey) {
+        setMovingTaskId(null);
+        return;
+      }
+      targetDayKey = foundDayKey;
+    }
+    
+    console.log('Drag end event:', {
       taskId,
-      taskTitle: draggedTask.title,
+      taskTitle: activeTask.title,
       fromDayKey: currentDayKey,
-      toDayKey: dayKey,
-      draggedTaskDueDate: draggedTask.dueDate,
-      userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      toDayKey: targetDayKey,
+      targetTaskId,
     });
     
     try {
       // Get the tasks for the target day
-      const targetDayTasks = tasksByDay[dayKey] || [];
+      const targetDayTasks = tasksByDay[targetDayKey] || [];
+      const sortedTasks = [...targetDayTasks].sort((a, b) => a.displayOrder - b.displayOrder);
       
-      // Handle different scenarios based on whether it's same-day or different-day drop
-      if (currentDayKey === dayKey) {
-        // Same-day drop - handle reordering within the day
-        
-        // Find the drop position within the day's task list
-        // Get the Y position of the drop
-        const dropY = e.clientY;
-        
-        // Sort the tasks by their display order
-        const sortedTasks = [...targetDayTasks].sort((a, b) => a.displayOrder - b.displayOrder);
-        
-        // Find the tasks before and after the drop position
-        let prevTask: Task | null = null;
-        let nextTask: Task | null = null;
-        
-        // Get all task elements in the current day container
-        const dayContainer = (e.currentTarget as HTMLElement);
-        const taskElements = Array.from(dayContainer.querySelectorAll('[data-id]'));
-        
-        // Find the task elements before and after the drop position
-        for (let i = 0; i < taskElements.length; i++) {
-          const rect = taskElements[i].getBoundingClientRect();
-          const taskMiddle = rect.top + rect.height / 2;
+      // Calculate new display order based on drop position
+      let prevTask: Task | null = null;
+      let nextTask: Task | null = null;
+      
+      if (targetTaskId) {
+        // Dropped on a specific task - insert before or after it
+        const targetIndex = sortedTasks.findIndex(t => t.id === targetTaskId);
+        if (targetIndex !== -1) {
+          // Insert before the target task
+          nextTask = sortedTasks[targetIndex];
+          prevTask = targetIndex > 0 ? sortedTasks[targetIndex - 1] : null;
           
-          // Skip the dragged task itself
-          if (taskElements[i].getAttribute('data-id') === taskId) continue;
-          
-          if (dropY < taskMiddle) {
-            // Found the next task
-            const nextTaskId = taskElements[i].getAttribute('data-id');
-            nextTask = sortedTasks.find(t => t.id === nextTaskId) || null;
-            
-            // The previous task is the one before this in the sorted array
-            if (i > 0) {
-              const prevTaskId = taskElements[i-1].getAttribute('data-id');
-              prevTask = sortedTasks.find(t => t.id === prevTaskId) || null;
-            }
-            break;
+          // If the previous task is the dragged task, adjust
+          if (prevTask?.id === taskId) {
+            prevTask = targetIndex > 1 ? sortedTasks[targetIndex - 2] : null;
           }
-          
-          // If we're at the last element and haven't found a next task,
-          // this task becomes the previous task
-          if (i === taskElements.length - 1) {
-            const prevTaskId = taskElements[i].getAttribute('data-id');
-            prevTask = sortedTasks.find(t => t.id === prevTaskId) || null;
+          // If the next task is the dragged task, adjust
+          if (nextTask?.id === taskId) {
+            nextTask = targetIndex < sortedTasks.length - 1 ? sortedTasks[targetIndex + 1] : null;
           }
         }
-        
-        // Calculate the new display order
-        const prevDisplayOrder = prevTask ? prevTask.displayOrder : null;
-        const nextDisplayOrder = nextTask ? nextTask.displayOrder : null;
-        
-        // Use the utility function to calculate the new display order
-        const newDisplayOrder = calculateDisplayOrder(prevDisplayOrder, nextDisplayOrder);
-        
-        // Update the task's display order
+      } else {
+        // Dropped on day container - add to end
+        const tasksWithoutDragged = sortedTasks.filter(t => t.id !== taskId);
+        if (tasksWithoutDragged.length > 0) {
+          prevTask = tasksWithoutDragged[tasksWithoutDragged.length - 1];
+        }
+      }
+      
+      // Calculate the new display order
+      const prevDisplayOrder = prevTask ? prevTask.displayOrder : null;
+      const nextDisplayOrder = nextTask ? nextTask.displayOrder : null;
+      const newDisplayOrder = calculateDisplayOrder(prevDisplayOrder, nextDisplayOrder);
+      
+      // Handle same-day vs different-day drop
+      if (currentDayKey === targetDayKey) {
+        // Same-day reorder
         await reorderTask(taskId, {
           displayOrder: newDisplayOrder
         });
       } else {
-        // Different-day drop - move the task to the new day with position awareness
-        
-        // Find the drop position within the target day's task list
-        const dropY = e.clientY;
-        
-        // Sort the tasks by their display order
-        const sortedTasks = [...targetDayTasks].sort((a, b) => a.displayOrder - b.displayOrder);
-        
-        // Find the tasks before and after the drop position
-        let prevTask: Task | null = null;
-        let nextTask: Task | null = null;
-        
-        // Get all task elements in the target day container
-        const dayContainer = (e.currentTarget as HTMLElement);
-        const taskElements = Array.from(dayContainer.querySelectorAll('[data-id]'));
-        
-        // Find the task elements before and after the drop position
-        for (let i = 0; i < taskElements.length; i++) {
-          const rect = taskElements[i].getBoundingClientRect();
-          const taskMiddle = rect.top + rect.height / 2;
-          
-          if (dropY < taskMiddle) {
-            // Found the next task
-            const nextTaskId = taskElements[i].getAttribute('data-id');
-            nextTask = sortedTasks.find(t => t.id === nextTaskId) || null;
-            
-            // The previous task is the one before this in the sorted array
-            if (i > 0) {
-              const prevTaskId = taskElements[i-1].getAttribute('data-id');
-              prevTask = sortedTasks.find(t => t.id === prevTaskId) || null;
-            }
-            break;
-          }
-          
-          // If we're at the last element and haven't found a next task,
-          // this task becomes the previous task
-          if (i === taskElements.length - 1) {
-            const prevTaskId = taskElements[i].getAttribute('data-id');
-            prevTask = sortedTasks.find(t => t.id === prevTaskId) || null;
-          }
-        }
-        
-        // Calculate the new display order
-        const prevDisplayOrder = prevTask ? prevTask.displayOrder : null;
-        const nextDisplayOrder = nextTask ? nextTask.displayOrder : null;
-        
-        // Use the utility function to calculate the new display order
-        const newDisplayOrder = calculateDisplayOrder(prevDisplayOrder, nextDisplayOrder);
-        
-        // Parse the dayKey (YYYY-MM-DD) into a proper PT date using our utility
-        const ptDate = createPTDate(dayKey);
+        // Different-day move
+        const ptDate = createPTDate(targetDayKey);
         
         console.log('Task move timezone debug:', {
           taskId,
-          originalDueDate: draggedTask.dueDate,
-          dayKey,
+          originalDueDate: activeTask.dueDate,
+          targetDayKey,
           ptDateISO: ptDate.toISOString(),
-          userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         });
         
-        try {
-          // First move the task to the new day with explicit PT timezone
-          const updatedTask = await moveTask(taskId, {
-            dueDate: ptDate.toISOString(),
-            isRolledOver: false
-          });
-          
-          console.log('Task moved successfully:', {
-            taskId,
-            newDueDate: updatedTask.dueDate,
-            originalDay: currentDayKey,
-            targetDay: dayKey
-          });
-          
-          // Removed redundant fetchTasks() call that was causing jarring refresh
-        } catch (error) {
-          console.error('Error in task movement:', error);
-        }
+        // Move the task to the new day
+        await moveTask(taskId, {
+          dueDate: ptDate.toISOString(),
+          isRolledOver: false
+        });
         
-        // Then update its display order
+        // Update its display order
         await reorderTask(taskId, {
           displayOrder: newDisplayOrder
         });
       }
       
-      // Reset animation states after a short delay to allow animations to complete
+      // Reset animation states after a short delay
       setTimeout(() => {
         setMovingTaskId(null);
-        setReceivingDayKey(null);
-        setDraggedTask(null);
-      }, 300); // Slightly longer than the transition duration
+      }, 300);
     } catch (error) {
       console.error('Error moving task:', error);
+      setMovingTaskId(null);
     }
-  };
+  }, [activeTask, tasksByDay, moveTask, reorderTask]);
+  
+  const handleDragCancel = useCallback(() => {
+    setActiveTask(null);
+    setMovingTaskId(null);
+    setReceivingDayKey(null);
+  }, []);
   
   // Handle bulk move
   const handleBulkMoveClick = () => {
@@ -452,135 +449,151 @@ export const TaskListContainer: React.FC = () => {
   const sortedTasksByDay = sortTaskGroups(tasksByDay);
   
   return (
-    <div className={styles.taskListContainer}>
-      {/* Header with Select Mode Toggle */}
-      <div className={styles.taskListHeader}>
-        <button
-          className={`${styles.selectModeButton} ${isSelectMode ? styles.active : ''}`}
-          onClick={isSelectMode ? exitSelectMode : enterSelectMode}
-          aria-label={isSelectMode ? 'Exit select mode' : 'Enter select mode'}
-        >
-          {isSelectMode ? (
-            <>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              Cancel
-            </>
-          ) : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                <path d="M5 8L7 10L11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Select
-            </>
-          )}
-        </button>
-      </div>
-      
-      {hasMorePastTasks && (
-        <div
-          className={styles.loadMoreButton}
-          onClick={() => loadMorePastTasks()}
-          aria-disabled={isLoadingMore}
-        >
-          {isLoadingMore ? (
-            <>
-              <span className={styles.loadingIndicator}></span>
-              Loading...
-            </>
-          ) : 'Load earlier tasks'}
-        </div>
-      )}
-      
-      {dateArray.map((date, index) => {
-        const key = dateKeys[index];
-        const tasksForDay = sortedTasksByDay[key] || [];
-        const isToday = key === todayKey;
-        
-        return (
-          <div
-            key={key}
-            className={key === receivingDayKey ? styles.dayReceiving : ''}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
+      <div className={styles.taskListContainer}>
+        {/* Header with Select Mode Toggle */}
+        <div className={styles.taskListHeader}>
+          <button
+            className={`${styles.selectModeButton} ${isSelectMode ? styles.active : ''}`}
+            onClick={isSelectMode ? exitSelectMode : enterSelectMode}
+            aria-label={isSelectMode ? 'Exit select mode' : 'Enter select mode'}
           >
-            <DayContainer
-              key={key}
-              dayKey={key}
-              date={date}
-              isToday={isToday}
-              ref={isToday ? todayRef : undefined}
-              tasks={tasksForDay}
-              editingTaskId={editingTaskId}
-              creatingTaskForDay={creatingTaskForDay}
-              onToggleComplete={handleToggleComplete}
-              onEdit={handleEditTask}
-              onUpdate={handleUpdateTask}
-              onDelete={handleDeleteTask}
-              onAddTaskClick={handleAddTaskClick}
-              onCreateTask={handleCreateTask}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              movingTaskId={movingTaskId}
-              isSelectMode={isSelectMode}
-              selectedTaskIds={selectedTaskIds}
-              onTaskSelectionToggle={toggleTaskSelection}
-            />
-          </div>
-        );
-      })}
-      
-      {hasMoreFutureTasks && (
-        <div
-          className={styles.loadMoreButton}
-          onClick={() => loadMoreFutureTasks()}
-          aria-disabled={isLoadingMore}
-        >
-          {isLoadingMore ? (
-            <>
-              <span className={styles.loadingIndicator}></span>
-              Loading...
-            </>
-          ) : 'Load more future tasks'}
+            {isSelectMode ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                Cancel
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                  <path d="M5 8L7 10L11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Select
+              </>
+            )}
+          </button>
         </div>
-      )}
-      
-      {/* Floating "Jump to Today" button */}
-      {!isTodayVisible && !isSelectMode && (
-        <button
-          className={styles.jumpToTodayButton}
-          onClick={() => {
-            todayRef.current?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }}
-          aria-label="Jump to today's tasks"
-        >
-          <span className={styles.jumpToTodayIcon}>↑</span>
-          Today
-        </button>
-      )}
-      
-      {/* Bulk Action Bar - shown when in select mode */}
-      {isSelectMode && (
-        <BulkActionBar
+        
+        {hasMorePastTasks && (
+          <div
+            className={styles.loadMoreButton}
+            onClick={() => loadMorePastTasks()}
+            aria-disabled={isLoadingMore}
+          >
+            {isLoadingMore ? (
+              <>
+                <span className={styles.loadingIndicator}></span>
+                Loading...
+              </>
+            ) : 'Load earlier tasks'}
+          </div>
+        )}
+        
+        {dateArray.map((date, index) => {
+          const key = dateKeys[index];
+          const tasksForDay = sortedTasksByDay[key] || [];
+          const isToday = key === todayKey;
+          
+          return (
+            <div
+              key={key}
+              className={key === receivingDayKey ? styles.dayReceiving : ''}
+            >
+              <DayContainer
+                dayKey={key}
+                date={date}
+                isToday={isToday}
+                ref={isToday ? todayRef : undefined}
+                tasks={tasksForDay}
+                editingTaskId={editingTaskId}
+                creatingTaskForDay={creatingTaskForDay}
+                onToggleComplete={handleToggleComplete}
+                onEdit={handleEditTask}
+                onUpdate={handleUpdateTask}
+                onDelete={handleDeleteTask}
+                onAddTaskClick={handleAddTaskClick}
+                onCreateTask={handleCreateTask}
+                movingTaskId={movingTaskId}
+                isSelectMode={isSelectMode}
+                selectedTaskIds={selectedTaskIds}
+                onTaskSelectionToggle={toggleTaskSelection}
+              />
+            </div>
+          );
+        })}
+        
+        {hasMoreFutureTasks && (
+          <div
+            className={styles.loadMoreButton}
+            onClick={() => loadMoreFutureTasks()}
+            aria-disabled={isLoadingMore}
+          >
+            {isLoadingMore ? (
+              <>
+                <span className={styles.loadingIndicator}></span>
+                Loading...
+              </>
+            ) : 'Load more future tasks'}
+          </div>
+        )}
+        
+        {/* Floating "Jump to Today" button */}
+        {!isTodayVisible && !isSelectMode && (
+          <button
+            className={styles.jumpToTodayButton}
+            onClick={() => {
+              todayRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }}
+            aria-label="Jump to today's tasks"
+          >
+            <span className={styles.jumpToTodayIcon}>↑</span>
+            Today
+          </button>
+        )}
+        
+        {/* Bulk Action Bar - shown when in select mode */}
+        {isSelectMode && (
+          <BulkActionBar
+            selectedCount={selectedTaskIds.size}
+            onMoveClick={handleBulkMoveClick}
+            onCancel={exitSelectMode}
+            isMoving={isBulkMoving}
+          />
+        )}
+        
+        {/* Bulk Move Date Picker Modal */}
+        <BulkMoveDatePicker
+          isOpen={isDatePickerOpen}
+          onClose={() => setIsDatePickerOpen(false)}
+          onSelectDate={handleBulkMoveConfirm}
           selectedCount={selectedTaskIds.size}
-          onMoveClick={handleBulkMoveClick}
-          onCancel={exitSelectMode}
           isMoving={isBulkMoving}
         />
-      )}
+      </div>
       
-      {/* Bulk Move Date Picker Modal */}
-      <BulkMoveDatePicker
-        isOpen={isDatePickerOpen}
-        onClose={() => setIsDatePickerOpen(false)}
-        onSelectDate={handleBulkMoveConfirm}
-        selectedCount={selectedTaskIds.size}
-        isMoving={isBulkMoving}
-      />
-    </div>
+      {/* Drag Overlay - shows the dragged item */}
+      <DragOverlay>
+        {activeTask ? (
+          <div className={styles.dragOverlay}>
+            <div className={styles.dragOverlayContent}>
+              {activeTask.title}
+            </div>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };

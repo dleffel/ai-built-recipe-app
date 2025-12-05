@@ -2,17 +2,23 @@ import React from 'react';
 import { Task } from '../../services/todoApi';
 import styles from './TaskItem.module.css';
 
+// Type for drag handle props from @dnd-kit
+interface DragHandleProps {
+  [key: string]: any;
+}
+
 interface TaskItemProps {
   task: Task;
   onToggleComplete: () => void;
   onEdit: () => void;
-  onDragStart: (e: React.DragEvent) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
   isMoving?: boolean; // Flag to indicate if this task is being moved
   isSelectMode?: boolean; // Flag to indicate if bulk select mode is active
   isSelected?: boolean; // Flag to indicate if this task is selected
   onSelectionToggle?: () => void; // Callback to toggle selection
+  dragHandleProps?: DragHandleProps; // Props for @dnd-kit drag handle
 }
 
 export const TaskItem: React.FC<TaskItemProps> = ({
@@ -25,7 +31,8 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   isMoving = false,
   isSelectMode = false,
   isSelected = false,
-  onSelectionToggle
+  onSelectionToggle,
+  dragHandleProps
 }) => {
   // Handle click on selection checkbox
   const handleSelectionClick = (e: React.MouseEvent) => {
@@ -33,14 +40,17 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     onSelectionToggle?.();
   };
 
+  // Determine if we're using dnd-kit (dragHandleProps provided) or native drag
+  const useNativeDrag = !dragHandleProps && !isSelectMode;
+
   return (
     <div
       className={`${styles.taskItem} ${task.status === 'complete' ? styles.completed : ''} ${isMoving ? styles.moving : ''} ${isSelectMode ? styles.selectMode : ''} ${isSelected ? styles.selected : ''}`}
       data-id={task.id}
-      draggable={!isSelectMode}
-      onDragStart={isSelectMode ? undefined : onDragStart}
-      onDragOver={isSelectMode ? undefined : onDragOver}
-      onDrop={isSelectMode ? undefined : onDrop}
+      draggable={useNativeDrag}
+      onDragStart={useNativeDrag ? onDragStart : undefined}
+      onDragOver={useNativeDrag ? onDragOver : undefined}
+      onDrop={useNativeDrag ? onDrop : undefined}
     >
       {/* Selection checkbox - only visible in select mode */}
       {isSelectMode && (
@@ -54,7 +64,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         />
       )}
       
-      <div className={`${styles.dragHandle} ${isSelectMode ? styles.hidden : ''}`} title="Drag to reorder">
+      <div
+        className={`${styles.dragHandle} ${isSelectMode ? styles.hidden : ''}`}
+        title="Drag to reorder"
+        {...(dragHandleProps || {})}
+      >
         <div className={styles.dragHandleIcon}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="4" cy="4" r="1.5" fill="currentColor" />
