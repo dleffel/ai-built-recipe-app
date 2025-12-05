@@ -62,7 +62,6 @@ export const TaskListContainer: React.FC = () => {
   
   // State for @dnd-kit drag and drop
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [activeDayKey, setActiveDayKey] = useState<string | null>(null);
   
   // State to track if today's tasks are visible
   const [isTodayVisible, setIsTodayVisible] = useState(true);
