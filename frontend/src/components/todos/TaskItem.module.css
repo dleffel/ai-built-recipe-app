@@ -392,3 +392,54 @@
     height: 10px;
   }
 }
+
+/* Touch device specific styles */
+@media (pointer: coarse) {
+  .taskItem {
+    padding: 8px 10px;
+    min-height: 44px; /* Minimum touch target size */
+    touch-action: none; /* Prevent browser handling of touch events during drag */
+  }
+  
+  .dragHandle {
+    opacity: 0.7; /* Always visible on touch devices */
+    width: 28px;
+    height: 28px;
+    margin-right: 6px;
+    padding: 4px;
+    background-color: var(--button-secondary-bg);
+    border-radius: var(--radius-sm);
+  }
+  
+  .dragHandle:active {
+    background-color: var(--button-primary-bg);
+    color: white;
+  }
+  
+  .dragHandleIcon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .checkbox {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .actionButton {
+    min-width: 36px;
+    height: 36px;
+  }
+  
+  .selectionCheckbox {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Dragging state styles */
+.taskItem.dragging {
+  opacity: 0.5;
+  background-color: var(--feedback-info-bg);
+  border: 2px dashed var(--button-primary-bg);
+}

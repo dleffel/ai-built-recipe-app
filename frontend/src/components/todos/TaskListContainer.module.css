@@ -381,3 +381,58 @@
     font-size: 14px;
   }
 }
+
+/* Drag Overlay styles for @dnd-kit */
+.dragOverlay {
+  background-color: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 8px 12px;
+  border: 2px solid var(--button-primary-bg);
+  max-width: 300px;
+  opacity: 0.95;
+  cursor: grabbing;
+  transform: rotate(2deg);
+}
+
+.dragOverlayContent {
+  font-size: 13px;
+  color: var(--todo-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Day receiving animation - enhanced for touch feedback */
+.dayReceiving {
+  background-color: var(--feedback-info-bg);
+  transition: background-color var(--transition-normal);
+  box-shadow: var(--shadow-md);
+  border: 2px dashed var(--button-primary-bg);
+  border-radius: var(--radius-md);
+}
+
+/* Touch-specific styles */
+@media (pointer: coarse) {
+  /* Larger touch targets on touch devices */
+  .dayContainer {
+    padding: 12px;
+  }
+  
+  /* Make drag handles more visible on touch devices */
+  .taskItem .dragHandle {
+    opacity: 0.6;
+    width: 24px;
+    height: 24px;
+  }
+  
+  /* Increase tap target size for buttons */
+  .headerAddButton {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .selectModeButton {
+    padding: 10px 16px;
+  }
+}
