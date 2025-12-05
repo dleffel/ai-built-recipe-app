@@ -268,7 +268,6 @@ export const TaskListContainer: React.FC = () => {
     
     if (foundTask) {
       setActiveTask(foundTask);
-      setActiveDayKey(foundDayKey);
       setMovingTaskId(taskId);
     }
   }, [tasksByDay]);
@@ -299,7 +298,6 @@ export const TaskListContainer: React.FC = () => {
     
     // Reset visual states
     setActiveTask(null);
-    setActiveDayKey(null);
     setReceivingDayKey(null);
     
     if (!over || !activeTask) {
@@ -425,7 +423,6 @@ export const TaskListContainer: React.FC = () => {
   
   const handleDragCancel = useCallback(() => {
     setActiveTask(null);
-    setActiveDayKey(null);
     setMovingTaskId(null);
     setReceivingDayKey(null);
   }, []);
