@@ -27,7 +27,7 @@
   
   /* Status Colors */
   --status-complete-color: #64748B;
-  --status-incomplete-color: var(--color-text, #F1F5F9);
+  --status-incomplete-color: var(--color-text, #F9FAFB);
   
   /* Interactive Elements */
   --button-primary-bg: #3B82F6;
