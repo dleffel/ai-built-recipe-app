@@ -219,13 +219,16 @@ const deleteAccount: RequestHandler = async (req, res) => {
   }
 };
 
-// Apply auth middleware to all routes except callback
+// OAuth callback route - must be BEFORE auth middleware since users
+// are redirected here from Google OAuth and won't have a session yet
+router.get('/callback', handleCallback);
+
+// Apply auth middleware to all remaining routes
 router.use(requireAuth);
 
-// Routes
+// Protected routes (require authentication)
 router.get('/accounts', listAccounts);
 router.post('/accounts/connect', initiateConnect);
-router.get('/callback', handleCallback);
 router.post('/accounts/:id/activate', activateAccount);
 router.post('/accounts/:id/deactivate', deactivateAccount);
 router.delete('/accounts/:id', deleteAccount);
