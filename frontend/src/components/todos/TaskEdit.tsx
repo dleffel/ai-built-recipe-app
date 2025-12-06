@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import styles from './TaskEdit.module.css';
 import { toDateStringPT, createPTDate } from '../../utils/timezoneUtils';
 import { TaskCategory } from '../../types/task';
+import { Button } from '../ui/Button';
+import styles from './TaskEdit.module.css';
 
 interface TaskEditProps {
   id: string;
@@ -177,37 +178,42 @@ export const TaskEdit: React.FC<TaskEditProps> = ({
         )}
         
         <div className={styles.buttonRow}>
-          <button
-            type="button"
-            className={`${styles.button} ${styles.deleteButton} ${isDeleting ? styles.loadingButton : ''}`}
+          <Button
+            variant="danger"
+            size="sm"
             onClick={handleDelete}
             disabled={isDeleting}
+            loading={isDeleting}
+            leftIcon={
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5.5 7V12H6.5V7H5.5ZM9.5 7V12H10.5V7H9.5Z" fill="currentColor"/>
+                <path d="M2 3V4H3V14C3 14.2652 3.10536 14.5196 3.29289 14.7071C3.48043 14.8946 3.73478 15 4 15H12C12.2652 15 12.5196 14.8946 12.7071 14.7071C12.8946 14.5196 13 14.2652 13 14V4H14V3H2ZM4 14V4H12V14H4Z" fill="currentColor"/>
+                <path d="M6 1H10V2H6V1Z" fill="currentColor"/>
+              </svg>
+            }
             aria-label="Delete task"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5.5 7V12H6.5V7H5.5ZM9.5 7V12H10.5V7H9.5Z" fill="currentColor"/>
-              <path d="M2 3V4H3V14C3 14.2652 3.10536 14.5196 3.29289 14.7071C3.48043 14.8946 3.73478 15 4 15H12C12.2652 15 12.5196 14.8946 12.7071 14.7071C12.8946 14.5196 13 14.2652 13 14V4H14V3H2ZM4 14V4H12V14H4Z" fill="currentColor"/>
-              <path d="M6 1H10V2H6V1Z" fill="currentColor"/>
-            </svg>
             Delete
-          </button>
+          </Button>
           
           <div className={styles.actionButtons}>
-            <button
-              type="button"
-              className={`${styles.button} ${styles.cancelButton}`}
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={onCancel}
               disabled={isSubmitting || isDeleting}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
               type="submit"
-              className={`${styles.button} ${styles.saveButton} ${isSubmitting ? styles.loadingButton : ''}`}
               disabled={!title.trim() || isSubmitting || isDeleting}
+              loading={isSubmitting}
             >
               Save
-            </button>
+            </Button>
           </div>
         </div>
       </form>

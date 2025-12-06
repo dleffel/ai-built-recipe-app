@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Recipe, CreateRecipeDTO } from '../../types/recipe';
 import { recipeApi } from '../../services/api';
 import { URLImportModal } from './URLImportModal';
+import { Button } from '../ui/Button';
 import styles from './RecipeForm.module.css';
 
 interface RecipeFormProps {
@@ -114,14 +115,14 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
       <form onSubmit={handleSubmit} className={styles.form}>
         {!recipe && (
           <div className={styles.importSection}>
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="md"
               onClick={() => setShowImportModal(true)}
-              className={styles.importButton}
               disabled={loading}
             >
               Import from URL
-            </button>
+            </Button>
           </div>
         )}
 
@@ -159,23 +160,23 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
                 placeholder="Enter an ingredient"
                 required
               />
-              <button
-                type="button"
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => handleRemoveIngredient(index)}
-                className={styles.removeButton}
                 disabled={ingredients.length === 1}
               >
                 Remove
-              </button>
+              </Button>
             </div>
           ))}
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="md"
             onClick={handleAddIngredient}
-            className={styles.addButton}
           >
             Add Ingredient
-          </button>
+          </Button>
         </div>
 
         <div className={styles.field}>
@@ -190,23 +191,23 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
                 rows={2}
                 required
               />
-              <button
-                type="button"
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => handleRemoveInstruction(index)}
-                className={styles.removeButton}
                 disabled={instructions.length === 1}
               >
                 Remove
-              </button>
+              </Button>
             </div>
           ))}
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="md"
             onClick={handleAddInstruction}
-            className={styles.addButton}
           >
             Add Step
-          </button>
+          </Button>
         </div>
 
         <div className={styles.row}>
@@ -259,21 +260,23 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         </div>
 
         <div className={styles.buttons}>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="md"
             onClick={onCancel}
-            className={styles.cancelButton}
             disabled={loading}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
             type="submit"
-            className={styles.submitButton}
             disabled={loading}
+            loading={loading}
           >
-            {loading ? 'Saving...' : recipe ? 'Update Recipe' : 'Create Recipe'}
-          </button>
+            {loading ? 'Saving...' : (recipe ? 'Update Recipe' : 'Create Recipe')}
+          </Button>
         </div>
       </form>
     </div>

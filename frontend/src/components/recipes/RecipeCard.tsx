@@ -1,5 +1,6 @@
 import React from 'react';
 import { Recipe } from '../../types/recipe';
+import { IconButton } from '../ui/Button';
 import styles from './RecipeCard.module.css';
 
 interface RecipeCardProps {
@@ -48,22 +49,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
       {(onEdit || onDelete) && (
         <div className={styles.actions}>
           {onEdit && (
-            <button
+            <IconButton
+              icon={<span>✎</span>}
               onClick={handleEdit}
-              className={`${styles.button} ${styles.editButton}`}
+              variant="ghost"
+              size="sm"
               aria-label="Edit recipe"
-            >
-              ✎
-            </button>
+            />
           )}
           {onDelete && (
-            <button
+            <IconButton
+              icon={<span>✕</span>}
               onClick={handleDelete}
-              className={`${styles.button} ${styles.deleteButton}`}
+              variant="danger"
+              size="sm"
               aria-label="Delete recipe"
-            >
-              ✕
-            </button>
+            />
           )}
         </div>
       )}

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Recipe } from '../../types/recipe';
 import { recipeApi } from '../../services/api';
 import { RecipeCard } from './RecipeCard';
+import { Button } from '../ui/Button';
 import styles from './RecipeList.module.css';
 
 interface RecipeListProps {
@@ -79,9 +80,9 @@ export const RecipeList: React.FC<RecipeListProps> = ({
     return (
       <div className={styles.error}>
         <p>{error}</p>
-        <button onClick={() => loadRecipes(0)} className={styles.retryButton}>
+        <Button variant="primary" size="md" onClick={() => loadRecipes(0)}>
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -118,12 +119,14 @@ export const RecipeList: React.FC<RecipeListProps> = ({
       )}
       
       {!loading && hasMore && (
-        <button
+        <Button
+          variant="secondary"
+          size="md"
           onClick={handleLoadMore}
-          className={styles.loadMoreButton}
+          fullWidth
         >
           Load More
-        </button>
+        </Button>
       )}
       
       {!loading && recipes.length === 0 && (

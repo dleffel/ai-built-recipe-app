@@ -17,6 +17,7 @@ import { TaskCategory } from '../../types/task';
 import { DayContainer } from './DayContainer';
 import { BulkActionBar } from './BulkActionBar';
 import { BulkMoveDatePicker } from './BulkMoveDatePicker';
+import { Button } from '../ui/Button';
 import { calculateDisplayOrder, sortTaskGroups } from '../../utils/taskUtils';
 import { createPTDate, toDateStringPT } from '../../utils/timezoneUtils';
 import styles from './TaskListContainer.module.css';
@@ -460,43 +461,39 @@ export const TaskListContainer: React.FC = () => {
       <div className={styles.taskListContainer}>
         {/* Header with Select Mode Toggle */}
         <div className={styles.taskListHeader}>
-          <button
-            className={`${styles.selectModeButton} ${isSelectMode ? styles.active : ''}`}
+          <Button
+            variant={isSelectMode ? 'secondary' : 'ghost'}
+            size="sm"
             onClick={isSelectMode ? exitSelectMode : enterSelectMode}
-            aria-label={isSelectMode ? 'Exit select mode' : 'Enter select mode'}
-          >
-            {isSelectMode ? (
-              <>
+            leftIcon={
+              isSelectMode ? (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
-                Cancel
-              </>
-            ) : (
-              <>
+              ) : (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
                   <path d="M5 8L7 10L11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Select
-              </>
-            )}
-          </button>
+              )
+            }
+            aria-label={isSelectMode ? 'Exit select mode' : 'Enter select mode'}
+          >
+            {isSelectMode ? 'Cancel' : 'Select'}
+          </Button>
         </div>
         
         {hasMorePastTasks && (
-          <div
-            className={styles.loadMoreButton}
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => loadMorePastTasks()}
-            aria-disabled={isLoadingMore}
+            disabled={isLoadingMore}
+            loading={isLoadingMore}
+            fullWidth
           >
-            {isLoadingMore ? (
-              <>
-                <span className={styles.loadingIndicator}></span>
-                Loading...
-              </>
-            ) : 'Load earlier tasks'}
-          </div>
+            {isLoadingMore ? 'Loading...' : 'Load earlier tasks'}
+          </Button>
         )}
         
         {dateArray.map((date, index) => {
@@ -533,35 +530,36 @@ export const TaskListContainer: React.FC = () => {
         })}
         
         {hasMoreFutureTasks && (
-          <div
-            className={styles.loadMoreButton}
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => loadMoreFutureTasks()}
-            aria-disabled={isLoadingMore}
+            disabled={isLoadingMore}
+            loading={isLoadingMore}
+            fullWidth
           >
-            {isLoadingMore ? (
-              <>
-                <span className={styles.loadingIndicator}></span>
-                Loading...
-              </>
-            ) : 'Load more future tasks'}
-          </div>
+            {isLoadingMore ? 'Loading...' : 'Load more future tasks'}
+          </Button>
         )}
         
         {/* Floating "Jump to Today" button */}
         {!isTodayVisible && !isSelectMode && (
-          <button
-            className={styles.jumpToTodayButton}
+          <Button
+            variant="primary"
+            size="sm"
+            pill
             onClick={() => {
               todayRef.current?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
               });
             }}
+            leftIcon={<span>↑</span>}
+            className={styles.jumpToTodayButton}
             aria-label="Jump to today's tasks"
           >
-            <span className={styles.jumpToTodayIcon}>↑</span>
             Today
-          </button>
+          </Button>
         )}
         
         {/* Bulk Action Bar - shown when in select mode */}

@@ -1,0 +1,44 @@
+/* Button Design Tokens - Single source of truth for button styling */
+
+:root {
+  /* Button Heights */
+  --btn-height-sm: 28px;
+  --btn-height-md: 36px;
+  --btn-height-lg: 44px;
+  
+  /* Button Padding */
+  --btn-padding-sm: 4px 10px;
+  --btn-padding-md: 6px 16px;
+  --btn-padding-lg: 10px 24px;
+  
+  /* Icon Button Sizes (square) */
+  --btn-icon-sm: 28px;
+  --btn-icon-md: 36px;
+  --btn-icon-lg: 44px;
+  
+  /* Border Radius */
+  --btn-radius: 6px;
+  --btn-radius-pill: 9999px;
+  
+  /* Transitions */
+  --btn-transition: all 150ms ease;
+  
+  /* Disabled State */
+  --btn-disabled-opacity: 0.6;
+  
+  /* Focus Ring */
+  --btn-focus-ring: 0 0 0 2px var(--color-accent-light);
+  
+  /* Font Sizes */
+  --btn-font-sm: 12px;
+  --btn-font-md: 14px;
+  --btn-font-lg: 16px;
+  
+  /* Icon Sizes */
+  --btn-icon-size-sm: 14px;
+  --btn-icon-size-md: 16px;
+  --btn-icon-size-lg: 20px;
+  
+  /* Gap between icon and text */
+  --btn-gap: 8px;
+}
