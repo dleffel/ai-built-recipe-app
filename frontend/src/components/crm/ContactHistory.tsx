@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Contact, ContactVersion, ContactChanges } from '../../types/contact';
 import { contactApi } from '../../services/contactApi';
 import { ContactVersionDiff } from './ContactVersionDiff';
+import { Button, IconButton } from '../ui/Button';
 import styles from './ContactHistory.module.css';
 
 interface ContactHistoryProps {
@@ -122,23 +123,29 @@ export const ContactHistory: React.FC<ContactHistoryProps> = ({
                   {getChangeSummary(version.changes)}
                 </div>
                 <div className={styles.versionActions}>
-                  <button
-                    className={styles.expandButton}
+                  <IconButton
+                    icon={<span>{isExpanded ? '▼' : '▶'}</span>}
+                    variant="ghost"
+                    size="sm"
                     aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-                  >
-                    {isExpanded ? '▼' : '▶'}
-                  </button>
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpanded(version.version);
+                    }}
+                  />
                   {!isLatest && (
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRestore(version.version);
                       }}
-                      className={styles.restoreButton}
                       disabled={restoring !== null}
+                      loading={restoring === version.version}
                     >
                       {restoring === version.version ? 'Restoring...' : 'Restore'}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>

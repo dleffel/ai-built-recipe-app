@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button, IconButton } from '../ui/Button';
 import styles from './MultiValueInput.module.css';
 
 interface MultiValueItem {
@@ -76,23 +77,24 @@ export const MultiValueInput: React.FC<MultiValueInputProps> = ({
               <span className={styles.primaryBadge}>Primary</span>
             )}
             {!item.isPrimary && items.length > 1 && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => handleSetPrimary(index)}
                 className={styles.setPrimaryButton}
-                title="Set as primary"
               >
                 Set Primary
-              </button>
+              </Button>
             )}
-            <button
-              type="button"
+            <IconButton
+              icon={<span>&times;</span>}
+              variant="ghost"
+              size="sm"
               onClick={() => handleRemove(index)}
-              className={styles.removeButton}
               aria-label={`Remove ${fieldName}`}
-            >
-              &times;
-            </button>
+              className={styles.removeButton}
+            />
           </div>
         ))}
       </div>
@@ -117,14 +119,15 @@ export const MultiValueInput: React.FC<MultiValueInputProps> = ({
             </option>
           ))}
         </select>
-        <button
+        <Button
           type="button"
+          variant="primary"
+          size="md"
           onClick={handleAdd}
-          className={styles.addButton}
           disabled={!newValue.trim()}
         >
           Add
-        </button>
+        </Button>
       </div>
     </div>
   );

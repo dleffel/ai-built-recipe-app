@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Contact } from '../../types/contact';
 import { ContactHistory } from './ContactHistory';
+import { Button } from '../ui/Button';
 import styles from './ContactDetail.module.css';
 
 interface ContactDetailProps {
@@ -46,19 +47,20 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <button onClick={onBack} className={styles.backButton}>
+        <Button variant="secondary" size="md" onClick={onBack}>
           &larr; Back
-        </button>
+        </Button>
         <div className={styles.actions}>
-          <button onClick={onEdit} className={styles.editButton}>
+          <Button variant="primary" size="md" onClick={onEdit}>
             Edit
-          </button>
-          <button 
-            onClick={() => setShowDeleteConfirm(true)} 
-            className={styles.deleteButton}
+          </Button>
+          <Button 
+            variant="danger" 
+            size="md"
+            onClick={() => setShowDeleteConfirm(true)}
           >
             Delete
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -194,20 +196,23 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
               Are you sure you want to delete {fullName}? This action cannot be undone.
             </p>
             <div className={styles.modalActions}>
-              <button
+              <Button
+                variant="secondary"
+                size="md"
                 onClick={() => setShowDeleteConfirm(false)}
-                className={styles.modalCancel}
                 disabled={deleting}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
                 onClick={handleDelete}
-                className={styles.modalDelete}
                 disabled={deleting}
+                loading={deleting}
               >
                 {deleting ? 'Deleting...' : 'Delete'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Contact, CreateContactDTO, EMAIL_LABELS, PHONE_LABELS } from '../../types/contact';
 import { MultiValueInput } from './MultiValueInput';
+import { Button } from '../ui/Button';
 import styles from './ContactForm.module.css';
 
 interface ContactFormProps {
@@ -203,21 +204,24 @@ export const ContactForm: React.FC<ContactFormProps> = ({
       </div>
 
       <div className={styles.actions}>
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="md"
           onClick={onCancel}
-          className={styles.cancelButton}
           disabled={submitting}
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className={styles.submitButton}
+          variant="primary"
+          size="md"
           disabled={submitting}
+          loading={submitting}
         >
           {submitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Contact'}
-        </button>
+        </Button>
       </div>
     </form>
   );

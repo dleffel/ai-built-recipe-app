@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Contact, ContactListParams } from '../../types/contact';
 import { contactApi } from '../../services/contactApi';
 import { ContactCard } from './ContactCard';
+import { Button, IconButton } from '../ui/Button';
 import styles from './ContactList.module.css';
 
 interface ContactListProps {
@@ -90,22 +91,22 @@ export const ContactList: React.FC<ContactListProps> = ({
             className={styles.searchInput}
           />
           {searchQuery && (
-            <button 
-              type="button" 
+            <IconButton
+              icon={<span>&times;</span>}
+              variant="ghost"
+              size="sm"
               onClick={handleClearSearch}
-              className={styles.clearButton}
               aria-label="Clear search"
-            >
-              &times;
-            </button>
+              className={styles.clearButton}
+            />
           )}
-          <button type="submit" className={styles.searchButton}>
+          <Button type="submit" variant="primary" size="md">
             Search
-          </button>
+          </Button>
         </form>
-        <button onClick={onCreateClick} className={styles.createButton}>
+        <Button variant="primary" size="md" onClick={onCreateClick}>
           + New Contact
-        </button>
+        </Button>
       </div>
 
       {loading && contacts.length === 0 ? (
@@ -119,9 +120,9 @@ export const ContactList: React.FC<ContactListProps> = ({
           ) : (
             <>
               <p>No contacts yet</p>
-              <button onClick={onCreateClick} className={styles.emptyCreateButton}>
+              <Button variant="primary" size="md" onClick={onCreateClick}>
                 Create your first contact
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -143,23 +144,25 @@ export const ContactList: React.FC<ContactListProps> = ({
                 Showing {pagination.skip + 1}-{Math.min(pagination.skip + pagination.take, pagination.total)} of {pagination.total} contacts
               </span>
               <div className={styles.paginationButtons}>
-                <button
+                <IconButton
+                  icon={<span>&lt;</span>}
+                  variant="ghost"
+                  size="sm"
                   onClick={handlePrevPage}
                   disabled={pagination.skip === 0}
-                  className={styles.pageButton}
-                >
-                  &lt;
-                </button>
+                  aria-label="Previous page"
+                />
                 <span className={styles.pageNumber}>
                   {currentPage} / {totalPages}
                 </span>
-                <button
+                <IconButton
+                  icon={<span>&gt;</span>}
+                  variant="ghost"
+                  size="sm"
                   onClick={handleNextPage}
                   disabled={pagination.skip + pagination.take >= pagination.total}
-                  className={styles.pageButton}
-                >
-                  &gt;
-                </button>
+                  aria-label="Next page"
+                />
               </div>
             </div>
           )}
