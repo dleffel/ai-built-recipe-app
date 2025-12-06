@@ -199,6 +199,15 @@
   height: var(--btn-icon-size-lg);
 }
 
+/* Icon wrapper styles */
+.leftIcon,
+.rightIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .lg {
