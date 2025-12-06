@@ -38,6 +38,7 @@ export class ContactService extends BaseService {
         company: data.company,
         title: data.title,
         notes: data.notes,
+        linkedInUrl: data.linkedInUrl,
         userId,
         emails: data.emails && data.emails.length > 0 ? {
           create: data.emails.map((e, index) => ({
@@ -175,6 +176,7 @@ export class ContactService extends BaseService {
     if (data.company !== undefined) updateData.company = data.company;
     if (data.title !== undefined) updateData.title = data.title;
     if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.linkedInUrl !== undefined) updateData.linkedInUrl = data.linkedInUrl;
 
     // Wrap all database operations in a transaction to ensure atomicity
     const updatedContact = await this.prisma.$transaction(async (tx) => {
@@ -325,6 +327,7 @@ export class ContactService extends BaseService {
       company: snapshot.company,
       title: snapshot.title,
       notes: snapshot.notes,
+      linkedInUrl: snapshot.linkedInUrl,
       emails: snapshot.emails,
       phones: snapshot.phones,
     });
@@ -354,6 +357,7 @@ export class ContactService extends BaseService {
       company: contact.company,
       title: contact.title,
       notes: contact.notes,
+      linkedInUrl: contact.linkedInUrl,
       emails: contact.emails.map(e => ({
         email: e.email,
         label: e.label,
@@ -383,6 +387,7 @@ export class ContactService extends BaseService {
       'company',
       'title',
       'notes',
+      'linkedInUrl',
     ];
 
     for (const field of simpleFields) {

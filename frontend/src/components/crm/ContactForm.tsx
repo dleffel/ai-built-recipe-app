@@ -31,6 +31,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
   const [lastName, setLastName] = useState(contact?.lastName || '');
   const [company, setCompany] = useState(contact?.company || '');
   const [title, setTitle] = useState(contact?.title || '');
+  const [linkedInUrl, setLinkedInUrl] = useState(contact?.linkedInUrl || '');
   const [notes, setNotes] = useState(contact?.notes || '');
   const [emails, setEmails] = useState<EmailItem[]>(
     contact?.emails.map(e => ({
@@ -68,6 +69,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
         lastName: lastName.trim(),
         company: company.trim() || undefined,
         title: title.trim() || undefined,
+        linkedInUrl: linkedInUrl.trim() || undefined,
         notes: notes.trim() || undefined,
         emails: emails.map(e => ({
           email: e.value,
@@ -155,6 +157,22 @@ export const ContactForm: React.FC<ContactFormProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={styles.input}
+            />
+          </div>
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.field}>
+            <label htmlFor="linkedInUrl" className={styles.label}>
+              LinkedIn Profile URL
+            </label>
+            <input
+              id="linkedInUrl"
+              type="url"
+              value={linkedInUrl}
+              onChange={(e) => setLinkedInUrl(e.target.value)}
+              className={styles.input}
+              placeholder="https://linkedin.com/in/username"
             />
           </div>
         </div>

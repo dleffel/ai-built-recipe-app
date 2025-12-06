@@ -143,6 +143,25 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
               </section>
             )}
 
+            {contact.linkedInUrl && (
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>Social Profiles</h2>
+                <div className={styles.infoGroup}>
+                  <h3 className={styles.infoLabel}>LinkedIn</h3>
+                  <div className={styles.infoItem}>
+                    <a
+                      href={contact.linkedInUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.link}
+                    >
+                      {contact.linkedInUrl}
+                    </a>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {contact.notes && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Notes</h2>

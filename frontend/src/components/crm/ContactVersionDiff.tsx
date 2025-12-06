@@ -37,6 +37,12 @@ export const ContactVersionDiff: React.FC<ContactVersionDiffProps> = ({
                 <span className={styles.snapshotValue}>{snapshot.title}</span>
               </div>
             )}
+            {snapshot.linkedInUrl && (
+              <div className={styles.snapshotItem}>
+                <span className={styles.snapshotLabel}>LinkedIn:</span>
+                <span className={styles.snapshotValue}>{snapshot.linkedInUrl}</span>
+              </div>
+            )}
             {snapshot.emails.length > 0 && (
               <div className={styles.snapshotItem}>
                 <span className={styles.snapshotLabel}>Emails:</span>
@@ -96,6 +102,7 @@ export const ContactVersionDiff: React.FC<ContactVersionDiffProps> = ({
       lastName: 'Last Name',
       company: 'Company',
       title: 'Title',
+      linkedInUrl: 'LinkedIn URL',
       notes: 'Notes',
       emails: 'Emails',
       phones: 'Phones',
