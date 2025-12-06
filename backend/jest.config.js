@@ -19,7 +19,8 @@ module.exports = {
     'src/**/*.{js,ts}',
     '!src/config/**',
     '!src/types/**',
-    '!src/**/*.d.ts'
+    '!src/**/*.d.ts',
+    '!src/debug-timezone-test.ts'
   ],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   testMatch: ['**/__tests__/**/*.test.ts'],
