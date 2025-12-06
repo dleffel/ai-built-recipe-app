@@ -6,10 +6,13 @@ import authRoutes, { validateDevAuthToken } from './routes/auth';
 import recipeRoutes from './routes/recipes';
 import taskRoutes from './routes/tasks';
 import contactRoutes from './routes/contacts';
+import gmailRoutes from './routes/gmail';
+import webhookRoutes from './routes/webhooks';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
 import { UserService } from './services/userService';
 import { createPTDate, toDateStringPT, getEndOfDayPT } from './utils/timezoneUtils';
+import { GmailWatchService } from './services/gmailWatchService';
 
 const app = express();
 
@@ -61,9 +64,40 @@ const scheduleTaskRollover = () => {
   console.log(`Task rollover scheduled for ${midnightPT.toISOString()} (in ${Math.floor(msUntilMidnight / 60000)} minutes)`);
 };
 
+// Gmail watch renewal scheduler
+// Gmail watches expire after 7 days, so we check hourly for expiring watches
+const scheduleGmailWatchRenewal = () => {
+  const RENEWAL_INTERVAL = 60 * 60 * 1000; // 1 hour
+  
+  const renewWatches = async () => {
+    try {
+      console.log('Checking for expiring Gmail watches...');
+      const renewedCount = await GmailWatchService.renewExpiringWatches();
+      if (renewedCount > 0) {
+        console.log(`Renewed ${renewedCount} Gmail watches`);
+      }
+    } catch (error) {
+      console.error('Error renewing Gmail watches:', error);
+    }
+  };
+
+  // Run immediately on startup to catch any missed renewals
+  renewWatches();
+  
+  // Then run every hour
+  setInterval(renewWatches, RENEWAL_INTERVAL);
+  
+  console.log('Gmail watch renewal scheduler started (runs every hour)');
+};
+
 // Start the task rollover scheduler (but not in test environment)
 if (process.env.NODE_ENV !== 'test') {
   scheduleTaskRollover();
+  
+  // Start Gmail watch renewal scheduler if Gmail integration is configured
+  if (process.env.GMAIL_PUBSUB_TOPIC) {
+    scheduleGmailWatchRenewal();
+  }
 }
 
 // Trust proxy - needed for secure cookies behind a proxy
@@ -321,6 +355,12 @@ app.use('/api/tasks', taskRoutes);
 
 // Contact routes
 app.use('/api/contacts', contactRoutes);
+
+// Gmail routes
+app.use('/api/gmail', gmailRoutes);
+
+// Webhook routes (no auth required for Pub/Sub callbacks)
+app.use('/webhooks', webhookRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
