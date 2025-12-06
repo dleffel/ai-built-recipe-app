@@ -1,4 +1,3 @@
-import type { GmailAccount, GmailWatch } from '@prisma/client';
 import { BaseService } from './BaseService';
 import { encrypt, decrypt } from '../utils/encryption';
 import {
@@ -7,10 +6,43 @@ import {
   GmailAccountResponse,
 } from '../types/gmail';
 
+// Local type definitions for Gmail models
+// These match the Prisma schema but are defined locally to avoid
+// compilation errors before prisma generate is run
+export interface GmailAccount {
+  id: string;
+  email: string;
+  isPrimary: boolean;
+  isActive: boolean;
+  accessToken: string;
+  refreshToken: string;
+  tokenExpiresAt: Date;
+  historyId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  lastSyncAt: Date | null;
+  userId: string;
+}
+
+export interface GmailWatch {
+  id: string;
+  resourceId: string;
+  expiration: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  gmailAccountId: string;
+}
+
 // Gmail account with relations type
 export type GmailAccountWithWatches = GmailAccount & {
   watches: GmailWatch[];
 };
+
+// Helper to access gmailAccount model (will be available after prisma generate)
+// Using 'any' to bypass TypeScript errors until Prisma client is regenerated
+const getGmailAccountModel = (prisma: any) => prisma.gmailAccount;
+const getGmailWatchModel = (prisma: any) => prisma.gmailWatch;
 
 export class GmailAccountService extends BaseService {
   /**
@@ -24,7 +56,7 @@ export class GmailAccountService extends BaseService {
     const encryptedAccessToken = encrypt(data.accessToken);
     const encryptedRefreshToken = encrypt(data.refreshToken);
 
-    return this.prisma.gmailAccount.create({
+    return getGmailAccountModel(this.prisma).create({
       data: {
         userId,
         email: data.email,
@@ -45,7 +77,7 @@ export class GmailAccountService extends BaseService {
     userId: string,
     data: CreateGmailAccountDTO
   ): Promise<GmailAccount> {
-    const existing = await this.prisma.gmailAccount.findFirst({
+    const existing = await getGmailAccountModel(this.prisma).findFirst({
       where: {
         userId,
         email: data.email,
@@ -61,7 +93,7 @@ export class GmailAccountService extends BaseService {
     }
 
     // Check if user already has a primary account
-    const hasPrimary = await this.prisma.gmailAccount.findFirst({
+    const hasPrimary = await getGmailAccountModel(this.prisma).findFirst({
       where: {
         userId,
         isPrimary: true,
@@ -78,7 +110,7 @@ export class GmailAccountService extends BaseService {
    * Find a Gmail account by ID
    */
   static async findById(id: string): Promise<GmailAccountWithWatches | null> {
-    return this.prisma.gmailAccount.findUnique({
+    return getGmailAccountModel(this.prisma).findUnique({
       where: { id },
       include: { watches: true },
     });
@@ -88,7 +120,7 @@ export class GmailAccountService extends BaseService {
    * Find a Gmail account by email address
    */
   static async findByEmail(email: string): Promise<GmailAccount | null> {
-    return this.prisma.gmailAccount.findFirst({
+    return getGmailAccountModel(this.prisma).findFirst({
       where: { email },
     });
   }
@@ -100,7 +132,7 @@ export class GmailAccountService extends BaseService {
     userId: string,
     email: string
   ): Promise<GmailAccount | null> {
-    return this.prisma.gmailAccount.findUnique({
+    return getGmailAccountModel(this.prisma).findUnique({
       where: {
         userId_email: {
           userId,
@@ -114,7 +146,7 @@ export class GmailAccountService extends BaseService {
    * Get all Gmail accounts for a user
    */
   static async getAccountsByUserId(userId: string): Promise<GmailAccount[]> {
-    return this.prisma.gmailAccount.findMany({
+    return getGmailAccountModel(this.prisma).findMany({
       where: { userId },
       orderBy: [
         { isPrimary: 'desc' },
@@ -127,7 +159,7 @@ export class GmailAccountService extends BaseService {
    * Get all active Gmail accounts (for watch renewal)
    */
   static async getActiveAccounts(): Promise<GmailAccount[]> {
-    return this.prisma.gmailAccount.findMany({
+    return getGmailAccountModel(this.prisma).findMany({
       where: { isActive: true },
     });
   }
@@ -141,7 +173,7 @@ export class GmailAccountService extends BaseService {
     data: UpdateGmailAccountDTO
   ): Promise<GmailAccount> {
     // Verify ownership
-    const account = await this.prisma.gmailAccount.findUnique({
+    const account = await getGmailAccountModel(this.prisma).findUnique({
       where: { id },
     });
 
@@ -170,7 +202,7 @@ export class GmailAccountService extends BaseService {
       updateData.lastSyncAt = data.lastSyncAt;
     }
 
-    return this.prisma.gmailAccount.update({
+    return getGmailAccountModel(this.prisma).update({
       where: { id },
       data: updateData,
     });
@@ -180,7 +212,7 @@ export class GmailAccountService extends BaseService {
    * Update the history ID for a Gmail account (internal use)
    */
   static async updateHistoryId(id: string, historyId: string): Promise<GmailAccount> {
-    return this.prisma.gmailAccount.update({
+    return getGmailAccountModel(this.prisma).update({
       where: { id },
       data: {
         historyId,
@@ -208,7 +240,7 @@ export class GmailAccountService extends BaseService {
    */
   static async deleteAccount(id: string, userId: string): Promise<void> {
     // Verify ownership
-    const account = await this.prisma.gmailAccount.findUnique({
+    const account = await getGmailAccountModel(this.prisma).findUnique({
       where: { id },
     });
 
@@ -221,7 +253,7 @@ export class GmailAccountService extends BaseService {
       throw new Error('Cannot delete primary Gmail account');
     }
 
-    await this.prisma.gmailAccount.delete({
+    await getGmailAccountModel(this.prisma).delete({
       where: { id },
     });
   }

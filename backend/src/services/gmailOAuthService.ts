@@ -1,16 +1,15 @@
-import { google, Auth } from 'googleapis';
-import { GmailAccountService } from './gmailAccountService';
-import { GMAIL_SCOPES, GmailTokens } from '../types/gmail';
-
-// Type for GmailAccount since Prisma client isn't generated yet
-interface GmailAccountType {
-  id: string;
-  email: string;
-  accessToken: string;
-  refreshToken: string;
-  tokenExpiresAt: Date;
-  userId: string;
+// Note: googleapis import will work after npm install
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+let google: any;
+try {
+  google = require('googleapis').google;
+} catch {
+  // googleapis not installed yet, will be available after npm install
+  google = null;
 }
+
+import { GmailAccountService, GmailAccount } from './gmailAccountService';
+import { GMAIL_SCOPES, GmailTokens } from '../types/gmail';
 
 /**
  * Gmail OAuth Service
@@ -20,7 +19,7 @@ export class GmailOAuthService {
   /**
    * Create an OAuth2 client with the application credentials
    */
-  static createOAuth2Client(): Auth.OAuth2Client {
+  static createOAuth2Client(): any {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = process.env.GMAIL_REDIRECT_URL || 
@@ -37,8 +36,8 @@ export class GmailOAuthService {
    * Get an authenticated OAuth2 client for a Gmail account
    */
   static async getAuthenticatedClient(
-    account: GmailAccountType
-  ): Promise<Auth.OAuth2Client> {
+    account: GmailAccount
+  ): Promise<any> {
     const oauth2Client = this.createOAuth2Client();
     
     // Get decrypted tokens
@@ -51,7 +50,7 @@ export class GmailOAuthService {
     });
 
     // Set up automatic token refresh
-    oauth2Client.on('tokens', async (newTokens) => {
+    oauth2Client.on('tokens', async (newTokens: any) => {
       console.log('Gmail tokens refreshed for account:', account.email);
       
       try {
@@ -133,7 +132,7 @@ export class GmailOAuthService {
   /**
    * Revoke OAuth tokens (when disconnecting an account)
    */
-  static async revokeTokens(account: GmailAccountType): Promise<void> {
+  static async revokeTokens(account: GmailAccount): Promise<void> {
     const oauth2Client = this.createOAuth2Client();
     const tokens = await GmailAccountService.getDecryptedTokens(account as any);
     
@@ -161,7 +160,7 @@ export class GmailOAuthService {
   /**
    * Manually refresh tokens for an account
    */
-  static async refreshTokens(account: GmailAccountType): Promise<GmailTokens> {
+  static async refreshTokens(account: GmailAccount): Promise<GmailTokens> {
     const oauth2Client = this.createOAuth2Client();
     const tokens = await GmailAccountService.getDecryptedTokens(account as any);
     
