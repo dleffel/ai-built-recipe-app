@@ -2,11 +2,11 @@
 @import '../../../src/styles/typography.css';
 
 :root {
-  /* Color System - Dark mode optimized */
-  --todo-bg-color: var(--color-bg-secondary, #1E293B);
-  --todo-text-color: var(--color-text, #F1F5F9);
-  --todo-muted-color: var(--color-muted, #94A3B8);
-  --todo-border-color: var(--color-border, #334155);
+  /* Color System - Dark mode optimized (neutral gray) */
+  --todo-bg-color: var(--color-bg-secondary, #1F2937);
+  --todo-text-color: var(--color-text, #F9FAFB);
+  --todo-muted-color: var(--color-muted, #9CA3AF);
+  --todo-border-color: var(--color-border, #374151);
   
   /* Category Colors - Enhanced for dark mode visibility */
   --category-roovet-bg: #3B82F6; /* Blue - brighter for dark mode */
@@ -34,9 +34,9 @@
   --button-primary-text: #FFFFFF;
   --button-primary-hover: #60A5FA;
   
-  --button-secondary-bg: var(--color-bg-tertiary, #334155);
-  --button-secondary-text: var(--color-text-secondary, #CBD5E1);
-  --button-secondary-hover: var(--color-border-light, #475569);
+  --button-secondary-bg: var(--color-bg-tertiary, #374151);
+  --button-secondary-text: var(--color-text-secondary, #D1D5DB);
+  --button-secondary-hover: var(--color-border-light, #4B5563);
   
   --button-danger-bg: rgba(239, 68, 68, 0.15);
   --button-danger-text: #F87171;
