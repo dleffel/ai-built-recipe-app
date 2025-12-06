@@ -44,7 +44,9 @@ export const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    touchAction: isSelectMode ? 'auto' : 'none', // Important for touch devices
+    // Allow vertical scrolling (pan-y) on touch devices; drag is handled by the drag handle
+    // In select mode, allow all touch actions since drag is disabled
+    touchAction: isSelectMode ? 'auto' : 'pan-y',
   };
 
   return (
