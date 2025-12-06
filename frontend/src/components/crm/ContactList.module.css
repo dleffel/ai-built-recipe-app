@@ -1,0 +1,195 @@
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  position: relative;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 10px 32px 10px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary-color, #007bff);
+}
+
+.clearButton {
+  position: absolute;
+  right: 80px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-secondary, #666666);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.clearButton:hover {
+  color: var(--text-primary, #333333);
+}
+
+.searchButton {
+  padding: 10px 16px;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.searchButton:hover {
+  background-color: var(--primary-hover, #0056b3);
+}
+
+.createButton {
+  padding: 10px 20px;
+  background-color: var(--success-color, #28a745);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.createButton:hover {
+  background-color: var(--success-hover, #218838);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.loading,
+.error,
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-secondary, #666666);
+}
+
+.error {
+  color: var(--error-color, #dc3545);
+}
+
+.empty p {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+}
+
+.emptyCreateButton {
+  padding: 12px 24px;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.emptyCreateButton:hover {
+  background-color: var(--primary-hover, #0056b3);
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.paginationInfo {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666666);
+}
+
+.paginationButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageButton {
+  padding: 8px 12px;
+  background-color: var(--card-background, #ffffff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  background-color: var(--hover-background, #f5f5f5);
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageNumber {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666666);
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchForm {
+    max-width: none;
+  }
+
+  .createButton {
+    width: 100%;
+    text-align: center;
+  }
+
+  .list {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

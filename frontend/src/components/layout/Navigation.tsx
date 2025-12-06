@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import styles from './Navigation.module.css';
 import useMediaQuery from '../../hooks/useMediaQuery';
-import { FaHome, FaUtensils, FaListUl, FaBars, FaTimes } from 'react-icons/fa';
+import { FaHome, FaUtensils, FaListUl, FaAddressBook, FaBars, FaTimes } from 'react-icons/fa';
 import { IconButton } from '../ui/Button';
 
 const Navigation: React.FC = () => {
@@ -89,6 +89,16 @@ const Navigation: React.FC = () => {
             }
           >
             To-Do
+          </NavLink>
+        </li>
+        <li className={styles.navItem}>
+          <NavLink
+            to="/contacts"
+            className={({ isActive }) =>
+              isActive ? `${styles.navLink} ${styles.activeLink}` : styles.navLink
+            }
+          >
+            CRM
           </NavLink>
         </li>
       </ul>
@@ -178,6 +188,20 @@ const Navigation: React.FC = () => {
                 {FaListUl({ 'aria-hidden': 'true' })}
               </span>
               <span className={styles.sideMenuText}>To-Do</span>
+            </NavLink>
+          </li>
+          <li className={styles.sideMenuItem}>
+            <NavLink
+              to="/contacts"
+              className={({ isActive }) =>
+                isActive ? `${styles.sideMenuLink} ${styles.sideMenuActiveLink}` : styles.sideMenuLink
+              }
+              onClick={closeMenu}
+            >
+              <span className={styles.sideMenuIcon}>
+                {FaAddressBook({ 'aria-hidden': 'true' })}
+              </span>
+              <span className={styles.sideMenuText}>CRM</span>
             </NavLink>
           </li>
         </ul>

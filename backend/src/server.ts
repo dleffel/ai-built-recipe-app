@@ -5,6 +5,7 @@ import passport from './config/passport';
 import authRoutes, { validateDevAuthToken } from './routes/auth';
 import recipeRoutes from './routes/recipes';
 import taskRoutes from './routes/tasks';
+import contactRoutes from './routes/contacts';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
 import { UserService } from './services/userService';
@@ -317,6 +318,9 @@ app.use('/api/recipes', recipeRoutes);
 
 // Task routes
 app.use('/api/tasks', taskRoutes);
+
+// Contact routes
+app.use('/api/contacts', contactRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

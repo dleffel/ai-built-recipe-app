@@ -1,0 +1,146 @@
+.container {
+  padding: 0;
+}
+
+.title {
+  margin: 0 0 20px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #333333);
+}
+
+.loading,
+.error,
+.empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--text-secondary, #666666);
+}
+
+.error {
+  color: var(--error-color, #dc3545);
+}
+
+.versionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.versionItem {
+  background-color: var(--card-background, #ffffff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.versionHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.versionHeader:hover {
+  background-color: var(--hover-background, #f5f5f5);
+}
+
+.versionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.versionNumber {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary, #333333);
+}
+
+.latestBadge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  background-color: var(--success-color, #28a745);
+  color: white;
+  border-radius: 12px;
+}
+
+.versionDate {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666666);
+}
+
+.changeSummary {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666666);
+}
+
+.versionActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666666);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.restoreButton {
+  padding: 6px 12px;
+  background-color: var(--card-background, #ffffff);
+  color: var(--primary-color, #007bff);
+  border: 1px solid var(--primary-color, #007bff);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.restoreButton:hover:not(:disabled) {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+}
+
+.restoreButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.versionDetails {
+  padding: 16px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+  background-color: var(--hover-background, #f9f9f9);
+}
+
+@media (max-width: 600px) {
+  .versionHeader {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .versionInfo {
+    min-width: auto;
+    flex: 1;
+  }
+
+  .changeSummary {
+    width: 100%;
+    order: 3;
+  }
+
+  .versionActions {
+    margin-left: auto;
+  }
+}
