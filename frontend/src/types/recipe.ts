@@ -29,6 +29,9 @@ export interface CreateRecipeDTO {
 
 export interface UpdateRecipeDTO extends Partial<CreateRecipeDTO> {}
 
+export type RecipeSortField = 'title' | 'prepTime' | 'cookTime' | 'createdAt' | 'updatedAt';
+export type RecipeSortOrder = 'asc' | 'desc';
+
 export interface RecipeListResponse {
   recipes: Recipe[];
   pagination: {
@@ -36,5 +39,7 @@ export interface RecipeListResponse {
     take: number;
     total: number;
     search?: string;
+    sortBy?: RecipeSortField;
+    sortOrder?: RecipeSortOrder;
   };
 }

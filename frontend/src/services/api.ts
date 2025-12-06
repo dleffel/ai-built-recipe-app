@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Recipe, CreateRecipeDTO, UpdateRecipeDTO, RecipeListResponse } from '../types/recipe';
+import { Recipe, CreateRecipeDTO, UpdateRecipeDTO, RecipeListResponse, RecipeSortField, RecipeSortOrder } from '../types/recipe';
 
 // Dev auth token storage key
 const DEV_AUTH_TOKEN_KEY = 'dev_auth_token';
@@ -74,18 +74,22 @@ export const recipeApi = {
     return response.data;
   },
 
-  // Get paginated list of recipes with optional search
+  // Get paginated list of recipes with optional search and sorting
   list: async (params?: {
     skip?: number;
     take?: number;
     search?: string;
+    sortBy?: RecipeSortField;
+    sortOrder?: RecipeSortOrder;
   }): Promise<RecipeListResponse> => {
     console.log('[DEBUG] API list request params:', params);
     const response = await api.get<RecipeListResponse>('/api/recipes', { params });
     console.log('[DEBUG] API list response:', {
       total: response.data.pagination.total,
       count: response.data.recipes.length,
-      search: response.data.pagination.search
+      search: response.data.pagination.search,
+      sortBy: response.data.pagination.sortBy,
+      sortOrder: response.data.pagination.sortOrder
     });
     return response.data;
   },

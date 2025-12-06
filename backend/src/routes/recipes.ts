@@ -82,22 +82,26 @@ const createRecipe: RequestHandler = async (req, res) => {
   }
 };
 
-// Get user's recipes with pagination
+// Get user's recipes with pagination and sorting
 const getUserRecipes: RequestHandler = async (req, res) => {
   try {
     const skip = parseInt(req.query.skip as string) || 0;
     const take = parseInt(req.query.take as string) || 10;
     const search = req.query.search as string | undefined;
+    const sortBy = req.query.sortBy as 'title' | 'prepTime' | 'cookTime' | 'createdAt' | 'updatedAt' | undefined;
+    const sortOrder = req.query.sortOrder as 'asc' | 'desc' | undefined;
     
     console.log('[DEBUG] Recipe search request:', {
       search,
       skip,
       take,
+      sortBy,
+      sortOrder,
       userId: req.user!.id
     });
     
     const [recipes, total] = await Promise.all([
-      RecipeService.findByUser(req.user!.id, { skip, take, search }),
+      RecipeService.findByUser(req.user!.id, { skip, take, search, sortBy, sortOrder }),
       RecipeService.countUserRecipes(req.user!.id, search)
     ]);
 
@@ -107,7 +111,9 @@ const getUserRecipes: RequestHandler = async (req, res) => {
         skip,
         take,
         total,
-        search
+        search,
+        sortBy,
+        sortOrder
       }
     });
   } catch (error: unknown) {

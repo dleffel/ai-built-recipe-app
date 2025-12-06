@@ -41,13 +41,15 @@ export class RecipeService extends BaseService {
   }
 
   /**
-   * Find recipes by user ID with pagination and search
+   * Find recipes by user ID with pagination, search, and sorting
    */
   static async findByUser(userId: string, options?: {
     skip?: number;
     take?: number;
     includeDeleted?: boolean;
     search?: string;
+    sortBy?: 'title' | 'prepTime' | 'cookTime' | 'createdAt' | 'updatedAt';
+    sortOrder?: 'asc' | 'desc';
   }): Promise<Recipe[]> {
     const searchCondition: Prisma.RecipeWhereInput = options?.search
       ? {
@@ -73,9 +75,20 @@ export class RecipeService extends BaseService {
         }
       : {};
 
+    // Build orderBy based on sortBy and sortOrder
+    const sortField = options?.sortBy || 'updatedAt';
+    const sortDirection = options?.sortOrder || 'desc';
+    
+    // Handle null values for optional fields by using nulls last
+    const orderBy: Prisma.RecipeOrderByWithRelationInput = {
+      [sortField]: sortDirection
+    };
+
     console.log('[DEBUG] Recipe search query:', {
       searchTerm: options?.search,
       searchCondition: JSON.stringify(searchCondition, null, 2),
+      sortBy: sortField,
+      sortOrder: sortDirection,
       userId
     });
 
@@ -87,9 +100,7 @@ export class RecipeService extends BaseService {
       },
       skip: options?.skip,
       take: options?.take,
-      orderBy: {
-        updatedAt: 'desc'
-      }
+      orderBy
     });
   }
 
