@@ -398,7 +398,7 @@
   .taskItem {
     padding: 8px 10px;
     min-height: 44px; /* Minimum touch target size */
-    touch-action: none; /* Prevent browser handling of touch events during drag */
+    touch-action: pan-y; /* Allow vertical scrolling, drag handled by drag handle only */
   }
   
   .dragHandle {
@@ -409,6 +409,7 @@
     padding: 4px;
     background-color: var(--button-secondary-bg);
     border-radius: var(--radius-sm);
+    touch-action: none; /* Prevent scrolling when touching drag handle */
   }
   
   .dragHandle:active {
