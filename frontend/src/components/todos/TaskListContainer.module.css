@@ -100,7 +100,7 @@
   position: relative;
   padding-left: 6px;
   border-left: 3px solid var(--button-primary-bg);
-  background-color: rgba(224, 122, 95, 0.05);
+  background-color: rgba(88, 166, 255, 0.05);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
 }

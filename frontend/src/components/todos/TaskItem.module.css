@@ -100,7 +100,7 @@
 }
 
 .taskItem.selected:hover {
-  background-color: rgba(224, 122, 95, 0.2);
+  background-color: rgba(88, 166, 255, 0.2);
 }
 
 /* Select mode styling */

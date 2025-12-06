@@ -2,54 +2,54 @@
 @import '../../../src/styles/typography.css';
 
 :root {
-  /* Color System - "Warm Midnight" theme optimized */
-  --todo-bg-color: var(--color-bg-secondary, #1A1A1F);
-  --todo-text-color: var(--color-text, #FAFAF9);
-  --todo-muted-color: var(--color-muted, #A1A1A0);
-  --todo-border-color: var(--color-border, #2E2E33);
+  /* Color System - "Steely Blue-Grey" theme optimized */
+  --todo-bg-color: var(--color-bg-secondary, #161B22);
+  --todo-text-color: var(--color-text, #F0F6FC);
+  --todo-muted-color: var(--color-muted, #8B949E);
+  --todo-border-color: var(--color-border, #30363D);
   
-  /* Category Colors - Harmonized with warm palette */
-  --category-roovet-bg: #5B8FB9; /* Muted blue - sophisticated */
+  /* Category Colors - Harmonized with cool steel palette */
+  --category-roovet-bg: #58A6FF; /* Steel blue - matches accent */
   --category-roovet-text: #FFFFFF;
-  --category-roovet-light: rgba(91, 143, 185, 0.2);
+  --category-roovet-light: rgba(88, 166, 255, 0.2);
   
-  --category-roocode-bg: #81B29A; /* Sage green - matches success */
+  --category-roocode-bg: #3FB950; /* Green - matches success */
   --category-roocode-text: #FFFFFF;
-  --category-roocode-light: rgba(129, 178, 154, 0.2);
+  --category-roocode-light: rgba(63, 185, 80, 0.2);
   
-  --category-personal-bg: #9B7E9B; /* Muted mauve - warm purple */
+  --category-personal-bg: #A371F7; /* Purple - cool violet */
   --category-personal-text: #FFFFFF;
-  --category-personal-light: rgba(155, 126, 155, 0.2);
+  --category-personal-light: rgba(163, 113, 247, 0.2);
   
   /* Priority Indicator */
-  --priority-color: #F2CC8F; /* Warm gold - matches warning */
-  --priority-hover: #F5D9A8;
+  --priority-color: #D29922; /* Amber/gold - matches warning */
+  --priority-hover: #E3B341;
   
   /* Status Colors */
-  --status-complete-color: #6B6B6A;
-  --status-incomplete-color: var(--color-text, #FAFAF9);
+  --status-complete-color: #6E7681;
+  --status-incomplete-color: var(--color-text, #F0F6FC);
   
-  /* Interactive Elements - Coral accent */
-  --button-primary-bg: #E07A5F;
+  /* Interactive Elements - Steel blue accent */
+  --button-primary-bg: #58A6FF;
   --button-primary-text: #FFFFFF;
-  --button-primary-hover: #E8927A;
+  --button-primary-hover: #79B8FF;
   
-  --button-secondary-bg: var(--color-bg-tertiary, #252529);
-  --button-secondary-text: var(--color-text-secondary, #D4D4D3);
-  --button-secondary-hover: var(--color-border-light, #3D3D42);
+  --button-secondary-bg: var(--color-bg-tertiary, #21262D);
+  --button-secondary-text: var(--color-text-secondary, #C9D1D9);
+  --button-secondary-hover: var(--color-border-light, #484F58);
   
-  --button-danger-bg: rgba(224, 122, 95, 0.12);
-  --button-danger-text: #E8927A;
-  --button-danger-hover: #E07A5F;
+  --button-danger-bg: rgba(248, 81, 73, 0.12);
+  --button-danger-text: #F85149;
+  --button-danger-hover: #DA3633;
   --button-danger-hover-text: #FFFFFF;
   
-  /* Feedback Colors - Warm palette harmonized */
-  --feedback-success-bg: rgba(129, 178, 154, 0.15);
-  --feedback-success-text: #9BC5AD;
-  --feedback-error-bg: rgba(224, 122, 95, 0.12);
-  --feedback-error-text: #E8927A;
-  --feedback-info-bg: rgba(91, 143, 185, 0.15);
-  --feedback-info-text: #7BA3C7;
+  /* Feedback Colors - Cool palette harmonized */
+  --feedback-success-bg: rgba(63, 185, 80, 0.15);
+  --feedback-success-text: #56D364;
+  --feedback-error-bg: rgba(248, 81, 73, 0.12);
+  --feedback-error-text: #F85149;
+  --feedback-info-bg: rgba(88, 166, 255, 0.15);
+  --feedback-info-text: #79B8FF;
   
   /* Spacing - Based on 8px grid system */
   --spacing-1: 0.5rem;  /* 8px */

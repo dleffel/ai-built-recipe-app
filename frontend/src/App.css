@@ -5,40 +5,40 @@
 }
 
 :root {
-  /* Dark mode color palette - "Warm Midnight" theme
-     A sophisticated, contemporary palette with warm undertones
-     and a coral/terracotta accent for a premium, inviting feel */
+  /* Dark mode color palette - "Steely Blue-Grey" theme
+     A sophisticated, professional palette with cool steel-blue undertones
+     and a modern blue accent for a clean, technical feel */
   
-  /* Background colors - warm charcoal tones */
-  --color-bg: #0F0F12;
-  --color-bg-secondary: #1A1A1F;
-  --color-bg-tertiary: #252529;
-  --color-surface: #1A1A1F;
-  --color-surface-hover: #252529;
+  /* Background colors - cool steel-grey tones */
+  --color-bg: #0D1117;
+  --color-bg-secondary: #161B22;
+  --color-bg-tertiary: #21262D;
+  --color-surface: #161B22;
+  --color-surface-hover: #21262D;
   
-  /* Text colors - warm whites and grays */
-  --color-text: #FAFAF9;
-  --color-text-secondary: #D4D4D3;
-  --color-muted: #A1A1A0;
+  /* Text colors - cool whites and grays */
+  --color-text: #F0F6FC;
+  --color-text-secondary: #C9D1D9;
+  --color-muted: #8B949E;
   
-  /* Border colors - subtle warm grays */
-  --color-border: #2E2E33;
-  --color-border-light: #3D3D42;
+  /* Border colors - subtle steel grays */
+  --color-border: #30363D;
+  --color-border-light: #484F58;
   
-  /* Accent colors - warm coral/terracotta (trending 2024-2025) */
-  --color-active: #E07A5F;
-  --color-accent: #E07A5F;
-  --color-accent-light: rgba(224, 122, 95, 0.15);
-  --color-accent-hover: #E8927A;
+  /* Accent colors - steel blue (modern, professional) */
+  --color-active: #58A6FF;
+  --color-accent: #58A6FF;
+  --color-accent-light: rgba(88, 166, 255, 0.15);
+  --color-accent-hover: #79B8FF;
   
-  /* Semantic colors - harmonized with warm palette */
-  --color-success: #81B29A;
-  --color-success-light: rgba(129, 178, 154, 0.15);
-  --color-card-hover: #1A1A1F;
-  --color-error: #E07A5F;
-  --color-error-light: rgba(224, 122, 95, 0.12);
-  --color-warning: #F2CC8F;
-  --color-warning-light: rgba(242, 204, 143, 0.15);
+  /* Semantic colors - harmonized with cool palette */
+  --color-success: #3FB950;
+  --color-success-light: rgba(63, 185, 80, 0.15);
+  --color-card-hover: #161B22;
+  --color-error: #F85149;
+  --color-error-light: rgba(248, 81, 73, 0.12);
+  --color-warning: #D29922;
+  --color-warning-light: rgba(210, 153, 34, 0.15);
   
   /* Spacing */
   --spacing-1: 0.25rem;
