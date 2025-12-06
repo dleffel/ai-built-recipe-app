@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Contact, ContactListParams } from '../../types/contact';
 import { contactApi } from '../../services/contactApi';
 import { ContactCard } from './ContactCard';
@@ -10,19 +10,24 @@ interface ContactListProps {
   onCreateClick: () => void;
 }
 
-export const ContactList: React.FC<ContactListProps> = ({ 
-  onContactClick, 
-  onCreateClick 
+// Debounce delay in milliseconds
+const SEARCH_DEBOUNCE_MS = 300;
+
+export const ContactList: React.FC<ContactListProps> = ({
+  onContactClick,
+  onCreateClick
 }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [pagination, setPagination] = useState({
     total: 0,
     skip: 0,
     take: 20,
   });
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchContacts = useCallback(async (params: ContactListParams = {}) => {
     try {
@@ -31,7 +36,7 @@ export const ContactList: React.FC<ContactListProps> = ({
       const result = await contactApi.list({
         skip: params.skip ?? pagination.skip,
         take: params.take ?? pagination.take,
-        search: params.search ?? (searchQuery || undefined),
+        search: params.search,
         sortBy: 'lastName',
         sortOrder: 'asc',
       });
@@ -43,16 +48,38 @@ export const ContactList: React.FC<ContactListProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [pagination.skip, pagination.take, searchQuery]);
+  }, [pagination.skip, pagination.take]);
 
+  // Initial fetch on mount
   useEffect(() => {
-    fetchContacts();
+    fetchContacts({ search: undefined });
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchContacts({ skip: 0, search: searchQuery || undefined });
-  };
+  // Debounce search query changes
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Fetch contacts when debounced search query changes
+  useEffect(() => {
+    // Skip the initial render when debouncedSearchQuery is empty
+    // The initial fetch is handled by the mount effect
+    if (debouncedSearchQuery !== '' || searchQuery !== '') {
+      fetchContacts({ skip: 0, search: debouncedSearchQuery || undefined });
+    }
+  }, [debouncedSearchQuery]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -60,6 +87,7 @@ export const ContactList: React.FC<ContactListProps> = ({
 
   const handleClearSearch = () => {
     setSearchQuery('');
+    setDebouncedSearchQuery('');
     fetchContacts({ skip: 0, search: undefined });
   };
 
@@ -82,7 +110,7 @@ export const ContactList: React.FC<ContactListProps> = ({
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <form onSubmit={handleSearch} className={styles.searchForm}>
+        <div className={styles.searchContainer}>
           <input
             type="text"
             placeholder="Search contacts..."
@@ -100,10 +128,7 @@ export const ContactList: React.FC<ContactListProps> = ({
               className={styles.clearButton}
             />
           )}
-          <Button type="submit" variant="primary" size="md">
-            Search
-          </Button>
-        </form>
+        </div>
         <Button variant="primary" size="md" onClick={onCreateClick}>
           + New Contact
         </Button>
