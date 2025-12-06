@@ -5,28 +5,40 @@
 }
 
 :root {
-  /* Dark mode color palette - neutral gray (no blue tone) */
-  --color-bg: #111827;
-  --color-bg-secondary: #1F2937;
-  --color-bg-tertiary: #374151;
-  --color-surface: #1F2937;
-  --color-surface-hover: #374151;
-  --color-text: #F9FAFB;
-  --color-text-secondary: #D1D5DB;
-  --color-muted: #9CA3AF;
-  --color-border: #374151;
-  --color-border-light: #4B5563;
-  --color-active: #3B82F6;
-  --color-accent: #3B82F6;
-  --color-accent-light: rgba(59, 130, 246, 0.15);
-  --color-accent-hover: #60A5FA;
-  --color-success: #10B981;
-  --color-success-light: rgba(16, 185, 129, 0.15);
-  --color-card-hover: #1F2937;
-  --color-error: #EF4444;
-  --color-error-light: rgba(239, 68, 68, 0.15);
-  --color-warning: #F59E0B;
-  --color-warning-light: rgba(245, 158, 11, 0.15);
+  /* Dark mode color palette - "Warm Midnight" theme
+     A sophisticated, contemporary palette with warm undertones
+     and a coral/terracotta accent for a premium, inviting feel */
+  
+  /* Background colors - warm charcoal tones */
+  --color-bg: #0F0F12;
+  --color-bg-secondary: #1A1A1F;
+  --color-bg-tertiary: #252529;
+  --color-surface: #1A1A1F;
+  --color-surface-hover: #252529;
+  
+  /* Text colors - warm whites and grays */
+  --color-text: #FAFAF9;
+  --color-text-secondary: #D4D4D3;
+  --color-muted: #A1A1A0;
+  
+  /* Border colors - subtle warm grays */
+  --color-border: #2E2E33;
+  --color-border-light: #3D3D42;
+  
+  /* Accent colors - warm coral/terracotta (trending 2024-2025) */
+  --color-active: #E07A5F;
+  --color-accent: #E07A5F;
+  --color-accent-light: rgba(224, 122, 95, 0.15);
+  --color-accent-hover: #E8927A;
+  
+  /* Semantic colors - harmonized with warm palette */
+  --color-success: #81B29A;
+  --color-success-light: rgba(129, 178, 154, 0.15);
+  --color-card-hover: #1A1A1F;
+  --color-error: #E07A5F;
+  --color-error-light: rgba(224, 122, 95, 0.12);
+  --color-warning: #F2CC8F;
+  --color-warning-light: rgba(242, 204, 143, 0.15);
   
   /* Spacing */
   --spacing-1: 0.25rem;

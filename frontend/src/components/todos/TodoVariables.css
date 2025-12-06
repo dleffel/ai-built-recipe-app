@@ -2,54 +2,54 @@
 @import '../../../src/styles/typography.css';
 
 :root {
-  /* Color System - Dark mode optimized (neutral gray) */
-  --todo-bg-color: var(--color-bg-secondary, #1F2937);
-  --todo-text-color: var(--color-text, #F9FAFB);
-  --todo-muted-color: var(--color-muted, #9CA3AF);
-  --todo-border-color: var(--color-border, #374151);
+  /* Color System - "Warm Midnight" theme optimized */
+  --todo-bg-color: var(--color-bg-secondary, #1A1A1F);
+  --todo-text-color: var(--color-text, #FAFAF9);
+  --todo-muted-color: var(--color-muted, #A1A1A0);
+  --todo-border-color: var(--color-border, #2E2E33);
   
-  /* Category Colors - Enhanced for dark mode visibility */
-  --category-roovet-bg: #3B82F6; /* Blue - brighter for dark mode */
+  /* Category Colors - Harmonized with warm palette */
+  --category-roovet-bg: #5B8FB9; /* Muted blue - sophisticated */
   --category-roovet-text: #FFFFFF;
-  --category-roovet-light: rgba(59, 130, 246, 0.2);
+  --category-roovet-light: rgba(91, 143, 185, 0.2);
   
-  --category-roocode-bg: #10B981; /* Green - brighter for dark mode */
+  --category-roocode-bg: #81B29A; /* Sage green - matches success */
   --category-roocode-text: #FFFFFF;
-  --category-roocode-light: rgba(16, 185, 129, 0.2);
+  --category-roocode-light: rgba(129, 178, 154, 0.2);
   
-  --category-personal-bg: #8B5CF6; /* Purple - brighter for dark mode */
+  --category-personal-bg: #9B7E9B; /* Muted mauve - warm purple */
   --category-personal-text: #FFFFFF;
-  --category-personal-light: rgba(139, 92, 246, 0.2);
+  --category-personal-light: rgba(155, 126, 155, 0.2);
   
   /* Priority Indicator */
-  --priority-color: #F59E0B; /* Amber - brighter for dark mode */
-  --priority-hover: #FBBF24;
+  --priority-color: #F2CC8F; /* Warm gold - matches warning */
+  --priority-hover: #F5D9A8;
   
   /* Status Colors */
-  --status-complete-color: #64748B;
-  --status-incomplete-color: var(--color-text, #F9FAFB);
+  --status-complete-color: #6B6B6A;
+  --status-incomplete-color: var(--color-text, #FAFAF9);
   
-  /* Interactive Elements */
-  --button-primary-bg: #3B82F6;
+  /* Interactive Elements - Coral accent */
+  --button-primary-bg: #E07A5F;
   --button-primary-text: #FFFFFF;
-  --button-primary-hover: #60A5FA;
+  --button-primary-hover: #E8927A;
   
-  --button-secondary-bg: var(--color-bg-tertiary, #374151);
-  --button-secondary-text: var(--color-text-secondary, #D1D5DB);
-  --button-secondary-hover: var(--color-border-light, #4B5563);
+  --button-secondary-bg: var(--color-bg-tertiary, #252529);
+  --button-secondary-text: var(--color-text-secondary, #D4D4D3);
+  --button-secondary-hover: var(--color-border-light, #3D3D42);
   
-  --button-danger-bg: rgba(239, 68, 68, 0.15);
-  --button-danger-text: #F87171;
-  --button-danger-hover: #EF4444;
+  --button-danger-bg: rgba(224, 122, 95, 0.12);
+  --button-danger-text: #E8927A;
+  --button-danger-hover: #E07A5F;
   --button-danger-hover-text: #FFFFFF;
   
-  /* Feedback Colors - Dark mode optimized */
-  --feedback-success-bg: rgba(16, 185, 129, 0.15);
-  --feedback-success-text: #34D399;
-  --feedback-error-bg: rgba(239, 68, 68, 0.15);
-  --feedback-error-text: #F87171;
-  --feedback-info-bg: rgba(59, 130, 246, 0.15);
-  --feedback-info-text: #60A5FA;
+  /* Feedback Colors - Warm palette harmonized */
+  --feedback-success-bg: rgba(129, 178, 154, 0.15);
+  --feedback-success-text: #9BC5AD;
+  --feedback-error-bg: rgba(224, 122, 95, 0.12);
+  --feedback-error-text: #E8927A;
+  --feedback-info-bg: rgba(91, 143, 185, 0.15);
+  --feedback-info-text: #7BA3C7;
   
   /* Spacing - Based on 8px grid system */
   --spacing-1: 0.5rem;  /* 8px */

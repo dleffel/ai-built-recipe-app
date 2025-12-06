@@ -84,7 +84,7 @@
   color: white;
   border-color: var(--color-accent);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 4px rgba(224, 122, 95, 0.3);
 }
 
 .deleteButton:hover {
@@ -92,7 +92,7 @@
   color: white;
   border-color: var(--color-error);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 2px 4px rgba(224, 122, 95, 0.3);
 }
 
 .imageContainer {

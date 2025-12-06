@@ -15,7 +15,7 @@
   background: var(--color-surface-hover);
   border-color: var(--color-accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 12px rgba(224, 122, 95, 0.2);
 }
 
 .imageContainer {
