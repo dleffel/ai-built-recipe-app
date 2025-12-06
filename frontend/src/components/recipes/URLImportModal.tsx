@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import styles from './URLImportModal.module.css';
 import { CreateRecipeDTO } from '../../types/recipe';
+import { Button } from '../ui/Button';
+import styles from './URLImportModal.module.css';
 
 interface URLImportModalProps {
   onImport: (url: string) => Promise<CreateRecipeDTO>;
@@ -62,21 +63,23 @@ export const URLImportModal: React.FC<URLImportModalProps> = ({
           )}
 
           <div className={styles.buttons}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="md"
               onClick={onClose}
-              className={styles.cancelButton}
               disabled={loading}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
               type="submit"
-              className={styles.importButton}
               disabled={loading}
+              loading={loading}
             >
               {loading ? 'Importing...' : 'Import Recipe'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

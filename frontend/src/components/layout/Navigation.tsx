@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import styles from './Navigation.module.css';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import { FaHome, FaUtensils, FaListUl, FaBars, FaTimes } from 'react-icons/fa';
+import { IconButton } from '../ui/Button';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -98,19 +99,16 @@ const Navigation: React.FC = () => {
   const mobileNav = (
     <>
       {/* Hamburger button */}
-      <button
-        className={styles.hamburgerButton}
+      <IconButton
+        icon={isMenuOpen ? FaTimes({ 'aria-hidden': 'true' }) : FaBars({ 'aria-hidden': 'true' })}
+        variant="ghost"
+        size="md"
         onClick={toggleMenu}
         aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-side-menu"
-      >
-        {isMenuOpen ? (
-          FaTimes({ 'aria-hidden': 'true' })
-        ) : (
-          FaBars({ 'aria-hidden': 'true' })
-        )}
-      </button>
+        className={styles.hamburgerButton}
+      />
 
       {/* Overlay */}
       <div
@@ -130,13 +128,13 @@ const Navigation: React.FC = () => {
       >
         <div className={styles.sideMenuHeader}>
           <span className={styles.sideMenuTitle}>Menu</span>
-          <button
-            className={styles.closeButton}
+          <IconButton
+            icon={FaTimes({ 'aria-hidden': 'true' })}
+            variant="ghost"
+            size="sm"
             onClick={closeMenu}
             aria-label="Close menu"
-          >
-            {FaTimes({ 'aria-hidden': 'true' })}
-          </button>
+          />
         </div>
         <ul className={styles.sideMenuList}>
           <li className={styles.sideMenuItem}>

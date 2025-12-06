@@ -1,5 +1,6 @@
 import React from 'react';
 import { Task } from '../../services/todoApi';
+import { IconButton } from '../ui/Button';
 import styles from './TaskItem.module.css';
 
 // Type for drag handle props from @dnd-kit
@@ -130,17 +131,18 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       )}
       
       {/* Edit button */}
-      <button
-        className={styles.actionButton}
+      <IconButton
+        icon={
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.7071 2.29289C12.0976 2.68342 12.0976 3.31658 11.7071 3.70711L4.70711 10.7071C4.51957 10.8946 4.26522 11 4 11H3C2.44772 11 2 10.5523 2 10V9C2 8.73478 2.10536 8.48043 2.29289 8.29289L9.29289 1.29289C9.68342 0.902369 10.3166 0.902369 10.7071 1.29289L11.7071 2.29289Z" fill="currentColor" />
+            <path d="M2 13C2 12.4477 2.44772 12 3 12H13C13.5523 12 14 12.4477 14 13C14 13.5523 13.5523 14 13 14H3C2.44772 14 2 13.5523 2 13Z" fill="currentColor" />
+          </svg>
+        }
         onClick={onEdit}
+        variant="ghost"
+        size="sm"
         aria-label="Edit task"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M11.7071 2.29289C12.0976 2.68342 12.0976 3.31658 11.7071 3.70711L4.70711 10.7071C4.51957 10.8946 4.26522 11 4 11H3C2.44772 11 2 10.5523 2 10V9C2 8.73478 2.10536 8.48043 2.29289 8.29289L9.29289 1.29289C9.68342 0.902369 10.3166 0.902369 10.7071 1.29289L11.7071 2.29289Z" fill="currentColor" />
-          <path d="M2 13C2 12.4477 2.44772 12 3 12H13C13.5523 12 14 12.4477 14 13C14 13.5523 13.5523 14 13 14H3C2.44772 14 2 13.5523 2 13Z" fill="currentColor" />
-        </svg>
-        <span className={styles.actionButtonLabel}>Edit</span>
-      </button>
+      />
     </div>
   );
 };

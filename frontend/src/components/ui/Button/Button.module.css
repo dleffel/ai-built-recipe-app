@@ -1,0 +1,238 @@
+/* Button.module.css - Standardized button styles */
+@import '../../../styles/buttons.css';
+
+/* Base button styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-gap);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: var(--btn-transition);
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--btn-focus-ring);
+}
+
+.button:disabled {
+  opacity: var(--btn-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.sm {
+  height: var(--btn-height-sm);
+  padding: var(--btn-padding-sm);
+  font-size: var(--btn-font-sm);
+  border-radius: var(--btn-radius);
+}
+
+.md {
+  height: var(--btn-height-md);
+  padding: var(--btn-padding-md);
+  font-size: var(--btn-font-md);
+  border-radius: var(--btn-radius);
+}
+
+.lg {
+  height: var(--btn-height-lg);
+  padding: var(--btn-padding-lg);
+  font-size: var(--btn-font-lg);
+  border-radius: var(--btn-radius);
+}
+
+/* Variants */
+.primary {
+  background: var(--color-accent);
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(95%);
+}
+
+.secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-muted);
+}
+
+.secondary:active:not(:disabled) {
+  background: var(--color-bg-secondary);
+}
+
+.danger {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--color-error);
+  color: white;
+}
+
+.danger:active:not(:disabled) {
+  filter: brightness(90%);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  color: var(--color-accent);
+}
+
+.ghost:active:not(:disabled) {
+  background: var(--color-bg-secondary);
+}
+
+/* Modifiers */
+.fullWidth {
+  width: 100%;
+}
+
+.pill {
+  border-radius: var(--btn-radius-pill);
+}
+
+.iconOnly {
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+.iconOnly.sm {
+  width: var(--btn-icon-sm);
+  height: var(--btn-icon-sm);
+}
+
+.iconOnly.md {
+  width: var(--btn-icon-md);
+  height: var(--btn-icon-md);
+}
+
+.iconOnly.lg {
+  width: var(--btn-icon-lg);
+  height: var(--btn-icon-lg);
+}
+
+/* Loading state */
+.loading {
+  color: transparent;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-top: -8px;
+  margin-left: -8px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Spinner color based on variant */
+.primary.loading::after {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+}
+
+.secondary.loading::after,
+.ghost.loading::after {
+  border-color: var(--color-border);
+  border-top-color: var(--color-accent);
+}
+
+.danger.loading::after {
+  border-color: rgba(248, 81, 73, 0.3);
+  border-top-color: var(--color-error);
+}
+
+/* Icon sizing */
+.button svg {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+.sm svg {
+  width: var(--btn-icon-size-sm);
+  height: var(--btn-icon-size-sm);
+}
+
+.md svg {
+  width: var(--btn-icon-size-md);
+  height: var(--btn-icon-size-md);
+}
+
+.lg svg {
+  width: var(--btn-icon-size-lg);
+  height: var(--btn-icon-size-lg);
+}
+
+/* Icon wrapper styles */
+.leftIcon,
+.rightIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .lg {
+    height: 48px;
+  }
+  
+  .iconOnly.lg {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Touch device specific */
+@media (pointer: coarse) {
+  .button {
+    min-height: 44px; /* Minimum touch target size */
+  }
+  
+  .sm {
+    min-height: 36px;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

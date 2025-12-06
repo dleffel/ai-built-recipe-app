@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { IconButton } from '../ui/Button';
 import styles from './TaskCreation.module.css';
 
 interface TaskCreationProps {
@@ -127,23 +128,25 @@ export const TaskCreation: React.FC<TaskCreationProps> = ({
         />
         
         {/* Priority toggle - star icon */}
-        <button
-          type="button"
-          className={`${styles.inlinePriorityToggle} ${isPriority ? styles.active : ''}`}
+        <IconButton
+          icon={
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M8 1L10.163 5.279L15 6.0907L11.5 9.4201L12.326 14L8 11.8656L3.674 14L4.5 9.4201L1 6.0907L5.837 5.279L8 1Z"
+                fill={isPriority ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+            </svg>
+          }
+          variant={isPriority ? 'primary' : 'ghost'}
+          size="sm"
           onClick={() => setIsPriority(!isPriority)}
           title={isPriority ? 'Remove priority' : 'Mark as priority'}
           aria-label={isPriority ? 'Remove priority' : 'Mark as priority'}
           disabled={isSubmitting}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path 
-              d="M8 1L10.163 5.279L15 6.0907L11.5 9.4201L12.326 14L8 11.8656L3.674 14L4.5 9.4201L1 6.0907L5.837 5.279L8 1Z" 
-              fill={isPriority ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-          </svg>
-        </button>
+          className={styles.inlinePriorityToggle}
+        />
         
         {/* Submit hint */}
         <span className={styles.inlineSubmitHint}>

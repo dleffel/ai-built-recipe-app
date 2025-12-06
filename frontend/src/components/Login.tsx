@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Button } from './ui/Button';
 import './Login.css';
 
 interface LoginProps {
@@ -44,15 +45,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             onError={handleImageError}
           />
         )}
-        <button
-          className={`profile-button ${isDropdownOpen ? 'active' : ''}`}
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           aria-expanded={isDropdownOpen}
           aria-haspopup="true"
           aria-label="User menu"
+          className={`profile-button ${isDropdownOpen ? 'active' : ''}`}
         >
           {user.displayName} ▾
-        </button>
+        </Button>
         {isDropdownOpen && (
           <>
             <div 
@@ -66,12 +69,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               role="menu"
               aria-label="User menu"
             >
-              <button 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleGoogleLogin()}
                 role="menuitem"
+                fullWidth
               >
                 Sign out
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -82,15 +88,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div className="login-container">
       <div className="login-button-container">
-        <button
-          className={`login-button ${isDropdownOpen ? 'active' : ''}`}
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           aria-expanded={isDropdownOpen}
           aria-haspopup="true"
           aria-label="Sign in menu"
+          className={`login-button ${isDropdownOpen ? 'active' : ''}`}
         >
           Sign in ▾
-        </button>
+        </Button>
         {isDropdownOpen && (
           <>
             <div 
@@ -104,20 +112,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               role="menu"
               aria-label="Sign in options"
             >
-              <button 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleLogin}
                 role="menuitem"
+                fullWidth
               >
                 Sign in with Google
-              </button>
+              </Button>
               {/* istanbul ignore next */}
               {isDevLoginEnabled && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleDevelopmentLogin}
                   role="menuitem"
+                  fullWidth
                 >
                   Dev Login
-                </button>
+                </Button>
               )}
             </div>
           </>

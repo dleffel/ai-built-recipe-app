@@ -1,5 +1,6 @@
 import React from 'react';
 import { Recipe } from '../../types/recipe';
+import { Button } from '../ui/Button';
 import styles from './RecipeDetail.module.css';
 
 interface RecipeDetailProps {
@@ -23,23 +24,23 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
   return (
     <div className={styles.container}>
-      <button onClick={onBack} className={styles.backButton}>
+      <Button variant="ghost" size="md" onClick={onBack}>
         ← Back to Recipes
-      </button>
+      </Button>
 
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <h1 className={styles.title}>{recipe.title}</h1>
           <div className={styles.actions}>
             {onEdit && (
-              <button onClick={onEdit} className={styles.editButton}>
+              <Button variant="secondary" size="md" onClick={onEdit}>
                 Edit Recipe
-              </button>
+              </Button>
             )}
             {onDelete && (
-              <button onClick={handleDelete} className={styles.deleteButton}>
+              <Button variant="danger" size="md" onClick={handleDelete}>
                 Delete Recipe
-              </button>
+              </Button>
             )}
           </div>
         </div>

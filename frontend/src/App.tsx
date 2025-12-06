@@ -11,6 +11,7 @@ import { recipeApi } from './services/api';
 import Layout from './components/layout/Layout';
 import HomePage from './components/HomePage';
 import { TodoPlaceholder } from './components/todos/TodoPlaceholder';
+import { Button } from './components/ui/Button';
 
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -145,12 +146,13 @@ const RecipeListPage: React.FC = () => {
   return (
     <>
       <div className="recipe-header">
-        <button
+        <Button
+          variant="primary"
+          size="md"
           onClick={() => navigate('/recipes/new')}
-          className="create-button"
         >
           Create New Recipe
-        </button>
+        </Button>
       </div>
       <RecipeList
         onRecipeClick={(recipe) => navigate(`/recipes/recipe/${recipe.id}`)}
