@@ -1,19 +1,16 @@
-import { google } from 'googleapis';
-import { GmailOAuthService } from './gmailOAuthService';
-import { GmailAccountService } from './gmailAccountService';
-import { GmailMessage, GmailMessageHeader } from '../types/gmail';
-
-// Type for GmailAccount since Prisma client isn't generated yet
-interface GmailAccountType {
-  id: string;
-  email: string;
-  accessToken: string;
-  refreshToken: string;
-  tokenExpiresAt: Date;
-  historyId: string | null;
-  userId: string;
-  isActive: boolean;
+// Note: googleapis import will work after npm install
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+let google: any;
+try {
+  google = require('googleapis').google;
+} catch {
+  // googleapis not installed yet, will be available after npm install
+  google = null;
 }
+
+import { GmailOAuthService } from './gmailOAuthService';
+import { GmailAccountService, GmailAccount } from './gmailAccountService';
+import { GmailMessage } from '../types/gmail';
 
 /**
  * Gmail History Service
@@ -24,7 +21,7 @@ export class GmailHistoryService {
    * Get new messages since the specified history ID
    */
   static async getNewMessages(
-    account: GmailAccountType,
+    account: GmailAccount,
     startHistoryId: string
   ): Promise<GmailMessage[]> {
     const oauth2Client = await GmailOAuthService.getAuthenticatedClient(account);
@@ -79,7 +76,7 @@ export class GmailHistoryService {
    * Get details for a specific message
    */
   private static async getMessageDetails(
-    gmail: ReturnType<typeof google.gmail>,
+    gmail: any,
     messageId: string
   ): Promise<GmailMessage | null> {
     try {
@@ -141,7 +138,7 @@ export class GmailHistoryService {
    * Get the latest history ID for the account
    */
   private static async getLatestHistoryId(
-    gmail: ReturnType<typeof google.gmail>
+    gmail: any
   ): Promise<string | null> {
     try {
       const response = await gmail.users.getProfile({
@@ -158,7 +155,7 @@ export class GmailHistoryService {
    * Get a single message by ID
    */
   static async getMessage(
-    account: GmailAccountType,
+    account: GmailAccount,
     messageId: string
   ): Promise<GmailMessage | null> {
     const oauth2Client = await GmailOAuthService.getAuthenticatedClient(account);
@@ -171,7 +168,7 @@ export class GmailHistoryService {
    * List recent messages (for initial sync or debugging)
    */
   static async listRecentMessages(
-    account: GmailAccountType,
+    account: GmailAccount,
     maxResults: number = 10
   ): Promise<GmailMessage[]> {
     const oauth2Client = await GmailOAuthService.getAuthenticatedClient(account);

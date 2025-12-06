@@ -1,6 +1,15 @@
-import { google } from 'googleapis';
+// Note: googleapis import will work after npm install
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+let google: any;
+try {
+  google = require('googleapis').google;
+} catch {
+  // googleapis not installed yet, will be available after npm install
+  google = null;
+}
+
 import { BaseService } from './BaseService';
-import { GmailAccountService } from './gmailAccountService';
+import { GmailAccountService, GmailAccount } from './gmailAccountService';
 import { GmailOAuthService } from './gmailOAuthService';
 import { GmailWatchResponse } from '../types/gmail';
 
@@ -13,17 +22,8 @@ interface GmailWatchType {
   gmailAccountId: string;
 }
 
-// Type for GmailAccount since Prisma client isn't generated yet
-interface GmailAccountType {
-  id: string;
-  email: string;
-  accessToken: string;
-  refreshToken: string;
-  tokenExpiresAt: Date;
-  historyId: string | null;
-  userId: string;
-  isActive: boolean;
-}
+// Helper to access gmailWatch model (will be available after prisma generate)
+const getGmailWatchModel = (prisma: any) => prisma.gmailWatch;
 
 /**
  * Gmail Watch Service
@@ -46,7 +46,7 @@ export class GmailWatchService extends BaseService {
     }
 
     // Get authenticated client
-    const oauth2Client = await GmailOAuthService.getAuthenticatedClient(account as GmailAccountType);
+    const oauth2Client = await GmailOAuthService.getAuthenticatedClient(account as GmailAccount);
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     // Set up the watch
@@ -63,7 +63,7 @@ export class GmailWatchService extends BaseService {
     const watchData = response.data as GmailWatchResponse;
 
     // Deactivate any existing watches for this account
-    await this.prisma.gmailWatch.updateMany({
+    await getGmailWatchModel(this.prisma).updateMany({
       where: {
         gmailAccountId,
         isActive: true,
@@ -74,7 +74,7 @@ export class GmailWatchService extends BaseService {
     });
 
     // Create new watch record
-    const watch = await this.prisma.gmailWatch.create({
+    const watch = await getGmailWatchModel(this.prisma).create({
       data: {
         gmailAccountId,
         resourceId: watchData.historyId, // Gmail returns historyId, not resourceId
@@ -104,7 +104,7 @@ export class GmailWatchService extends BaseService {
 
     try {
       // Get authenticated client
-      const oauth2Client = await GmailOAuthService.getAuthenticatedClient(account as GmailAccountType);
+      const oauth2Client = await GmailOAuthService.getAuthenticatedClient(account as GmailAccount);
       const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
       // Stop the watch
@@ -119,7 +119,7 @@ export class GmailWatchService extends BaseService {
     }
 
     // Deactivate all watches for this account
-    await this.prisma.gmailWatch.updateMany({
+    await getGmailWatchModel(this.prisma).updateMany({
       where: {
         gmailAccountId,
         isActive: true,
@@ -134,7 +134,7 @@ export class GmailWatchService extends BaseService {
    * Get active watch for an account
    */
   static async getActiveWatch(gmailAccountId: string): Promise<GmailWatchType | null> {
-    return this.prisma.gmailWatch.findFirst({
+    return getGmailWatchModel(this.prisma).findFirst({
       where: {
         gmailAccountId,
         isActive: true,
@@ -148,7 +148,7 @@ export class GmailWatchService extends BaseService {
   static async getExpiringWatches(withinMinutes: number = 60): Promise<GmailWatchType[]> {
     const expirationThreshold = new Date(Date.now() + withinMinutes * 60 * 1000);
 
-    return this.prisma.gmailWatch.findMany({
+    return getGmailWatchModel(this.prisma).findMany({
       where: {
         isActive: true,
         expiration: {
@@ -175,7 +175,7 @@ export class GmailWatchService extends BaseService {
         const account = await GmailAccountService.findById(watch.gmailAccountId);
         if (!account || !account.isActive) {
           // Deactivate the watch if account is inactive
-          await this.prisma.gmailWatch.update({
+          await getGmailWatchModel(this.prisma).update({
             where: { id: watch.id },
             data: { isActive: false },
           });
