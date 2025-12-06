@@ -4,6 +4,7 @@
   "description": "Express backend for Organizer app",
   "main": "dist/index.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "NODE_ENV=development ts-node-dev --respawn src/index.ts",
