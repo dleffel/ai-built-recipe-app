@@ -98,9 +98,9 @@ export const RecipeList: React.FC<RecipeListProps> = ({
           aria-label="Search recipes"
         />
       </div>
-      <div className={styles.grid}>
+      <div className={styles.list}>
         {recipes.map(recipe => (
-          <div key={recipe.id} className={styles.gridItem}>
+          <div key={recipe.id} className={styles.listItem}>
             <RecipeCard
               recipe={recipe}
               onEdit={() => onRecipeEdit(recipe)}

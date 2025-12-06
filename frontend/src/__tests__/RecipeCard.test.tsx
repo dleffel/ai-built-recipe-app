@@ -35,12 +35,14 @@ describe('RecipeCard', () => {
   it('renders recipe information correctly', () => {
     render(<RecipeCard recipe={mockRecipe} />);
 
+    // Compact view shows only title and image
     expect(screen.getByText(mockRecipe.title)).toBeInTheDocument();
-    expect(screen.getByText(mockRecipe.description!)).toBeInTheDocument();
-    expect(screen.getByText(`Prep: ${mockRecipe.prepTime} min`)).toBeInTheDocument();
-    expect(screen.getByText(`Cook: ${mockRecipe.cookTime} min`)).toBeInTheDocument();
-    expect(screen.getByText(`Serves: ${mockRecipe.servings}`)).toBeInTheDocument();
     expect(screen.getByRole('img')).toHaveAttribute('src', mockRecipe.imageUrl);
+    // Description and details are hidden in compact view
+    expect(screen.queryByText(mockRecipe.description!)).not.toBeInTheDocument();
+    expect(screen.queryByText(`Prep: ${mockRecipe.prepTime} min`)).not.toBeInTheDocument();
+    expect(screen.queryByText(`Cook: ${mockRecipe.cookTime} min`)).not.toBeInTheDocument();
+    expect(screen.queryByText(`Serves: ${mockRecipe.servings}`)).not.toBeInTheDocument();
   });
 
   it('shows placeholder with first letter when no image URL is provided', () => {
@@ -94,7 +96,7 @@ describe('RecipeCard', () => {
 
   it('calls onEdit when edit button is clicked', () => {
     render(<RecipeCard recipe={mockRecipe} onEdit={mockHandlers.onEdit} />);
-    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.click(screen.getByLabelText('Edit recipe'));
     expect(mockHandlers.onEdit).toHaveBeenCalledWith(mockRecipe);
   });
 
@@ -103,7 +105,7 @@ describe('RecipeCard', () => {
     mockConfirm.mockImplementation(() => true);
 
     render(<RecipeCard recipe={mockRecipe} onDelete={mockHandlers.onDelete} />);
-    fireEvent.click(screen.getByText('Delete'));
+    fireEvent.click(screen.getByLabelText('Delete recipe'));
 
     expect(mockConfirm).toHaveBeenCalledWith('Are you sure you want to delete this recipe?');
     expect(mockHandlers.onDelete).toHaveBeenCalledWith(mockRecipe);
@@ -116,7 +118,7 @@ describe('RecipeCard', () => {
     mockConfirm.mockImplementation(() => false);
 
     render(<RecipeCard recipe={mockRecipe} onDelete={mockHandlers.onDelete} />);
-    fireEvent.click(screen.getByText('Delete'));
+    fireEvent.click(screen.getByLabelText('Delete recipe'));
 
     expect(mockConfirm).toHaveBeenCalled();
     expect(mockHandlers.onDelete).not.toHaveBeenCalled();
@@ -127,8 +129,8 @@ describe('RecipeCard', () => {
   it('does not show action buttons when handlers are not provided', () => {
     render(<RecipeCard recipe={mockRecipe} />);
     
-    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
-    expect(screen.queryByText('Delete')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Edit recipe')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Delete recipe')).not.toBeInTheDocument();
   });
 
   it('prevents event propagation when clicking action buttons', () => {
@@ -141,14 +143,14 @@ describe('RecipeCard', () => {
       />
     );
 
-    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.click(screen.getByLabelText('Edit recipe'));
     expect(mockHandlers.onClick).not.toHaveBeenCalled();
     expect(mockHandlers.onEdit).toHaveBeenCalled();
 
     const mockConfirm = jest.spyOn(window, 'confirm');
     mockConfirm.mockImplementation(() => true);
 
-    fireEvent.click(screen.getByText('Delete'));
+    fireEvent.click(screen.getByLabelText('Delete recipe'));
     expect(mockHandlers.onClick).not.toHaveBeenCalled();
     expect(mockHandlers.onDelete).toHaveBeenCalled();
 
