@@ -72,9 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await logout();
     } else {
       // If no user, this is a login request
-      // Store the current path to redirect back after login
-      const returnPath = window.location.pathname.startsWith('/recipes') ?
-        window.location.pathname : '/recipes';
+      // Store the current path to redirect back after login, defaulting to homepage
+      const currentPath = window.location.pathname;
+      const returnPath = currentPath !== '/login' && currentPath !== '/' ? currentPath : '/';
       localStorage.setItem('auth_return_path', returnPath);
       window.location.href = `${api.defaults.baseURL}/auth/google`;
     }

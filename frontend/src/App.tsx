@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, Outlet } from 'react-router-dom';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
@@ -15,19 +15,20 @@ import { TodoPlaceholder } from './components/todos/TodoPlaceholder';
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    if (!loading && !user) {
-      navigate('/recipes');
-    }
-  }, [user, loading, navigate]);
 
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
 
-  return user ? <>{children}</> : null;
+  if (!user) {
+    return (
+      <div className="login-message">
+        <p>Please sign in to access this page</p>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 };
 
 const RecipeDetailPage: React.FC = () => {
