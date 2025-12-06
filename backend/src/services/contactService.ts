@@ -176,65 +176,70 @@ export class ContactService extends BaseService {
     if (data.title !== undefined) updateData.title = data.title;
     if (data.notes !== undefined) updateData.notes = data.notes;
 
-    // Handle emails update - delete all and recreate
-    if (data.emails !== undefined) {
-      await this.prisma.contactEmail.deleteMany({ where: { contactId: id } });
-      if (data.emails.length > 0) {
-        await this.prisma.contactEmail.createMany({
-          data: data.emails.map((e, index) => ({
-            contactId: id,
-            email: e.email,
-            label: e.label,
-            isPrimary: e.isPrimary ?? index === 0,
-          })),
-        });
+    // Wrap all database operations in a transaction to ensure atomicity
+    const updatedContact = await this.prisma.$transaction(async (tx) => {
+      // Handle emails update - delete all and recreate
+      if (data.emails !== undefined) {
+        await tx.contactEmail.deleteMany({ where: { contactId: id } });
+        if (data.emails.length > 0) {
+          await tx.contactEmail.createMany({
+            data: data.emails.map((e, index) => ({
+              contactId: id,
+              email: e.email,
+              label: e.label,
+              isPrimary: e.isPrimary ?? index === 0,
+            })),
+          });
+        }
       }
-    }
 
-    // Handle phones update - delete all and recreate
-    if (data.phones !== undefined) {
-      await this.prisma.contactPhone.deleteMany({ where: { contactId: id } });
-      if (data.phones.length > 0) {
-        await this.prisma.contactPhone.createMany({
-          data: data.phones.map((p, index) => ({
-            contactId: id,
-            phone: p.phone,
-            label: p.label,
-            isPrimary: p.isPrimary ?? index === 0,
-          })),
-        });
+      // Handle phones update - delete all and recreate
+      if (data.phones !== undefined) {
+        await tx.contactPhone.deleteMany({ where: { contactId: id } });
+        if (data.phones.length > 0) {
+          await tx.contactPhone.createMany({
+            data: data.phones.map((p, index) => ({
+              contactId: id,
+              phone: p.phone,
+              label: p.label,
+              isPrimary: p.isPrimary ?? index === 0,
+            })),
+          });
+        }
       }
-    }
 
-    // Update the contact
-    const updatedContact = await this.prisma.contact.update({
-      where: { id },
-      data: updateData,
-      include: {
-        emails: true,
-        phones: true,
-      },
-    });
+      // Update the contact
+      const contact = await tx.contact.update({
+        where: { id },
+        data: updateData,
+        include: {
+          emails: true,
+          phones: true,
+        },
+      });
 
-    // Create new version
-    const newSnapshot = this.createSnapshot(updatedContact);
-    const changes = this.computeChanges(previousSnapshot, newSnapshot);
+      // Create new version
+      const newSnapshot = this.createSnapshot(contact);
+      const changes = this.computeChanges(previousSnapshot, newSnapshot);
 
-    // Get the latest version number
-    const latestVersion = await this.prisma.contactVersion.findFirst({
-      where: { contactId: id },
-      orderBy: { version: 'desc' },
-    });
+      // Get the latest version number
+      const latestVersion = await tx.contactVersion.findFirst({
+        where: { contactId: id },
+        orderBy: { version: 'desc' },
+      });
 
-    const newVersionNumber = (latestVersion?.version ?? 0) + 1;
+      const newVersionNumber = (latestVersion?.version ?? 0) + 1;
 
-    await this.prisma.contactVersion.create({
-      data: {
-        contactId: id,
-        version: newVersionNumber,
-        snapshot: newSnapshot as unknown as Prisma.JsonObject,
-        changes: changes as unknown as Prisma.JsonObject,
-      },
+      await tx.contactVersion.create({
+        data: {
+          contactId: id,
+          version: newVersionNumber,
+          snapshot: newSnapshot as unknown as Prisma.JsonObject,
+          changes: changes as unknown as Prisma.JsonObject,
+        },
+      });
+
+      return contact;
     });
 
     return updatedContact;
