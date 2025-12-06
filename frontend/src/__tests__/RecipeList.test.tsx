@@ -87,23 +87,25 @@ describe('RecipeList', () => {
     );
 
     // Should show loading state initially
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText(/Loading/)).toBeInTheDocument();
 
     // Wait for recipes to load
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
     // Should display recipes
     expect(screen.getByText('Recipe 1')).toBeInTheDocument();
     expect(screen.getByText('Recipe 2')).toBeInTheDocument();
 
-    // Should have called the API
+    // Should have called the API with sort parameters
     expect(mockApi.get).toHaveBeenCalledWith('/api/recipes', {
       params: {
         search: '',
         skip: 0,
-        take: 12
+        take: 12,
+        sortBy: 'updatedAt',
+        sortOrder: 'desc'
       }
     });
   });
@@ -129,7 +131,7 @@ describe('RecipeList', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByText('Recipe 1'));
@@ -157,10 +159,11 @@ describe('RecipeList', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
-    const editButtons = screen.getAllByText('Edit');
+    // In list view, edit buttons are shown on hover - find by aria-label
+    const editButtons = screen.getAllByLabelText('Edit recipe');
     fireEvent.click(editButtons[0]);
     expect(mockHandlers.onRecipeEdit).toHaveBeenCalledWith(mockRecipes[0]);
   });
@@ -188,10 +191,11 @@ describe('RecipeList', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
-    const deleteButtons = screen.getAllByText('Delete');
+    // In list view, delete buttons are shown on hover - find by aria-label
+    const deleteButtons = screen.getAllByLabelText('Delete recipe');
     fireEvent.click(deleteButtons[0]);
     expect(window.confirm).toHaveBeenCalled();
     expect(mockHandlers.onRecipeDelete).toHaveBeenCalledWith(mockRecipes[0]);
@@ -228,7 +232,7 @@ describe('RecipeList', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
     // Should only show first page initially
@@ -239,11 +243,11 @@ describe('RecipeList', () => {
     fireEvent.click(screen.getByText('Load More'));
 
     // Should show loading state
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText(/Loading/)).toBeInTheDocument();
 
     // Wait for second page to load
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
     // Should show both pages
@@ -253,10 +257,10 @@ describe('RecipeList', () => {
     // Should have called API twice with correct pagination
     expect(mockApi.get).toHaveBeenCalledTimes(2);
     expect(mockApi.get).toHaveBeenNthCalledWith(1, '/api/recipes', {
-      params: { search: '', skip: 0, take: 12 }
+      params: { search: '', skip: 0, take: 12, sortBy: 'updatedAt', sortOrder: 'desc' }
     });
     expect(mockApi.get).toHaveBeenNthCalledWith(2, '/api/recipes', {
-      params: { search: '', skip: 12, take: 12 }
+      params: { search: '', skip: 12, take: 12, sortBy: 'updatedAt', sortOrder: 'desc' }
     });
   });
 
@@ -273,7 +277,7 @@ describe('RecipeList', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
     // Should show error message
@@ -283,7 +287,7 @@ describe('RecipeList', () => {
     fireEvent.click(screen.getByRole('button', { name: /retry/i }));
 
     // Should show loading state again
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText(/Loading/)).toBeInTheDocument();
 
     // API should have been called twice (initial + retry)
     expect(mockApi.get).toHaveBeenCalledTimes(2);
@@ -306,10 +310,10 @@ describe('RecipeList', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText('No recipes found. Create your first recipe!')).toBeInTheDocument();
+    expect(screen.getByText('No recipes found')).toBeInTheDocument();
   });
 
   it('handles search functionality', async () => {
@@ -351,23 +355,23 @@ describe('RecipeList', () => {
 
     // Wait for initial load
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
-    // Type in search input
-    const searchInput = screen.getByPlaceholderText('Search recipes by title, description, or ingredients...');
+    // Type in search input - new placeholder is shorter
+    const searchInput = screen.getByPlaceholderText('Search recipes...');
     fireEvent.change(searchInput, { target: { value: searchTerm } });
 
     // Wait for debounced search
     await waitFor(() => {
       expect(mockApi.get).toHaveBeenCalledWith('/api/recipes', {
-        params: { search: searchTerm, skip: 0, take: 12 }
+        params: { search: searchTerm, skip: 0, take: 12, sortBy: 'updatedAt', sortOrder: 'desc' }
       });
     }, { timeout: 1000 });
 
     // Wait for loading state to disappear
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
     // Verify search results
@@ -404,28 +408,28 @@ describe('RecipeList', () => {
 
     // Wait for initial load
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
-    // Type in search input
-    const searchInput = screen.getByPlaceholderText('Search recipes by title, description, or ingredients...');
+    // Type in search input - new placeholder is shorter
+    const searchInput = screen.getByPlaceholderText('Search recipes...');
     fireEvent.change(searchInput, { target: { value: searchTerm } });
 
     // Wait for debounced search
     await waitFor(() => {
       expect(mockApi.get).toHaveBeenCalledWith('/api/recipes', {
-        params: { search: searchTerm, skip: 0, take: 12 }
+        params: { search: searchTerm, skip: 0, take: 12, sortBy: 'updatedAt', sortOrder: 'desc' }
       });
     }, { timeout: 1000 });
 
     // Wait for loading state to disappear
     await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
     
-    // Wait for empty state to appear
+    // Wait for empty state to appear - new text is different when searching
     await waitFor(() => {
-      expect(screen.getByText('No recipes found. Create your first recipe!')).toBeInTheDocument();
+      expect(screen.getByText('No recipes found')).toBeInTheDocument();
     });
   });
 });
