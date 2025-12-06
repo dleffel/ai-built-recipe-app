@@ -44,26 +44,6 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
       </div>
       <div className={styles.content}>
         <h3 className={styles.title}>{recipe.title}</h3>
-        {recipe.description && (
-          <p className={styles.description}>{recipe.description}</p>
-        )}
-        <div className={styles.details}>
-          {recipe.prepTime && (
-            <span className={styles.time}>
-              Prep: {recipe.prepTime} min
-            </span>
-          )}
-          {recipe.cookTime && (
-            <span className={styles.time}>
-              Cook: {recipe.cookTime} min
-            </span>
-          )}
-          {recipe.servings && (
-            <span className={styles.servings}>
-              Serves: {recipe.servings}
-            </span>
-          )}
-        </div>
       </div>
       {(onEdit || onDelete) && (
         <div className={styles.actions}>
@@ -73,7 +53,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
               className={`${styles.button} ${styles.editButton}`}
               aria-label="Edit recipe"
             >
-              Edit
+              ✎
             </button>
           )}
           {onDelete && (
@@ -82,7 +62,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
               className={`${styles.button} ${styles.deleteButton}`}
               aria-label="Delete recipe"
             >
-              Delete
+              ✕
             </button>
           )}
         </div>

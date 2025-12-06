@@ -160,7 +160,7 @@ describe('RecipeList', () => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
 
-    const editButtons = screen.getAllByText('Edit');
+    const editButtons = screen.getAllByLabelText('Edit recipe');
     fireEvent.click(editButtons[0]);
     expect(mockHandlers.onRecipeEdit).toHaveBeenCalledWith(mockRecipes[0]);
   });
@@ -191,7 +191,7 @@ describe('RecipeList', () => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
 
-    const deleteButtons = screen.getAllByText('Delete');
+    const deleteButtons = screen.getAllByLabelText('Delete recipe');
     fireEvent.click(deleteButtons[0]);
     expect(window.confirm).toHaveBeenCalled();
     expect(mockHandlers.onRecipeDelete).toHaveBeenCalledWith(mockRecipes[0]);
