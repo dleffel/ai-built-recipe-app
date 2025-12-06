@@ -21,11 +21,54 @@ model User {
   lastLoginAt DateTime?
 
   // Relations
-  recipes     Recipe[]
-  tasks       Task[]
-  contacts    Contact[]
+  recipes       Recipe[]
+  tasks         Task[]
+  contacts      Contact[]
+  gmailAccounts GmailAccount[]
 
   @@map("users")
+}
+
+// Gmail Integration Models
+model GmailAccount {
+  id              String    @id @default(uuid())
+  email           String    // Gmail address
+  isPrimary       Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  accessToken     String    // Encrypted OAuth access token
+  refreshToken    String    // Encrypted OAuth refresh token
+  tokenExpiresAt  DateTime
+  historyId       String?   // Gmail history ID for incremental sync
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastSyncAt      DateTime?
+  
+  // Relations
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  watches         GmailWatch[]
+
+  @@map("gmail_accounts")
+  @@unique([userId, email])
+  @@index([userId])
+  @@index([email])
+}
+
+model GmailWatch {
+  id              String    @id @default(uuid())
+  resourceId      String    // Gmail watch resource ID
+  expiration      DateTime  // Watch expiration time
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  gmailAccountId  String
+  gmailAccount    GmailAccount @relation(fields: [gmailAccountId], references: [id], onDelete: Cascade)
+
+  @@map("gmail_watches")
+  @@index([gmailAccountId])
+  @@index([expiration])
 }
 
 model Recipe {
