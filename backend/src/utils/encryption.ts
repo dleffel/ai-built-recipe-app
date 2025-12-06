@@ -24,6 +24,11 @@ function getEncryptionKey(): Buffer {
     throw new Error('GMAIL_TOKEN_ENCRYPTION_KEY must be 64 hex characters (32 bytes)');
   }
   
+  // Validate that all characters are valid hex characters (0-9, a-f, A-F)
+  if (!/^[0-9a-fA-F]+$/.test(key)) {
+    throw new Error('GMAIL_TOKEN_ENCRYPTION_KEY must contain only valid hex characters (0-9, a-f, A-F)');
+  }
+  
   return Buffer.from(key, 'hex');
 }
 
