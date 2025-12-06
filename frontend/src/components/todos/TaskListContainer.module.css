@@ -27,7 +27,7 @@
   padding: 6px 12px;
   border: 1px solid var(--todo-border-color);
   border-radius: var(--radius-sm);
-  background: white;
+  background: var(--todo-bg-color);
   color: var(--todo-text-color);
   font-size: 13px;
   font-weight: var(--font-weight-medium);
@@ -56,13 +56,14 @@
 }
 
 .dayContainer {
-  background-color: #ffffff;
+  background-color: var(--todo-bg-color);
   border-radius: var(--radius-md);
   padding: 8px 12px;
   box-shadow: none;
   transition: all var(--transition-normal);
   /* Account for fixed header (60px) plus some padding when scrolling into view */
   scroll-margin-top: 72px;
+  border: 1px solid var(--todo-border-color);
 }
 
 /* Highlight style for drop target day */
@@ -222,7 +223,7 @@
 /* Drag ghost styling */
 .dragGhost {
   padding: var(--spacing-1) var(--spacing-2);
-  background-color: white;
+  background-color: var(--todo-bg-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   font-size: var(--font-size-sm);
@@ -231,7 +232,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
-  border: 1px solid var(--todo-border-color);
+  border: 1px solid var(--button-primary-bg);
 }
 
 @keyframes spin {
@@ -384,7 +385,7 @@
 
 /* Drag Overlay styles for @dnd-kit */
 .dragOverlay {
-  background-color: white;
+  background-color: var(--todo-bg-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   padding: 8px 12px;

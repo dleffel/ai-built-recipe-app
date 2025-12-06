@@ -88,7 +88,7 @@
   }
 
   .hamburgerButton:hover {
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-tertiary);
     color: var(--color-accent);
   }
 
@@ -104,7 +104,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -124,8 +124,8 @@
     width: 280px;
     max-width: 80vw;
     height: 100%;
-    background: var(--color-bg);
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    background: var(--color-bg-secondary);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.4);
     z-index: 999;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
@@ -171,7 +171,7 @@
   }
 
   .closeButton:hover {
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-tertiary);
     color: var(--color-text);
   }
 
@@ -208,18 +208,18 @@
   }
 
   .sideMenuLink:hover {
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-tertiary);
     color: var(--color-accent);
   }
 
   .sideMenuLink:focus {
     outline: none;
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-tertiary);
   }
 
   .sideMenuActiveLink {
     color: var(--color-accent);
-    background-color: var(--color-surface);
+    background-color: var(--color-accent-light);
     font-weight: 600;
     position: relative;
   }

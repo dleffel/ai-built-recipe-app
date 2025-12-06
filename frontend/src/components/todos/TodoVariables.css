@@ -2,54 +2,54 @@
 @import '../../../src/styles/typography.css';
 
 :root {
-  /* Color System - Enhanced for accessibility */
-  --todo-bg-color: #FFFFFF;
-  --todo-text-color: #1A2B3D;
-  --todo-muted-color: #4B5563; /* Darker than original for better contrast */
-  --todo-border-color: #D1D5DB;
+  /* Color System - Dark mode optimized (neutral gray) */
+  --todo-bg-color: var(--color-bg-secondary, #1F2937);
+  --todo-text-color: var(--color-text, #F9FAFB);
+  --todo-muted-color: var(--color-muted, #9CA3AF);
+  --todo-border-color: var(--color-border, #374151);
   
-  /* Category Colors - Enhanced for WCAG AA compliance (4.5:1 minimum contrast ratio) */
-  --category-roovet-bg: #2563EB; /* Blue */
+  /* Category Colors - Enhanced for dark mode visibility */
+  --category-roovet-bg: #3B82F6; /* Blue - brighter for dark mode */
   --category-roovet-text: #FFFFFF;
-  --category-roovet-light: rgba(37, 99, 235, 0.15);
+  --category-roovet-light: rgba(59, 130, 246, 0.2);
   
-  --category-roocode-bg: #059669; /* Green */
+  --category-roocode-bg: #10B981; /* Green - brighter for dark mode */
   --category-roocode-text: #FFFFFF;
-  --category-roocode-light: rgba(5, 150, 105, 0.15);
+  --category-roocode-light: rgba(16, 185, 129, 0.2);
   
-  --category-personal-bg: #7C3AED; /* Purple */
+  --category-personal-bg: #8B5CF6; /* Purple - brighter for dark mode */
   --category-personal-text: #FFFFFF;
-  --category-personal-light: rgba(124, 58, 237, 0.15);
+  --category-personal-light: rgba(139, 92, 246, 0.2);
   
   /* Priority Indicator */
-  --priority-color: #E3A008; /* Darker amber for better contrast */
-  --priority-hover: #D97706;
+  --priority-color: #F59E0B; /* Amber - brighter for dark mode */
+  --priority-hover: #FBBF24;
   
   /* Status Colors */
-  --status-complete-color: #6B7280;
-  --status-incomplete-color: #1A2B3D;
+  --status-complete-color: #64748B;
+  --status-incomplete-color: var(--color-text, #F9FAFB);
   
   /* Interactive Elements */
-  --button-primary-bg: #2563EB;
+  --button-primary-bg: #3B82F6;
   --button-primary-text: #FFFFFF;
-  --button-primary-hover: #1D4ED8;
+  --button-primary-hover: #60A5FA;
   
-  --button-secondary-bg: #F3F4F6;
-  --button-secondary-text: #4B5563;
-  --button-secondary-hover: #E5E7EB;
+  --button-secondary-bg: var(--color-bg-tertiary, #374151);
+  --button-secondary-text: var(--color-text-secondary, #D1D5DB);
+  --button-secondary-hover: var(--color-border-light, #4B5563);
   
-  --button-danger-bg: #FEE2E2;
-  --button-danger-text: #DC2626;
-  --button-danger-hover: #DC2626;
+  --button-danger-bg: rgba(239, 68, 68, 0.15);
+  --button-danger-text: #F87171;
+  --button-danger-hover: #EF4444;
   --button-danger-hover-text: #FFFFFF;
   
-  /* Feedback Colors */
-  --feedback-success-bg: #D1FAE5;
-  --feedback-success-text: #059669;
-  --feedback-error-bg: #FEE2E2;
-  --feedback-error-text: #DC2626;
-  --feedback-info-bg: #E0F2FE;
-  --feedback-info-text: #0284C7;
+  /* Feedback Colors - Dark mode optimized */
+  --feedback-success-bg: rgba(16, 185, 129, 0.15);
+  --feedback-success-text: #34D399;
+  --feedback-error-bg: rgba(239, 68, 68, 0.15);
+  --feedback-error-text: #F87171;
+  --feedback-info-bg: rgba(59, 130, 246, 0.15);
+  --feedback-info-text: #60A5FA;
   
   /* Spacing - Based on 8px grid system */
   --spacing-1: 0.5rem;  /* 8px */
@@ -61,10 +61,10 @@
   
   /* Typography variables moved to typography.css */
   
-  /* Effects */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Effects - Dark mode shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.5);
   
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
