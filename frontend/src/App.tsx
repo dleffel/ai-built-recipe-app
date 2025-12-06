@@ -19,7 +19,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   React.useEffect(() => {
     if (!loading && !user) {
-      navigate('/recipes');
+      navigate('/');
     }
   }, [user, loading, navigate]);
 
