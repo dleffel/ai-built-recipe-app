@@ -1,0 +1,152 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--hover-background, #f5f5f5);
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.itemValue {
+  font-weight: 500;
+  color: var(--text-primary, #333333);
+}
+
+.itemLabel {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666666);
+}
+
+.primaryBadge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border-radius: 12px;
+  margin-left: auto;
+}
+
+.setPrimaryButton {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background-color: transparent;
+  color: var(--primary-color, #007bff);
+  border: 1px solid var(--primary-color, #007bff);
+  border-radius: 12px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background-color 0.2s ease;
+}
+
+.setPrimaryButton:hover {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-secondary, #666666);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.removeButton:hover {
+  color: var(--error-color, #dc3545);
+}
+
+.addRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color, #007bff);
+}
+
+.labelSelect {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: var(--card-background, #ffffff);
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.labelSelect:focus {
+  outline: none;
+  border-color: var(--primary-color, #007bff);
+}
+
+.addButton {
+  padding: 10px 16px;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.addButton:hover:not(:disabled) {
+  background-color: var(--primary-hover, #0056b3);
+}
+
+.addButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .addRow {
+    flex-wrap: wrap;
+  }
+
+  .input {
+    width: 100%;
+  }
+
+  .labelSelect {
+    flex: 1;
+  }
+
+  .addButton {
+    flex: 1;
+  }
+
+  .item {
+    flex-wrap: wrap;
+  }
+
+  .primaryBadge,
+  .setPrimaryButton {
+    margin-left: 0;
+  }
+}

@@ -1,0 +1,99 @@
+.container {
+  font-size: 0.9rem;
+}
+
+.initialVersion {
+  padding: 0;
+}
+
+.initialTitle {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary, #666666);
+}
+
+.snapshotGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.snapshotItem {
+  display: flex;
+  gap: 8px;
+}
+
+.snapshotLabel {
+  font-weight: 500;
+  color: var(--text-secondary, #666666);
+  min-width: 80px;
+}
+
+.snapshotValue {
+  color: var(--text-primary, #333333);
+}
+
+.changeList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.changeItem {
+  border-left: 3px solid var(--border-color, #e0e0e0);
+  padding-left: 12px;
+}
+
+.fieldName {
+  font-weight: 600;
+  color: var(--text-primary, #333333);
+  margin-bottom: 8px;
+}
+
+.changeValues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oldValue,
+.newValue {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.oldValue {
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+.newValue {
+  background-color: #f0fdf4;
+  color: #166534;
+}
+
+.changeIndicator {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.valueText {
+  word-break: break-word;
+}
+
+@media (max-width: 480px) {
+  .snapshotItem {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .snapshotLabel {
+    min-width: auto;
+  }
+}

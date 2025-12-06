@@ -8,10 +8,13 @@ import { RecipeDetail } from './components/recipes/RecipeDetail';
 import { RecipeForm } from './components/recipes/RecipeForm';
 import { Recipe, CreateRecipeDTO } from './types/recipe';
 import { recipeApi } from './services/api';
+import { contactApi } from './services/contactApi';
 import Layout from './components/layout/Layout';
 import HomePage from './components/HomePage';
 import { TodoPlaceholder } from './components/todos/TodoPlaceholder';
 import { Button } from './components/ui/Button';
+import { ContactList, ContactDetail, ContactForm } from './components/crm';
+import { Contact, CreateContactDTO } from './types/contact';
 
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -170,6 +173,128 @@ const RecipeListPage: React.FC = () => {
   );
 };
 
+// CRM Page Components
+const ContactListPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <div className="login-message">
+        <p>Please sign in to access your contacts</p>
+      </div>
+    );
+  }
+
+  return (
+    <ContactList
+      onContactClick={(contact) => navigate(`/contacts/${contact.id}`)}
+      onCreateClick={() => navigate('/contacts/new')}
+    />
+  );
+};
+
+const ContactDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [contact, setContact] = React.useState<Contact | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchContact = async () => {
+      try {
+        if (id) {
+          const data = await contactApi.get(id);
+          setContact(data);
+        }
+      } catch (error) {
+        console.error('Error fetching contact:', error);
+        navigate('/contacts');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContact();
+  }, [id, navigate]);
+
+  if (loading) {
+    return <div className="loading">Loading contact...</div>;
+  }
+
+  if (!contact) {
+    return null;
+  }
+
+  return (
+    <ContactDetail
+      contact={contact}
+      onEdit={() => navigate(`/contacts/${contact.id}/edit`)}
+      onDelete={async () => {
+        try {
+          await contactApi.delete(contact.id);
+          navigate('/contacts');
+        } catch (error) {
+          console.error('Error deleting contact:', error);
+        }
+      }}
+      onBack={() => navigate('/contacts')}
+      onContactUpdated={(updatedContact) => setContact(updatedContact)}
+    />
+  );
+};
+
+const ContactFormPage: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [contact, setContact] = React.useState<Contact | null>(null);
+  const [loading, setLoading] = React.useState(mode === 'edit');
+
+  React.useEffect(() => {
+    const fetchContact = async () => {
+      if (mode === 'edit' && id) {
+        try {
+          const data = await contactApi.get(id);
+          setContact(data);
+        } catch (error) {
+          console.error('Error fetching contact:', error);
+          navigate('/contacts');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchContact();
+  }, [mode, id, navigate]);
+
+  if (loading) {
+    return <div className="loading">Loading contact...</div>;
+  }
+
+  const handleSubmit = async (data: CreateContactDTO) => {
+    try {
+      if (mode === 'edit' && contact) {
+        await contactApi.update(contact.id, data);
+      } else {
+        await contactApi.create(data);
+      }
+      navigate('/contacts');
+    } catch (error) {
+      console.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} contact:`, error);
+      throw error;
+    }
+  };
+
+  return (
+    <ContactForm
+      contact={contact || undefined}
+      onSubmit={handleSubmit}
+      onCancel={() => navigate('/contacts')}
+    />
+  );
+};
+
 const AppContent: React.FC = () => {
   const { loading } = useAuth();
 
@@ -223,6 +348,40 @@ const AppContent: React.FC = () => {
               <ProtectedRoute>
                 <TodoPlaceholder />
               </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/contacts/*"
+          element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<ContactListPage />} />
+                <Route
+                  path="/new"
+                  element={
+                    <ProtectedRoute>
+                      <ContactFormPage mode="create" />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ContactDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <ContactFormPage mode="edit" />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
             </Layout>
           }
         />

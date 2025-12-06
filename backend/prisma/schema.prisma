@@ -23,6 +23,7 @@ model User {
   // Relations
   recipes     Recipe[]
   tasks       Task[]
+  contacts    Contact[]
 
   @@map("users")
 }
@@ -69,4 +70,73 @@ model Task {
   @@map("tasks")
   @@index([userId])
   @@index([dueDate])
+}
+
+// CRM Models
+model Contact {
+  id          String    @id @default(uuid())
+  firstName   String
+  lastName    String
+  company     String?
+  title       String?
+  notes       String?
+  isDeleted   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  emails      ContactEmail[]
+  phones      ContactPhone[]
+  versions    ContactVersion[]
+
+  @@map("contacts")
+  @@index([userId])
+  @@index([firstName, lastName])
+}
+
+model ContactEmail {
+  id          String    @id @default(uuid())
+  email       String
+  label       String    // e.g., "work", "personal", "other"
+  isPrimary   Boolean   @default(false)
+  
+  // Relations
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("contact_emails")
+  @@index([contactId])
+  @@index([email])
+}
+
+model ContactPhone {
+  id          String    @id @default(uuid())
+  phone       String
+  label       String    // e.g., "mobile", "work", "home"
+  isPrimary   Boolean   @default(false)
+  
+  // Relations
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("contact_phones")
+  @@index([contactId])
+}
+
+model ContactVersion {
+  id          String    @id @default(uuid())
+  version     Int       // Sequential version number
+  snapshot    Json      // Full snapshot of contact data at this version
+  changes     Json      // Object describing what changed from previous version
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("contact_versions")
+  @@index([contactId])
+  @@index([contactId, version])
 }
