@@ -30,6 +30,7 @@ export interface ContactSnapshot {
   company: string | null;
   title: string | null;
   notes: string | null;
+  linkedInUrl: string | null;
   emails: Array<{ email: string; label: string; isPrimary: boolean }>;
   phones: Array<{ phone: string; label: string; isPrimary: boolean }>;
 }
@@ -53,6 +54,7 @@ export interface CreateContactDTO {
   company?: string;
   title?: string;
   notes?: string;
+  linkedInUrl?: string;
   emails?: ContactEmailDTO[];
   phones?: ContactPhoneDTO[];
 }
@@ -66,6 +68,7 @@ export interface UpdateContactDTO {
   company?: string | null;
   title?: string | null;
   notes?: string | null;
+  linkedInUrl?: string | null;
   emails?: ContactEmailDTO[];
   phones?: ContactPhoneDTO[];
 }
