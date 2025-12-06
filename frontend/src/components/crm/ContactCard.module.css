@@ -1,19 +1,20 @@
 .card {
-  background: var(--card-background, #ffffff);
-  border: 1px solid var(--border-color, #e0e0e0);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+  border-color: var(--color-accent);
 }
 
 .card:focus {
-  outline: 2px solid var(--primary-color, #007bff);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
@@ -25,13 +26,13 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary, #333333);
+  color: var(--color-text);
 }
 
 .subtitle {
   margin: 4px 0 0 0;
   font-size: 0.9rem;
-  color: var(--text-secondary, #666666);
+  color: var(--color-text-secondary);
 }
 
 .contactInfo {
@@ -40,7 +41,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--text-secondary, #666666);
+  color: var(--color-text-secondary);
 }
 
 .email,
@@ -49,7 +50,7 @@
 }
 
 .separator {
-  color: var(--border-color, #e0e0e0);
+  color: var(--color-border);
 }
 
 @media (max-width: 480px) {

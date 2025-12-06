@@ -7,15 +7,15 @@
 .title {
   margin: 0 0 24px 0;
   font-size: 1.5rem;
-  color: var(--text-primary, #333333);
+  color: var(--color-text);
 }
 
 .error {
   padding: 12px 16px;
-  background-color: #fef2f2;
-  border: 1px solid var(--error-color, #dc3545);
+  background-color: var(--color-error-light);
+  border: 1px solid var(--color-error);
   border-radius: 6px;
-  color: var(--error-color, #dc3545);
+  color: var(--color-error);
   margin-bottom: 20px;
 }
 
@@ -27,9 +27,9 @@
   margin: 0 0 16px 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-secondary, #666666);
+  color: var(--color-text-secondary);
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .row {
@@ -47,32 +47,38 @@
   margin-bottom: 6px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-primary, #333333);
+  color: var(--color-text);
 }
 
 .required {
-  color: var(--error-color, #dc3545);
+  color: var(--color-error);
 }
 
 .input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border-color, #e0e0e0);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.95rem;
   transition: border-color 0.2s ease;
   box-sizing: border-box;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--primary-color, #007bff);
+  border-color: var(--color-accent);
+}
+
+.input::placeholder {
+  color: var(--color-muted);
 }
 
 .textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border-color, #e0e0e0);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.95rem;
   font-family: inherit;
@@ -80,11 +86,17 @@
   min-height: 100px;
   transition: border-color 0.2s ease;
   box-sizing: border-box;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .textarea:focus {
   outline: none;
-  border-color: var(--primary-color, #007bff);
+  border-color: var(--color-accent);
+}
+
+.textarea::placeholder {
+  color: var(--color-muted);
 }
 
 .actions {
@@ -92,14 +104,14 @@
   justify-content: flex-end;
   gap: 12px;
   padding-top: 20px;
-  border-top: 1px solid var(--border-color, #e0e0e0);
+  border-top: 1px solid var(--color-border);
 }
 
 .cancelButton {
   padding: 12px 24px;
-  background-color: var(--card-background, #ffffff);
-  color: var(--text-primary, #333333);
-  border: 1px solid var(--border-color, #e0e0e0);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.95rem;
   cursor: pointer;
@@ -107,7 +119,7 @@
 }
 
 .cancelButton:hover:not(:disabled) {
-  background-color: var(--hover-background, #f5f5f5);
+  background-color: var(--color-surface-hover);
 }
 
 .cancelButton:disabled {
@@ -117,7 +129,7 @@
 
 .submitButton {
   padding: 12px 24px;
-  background-color: var(--primary-color, #007bff);
+  background-color: var(--color-accent);
   color: white;
   border: none;
   border-radius: 6px;
@@ -128,7 +140,7 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background-color: var(--primary-hover, #0056b3);
+  background-color: var(--color-accent-hover);
 }
 
 .submitButton:disabled {

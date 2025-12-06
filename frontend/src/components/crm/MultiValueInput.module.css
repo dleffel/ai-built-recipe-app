@@ -15,25 +15,25 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background-color: var(--hover-background, #f5f5f5);
+  background-color: var(--color-bg-tertiary);
   border-radius: 6px;
   flex-wrap: wrap;
 }
 
 .itemValue {
   font-weight: 500;
-  color: var(--text-primary, #333333);
+  color: var(--color-text);
 }
 
 .itemLabel {
   font-size: 0.85rem;
-  color: var(--text-secondary, #666666);
+  color: var(--color-text-secondary);
 }
 
 .primaryBadge {
   font-size: 0.75rem;
   padding: 2px 8px;
-  background-color: var(--primary-color, #007bff);
+  background-color: var(--color-accent);
   color: white;
   border-radius: 12px;
   margin-left: auto;
@@ -43,8 +43,8 @@
   font-size: 0.75rem;
   padding: 2px 8px;
   background-color: transparent;
-  color: var(--primary-color, #007bff);
-  border: 1px solid var(--primary-color, #007bff);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
   border-radius: 12px;
   cursor: pointer;
   margin-left: auto;
@@ -52,7 +52,7 @@
 }
 
 .setPrimaryButton:hover {
-  background-color: var(--primary-color, #007bff);
+  background-color: var(--color-accent);
   color: white;
 }
 
@@ -60,14 +60,14 @@
   background: none;
   border: none;
   font-size: 1.2rem;
-  color: var(--text-secondary, #666666);
+  color: var(--color-muted);
   cursor: pointer;
   padding: 0 4px;
   line-height: 1;
 }
 
 .removeButton:hover {
-  color: var(--error-color, #dc3545);
+  color: var(--color-error);
 }
 
 .addRow {
@@ -79,34 +79,41 @@
 .input {
   flex: 1;
   padding: 10px 12px;
-  border: 1px solid var(--border-color, #e0e0e0);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.95rem;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--primary-color, #007bff);
+  border-color: var(--color-accent);
+}
+
+.input::placeholder {
+  color: var(--color-muted);
 }
 
 .labelSelect {
   padding: 10px 12px;
-  border: 1px solid var(--border-color, #e0e0e0);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.95rem;
-  background-color: var(--card-background, #ffffff);
+  background-color: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
   min-width: 100px;
 }
 
 .labelSelect:focus {
   outline: none;
-  border-color: var(--primary-color, #007bff);
+  border-color: var(--color-accent);
 }
 
 .addButton {
   padding: 10px 16px;
-  background-color: var(--primary-color, #007bff);
+  background-color: var(--color-accent);
   color: white;
   border: none;
   border-radius: 6px;
@@ -116,7 +123,7 @@
 }
 
 .addButton:hover:not(:disabled) {
-  background-color: var(--primary-hover, #0056b3);
+  background-color: var(--color-accent-hover);
 }
 
 .addButton:disabled {

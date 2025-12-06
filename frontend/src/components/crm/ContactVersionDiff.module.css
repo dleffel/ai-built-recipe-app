@@ -10,7 +10,7 @@
   margin: 0 0 12px 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-secondary, #666666);
+  color: var(--color-text-secondary);
 }
 
 .snapshotGrid {
@@ -26,12 +26,12 @@
 
 .snapshotLabel {
   font-weight: 500;
-  color: var(--text-secondary, #666666);
+  color: var(--color-muted);
   min-width: 80px;
 }
 
 .snapshotValue {
-  color: var(--text-primary, #333333);
+  color: var(--color-text);
 }
 
 .changeList {
@@ -41,13 +41,13 @@
 }
 
 .changeItem {
-  border-left: 3px solid var(--border-color, #e0e0e0);
+  border-left: 3px solid var(--color-border);
   padding-left: 12px;
 }
 
 .fieldName {
   font-weight: 600;
-  color: var(--text-primary, #333333);
+  color: var(--color-text);
   margin-bottom: 8px;
 }
 
@@ -69,13 +69,13 @@
 }
 
 .oldValue {
-  background-color: #fef2f2;
-  color: #991b1b;
+  background-color: var(--color-error-light);
+  color: #F85149;
 }
 
 .newValue {
-  background-color: #f0fdf4;
-  color: #166534;
+  background-color: var(--color-success-light);
+  color: #56D364;
 }
 
 .changeIndicator {
