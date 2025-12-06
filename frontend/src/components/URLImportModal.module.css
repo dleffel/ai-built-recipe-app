@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,7 +15,7 @@
 }
 
 .modal {
-  background: white;
+  background: var(--color-surface);
   padding: var(--spacing-5);
   width: 100%;
   max-width: 500px;
@@ -23,7 +23,8 @@
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
 }
 
 .modal h2 {
@@ -68,7 +69,7 @@
   border-radius: 6px;
   font-size: var(--font-size-base);
   transition: all 0.2s ease-in-out;
-  background-color: white;
+  background-color: var(--color-bg-secondary);
   color: var(--color-text);
   min-height: 44px;
   box-sizing: border-box;
@@ -77,31 +78,31 @@
 
 .field input:hover {
   border-color: var(--color-accent);
-  background: var(--color-accent-light);
+  background: var(--color-bg-tertiary);
 }
 
 .field input:focus {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px var(--color-accent-light);
-  background: white;
+  background: var(--color-bg-secondary);
 }
 
 .field input:disabled {
   color: var(--color-muted);
   border-color: var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-bg-tertiary);
   cursor: not-allowed;
 }
 
 .error {
-  color: #DC2626;
+  color: var(--color-error);
   margin-bottom: var(--spacing-3);
   padding: var(--spacing-3);
   font-size: var(--font-size-base);
   font-family: var(--font-ui);
   font-style: italic;
-  background: #FEE2E2;
+  background: var(--color-error-light);
   border-radius: 6px;
   width: 100%;
   box-sizing: border-box;
@@ -142,12 +143,12 @@
 
 .cancelButton {
   color: var(--color-text);
-  background: white;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
 }
 
 .cancelButton:hover:not(:disabled) {
-  background: var(--color-bg);
+  background: var(--color-bg-tertiary);
   border-color: var(--color-muted);
 }
 
@@ -191,7 +192,7 @@
 @media (max-width: 768px) {
   .overlay {
     padding: var(--spacing-3);
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7);
   }
 
   .modal {
@@ -200,6 +201,7 @@
     border-radius: 12px 12px 0 0;
     animation: slideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     max-width: none;
+    border-bottom: none;
   }
 
   .modal h2 {
@@ -213,7 +215,7 @@
     gap: var(--spacing-3);
     margin: var(--spacing-4) calc(var(--spacing-4) * -1) calc(var(--spacing-4) * -1);
     padding: var(--spacing-4);
-    background: var(--color-bg);
+    background: var(--color-bg-secondary);
     border-top: 1px solid var(--color-border);
   }
 

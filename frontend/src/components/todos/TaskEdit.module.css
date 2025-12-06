@@ -33,12 +33,13 @@
   color: var(--todo-text-color);
   transition: all var(--transition-fast);
   height: 32px;
+  background-color: var(--todo-bg-color);
 }
 
 .titleInput:focus {
   outline: none;
   border-color: var(--button-primary-bg);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px var(--feedback-info-bg);
 }
 
 .titleInput::placeholder {
@@ -76,7 +77,7 @@
   font-family: var(--font-family-ui);
   font-size: 12px;
   color: var(--todo-text-color);
-  background-color: white;
+  background-color: var(--todo-bg-color);
   transition: all var(--transition-fast);
   height: 28px;
 }
@@ -84,7 +85,7 @@
 .datePicker:focus {
   outline: none;
   border-color: var(--button-primary-bg);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px var(--feedback-info-bg);
 }
 
 .categorySelect {
@@ -94,7 +95,7 @@
   font-family: var(--font-family-ui);
   font-size: 12px;
   color: var(--todo-text-color);
-  background-color: white;
+  background-color: var(--todo-bg-color);
   cursor: pointer;
   transition: all var(--transition-fast);
   height: 28px;
@@ -103,7 +104,7 @@
 .categorySelect:focus {
   outline: none;
   border-color: var(--button-primary-bg);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px var(--feedback-info-bg);
 }
 
 .priorityToggle {
@@ -147,7 +148,7 @@
 }
 
 .priorityCheckbox:focus {
-  outline: 2px solid rgba(227, 160, 8, 0.3);
+  outline: 2px solid var(--priority-color);
   outline-offset: 2px;
 }
 

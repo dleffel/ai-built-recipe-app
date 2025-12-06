@@ -6,7 +6,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,12 +20,13 @@
 }
 
 .modal {
-  background: white;
+  background: var(--todo-bg-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   width: 90%;
   max-width: 400px;
   animation: slideIn 0.2s ease-out;
+  border: 1px solid var(--todo-border-color);
 }
 
 @keyframes slideIn {
@@ -104,7 +105,7 @@
   padding: 10px 12px;
   border: 1px solid var(--todo-border-color);
   border-radius: var(--radius-sm);
-  background: white;
+  background: var(--todo-bg-color);
   color: var(--todo-text-color);
   font-size: 13px;
   font-weight: var(--font-weight-medium);
@@ -140,12 +141,13 @@
   font-size: 14px;
   color: var(--todo-text-color);
   transition: all var(--transition-fast);
+  background-color: var(--todo-bg-color);
 }
 
 .datePicker:focus {
   outline: none;
   border-color: var(--button-primary-bg);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px var(--feedback-info-bg);
 }
 
 .datePicker:disabled {
@@ -166,7 +168,7 @@
   padding: 10px 20px;
   border: 1px solid var(--todo-border-color);
   border-radius: var(--radius-sm);
-  background: white;
+  background: var(--todo-bg-color);
   color: var(--todo-text-color);
   font-size: 14px;
   font-weight: var(--font-weight-medium);

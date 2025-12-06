@@ -8,7 +8,7 @@
 
 .searchContainer {
   padding: var(--spacing-4) var(--page-margin);
-  background: var(--color-bg);
+  background: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
@@ -24,7 +24,8 @@
   font-size: var(--font-size-base);
   border: 2px solid var(--color-border);
   border-radius: 8px;
-  background: white;
+  background: var(--color-surface);
+  color: var(--color-text);
   transition: all 0.2s ease;
 }
 
@@ -49,7 +50,7 @@
 .gridItem {
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--color-surface);
   border-radius: 8px;
   overflow: hidden;
   transition: transform 0.2s ease;
@@ -61,17 +62,18 @@
   color: var(--color-muted);
   font-family: var(--font-ui);
   font-style: italic;
-  background: var(--color-bg);
+  background: var(--color-surface);
   border-radius: 8px;
   margin: var(--spacing-4) var(--page-margin);
+  border: 1px solid var(--color-border);
 }
 
 .error {
   text-align: center;
   padding: var(--spacing-6);
-  color: var(--color-text);
+  color: var(--color-error);
   font-family: var(--font-ui);
-  background: var(--color-accent-light);
+  background: var(--color-error-light);
   border-radius: 8px;
   margin: var(--spacing-4) var(--page-margin);
 }
@@ -83,9 +85,10 @@
   font-family: var(--font-content);
   font-size: var(--font-size-base);
   line-height: var(--line-height-content);
-  background: var(--color-bg);
+  background: var(--color-surface);
   border-radius: 8px;
   margin: var(--spacing-4) var(--page-margin);
+  border: 1px solid var(--color-border);
 }
 
 .retryButton,

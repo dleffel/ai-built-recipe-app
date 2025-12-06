@@ -4,7 +4,7 @@
 .dragFeedback {
   display: flex;
   align-items: center;
-  background-color: white;
+  background-color: var(--todo-bg-color);
   border-radius: var(--radius-md);
   padding: var(--spacing-1) var(--spacing-2);
   box-shadow: var(--shadow-lg);
@@ -17,7 +17,7 @@
   z-index: var(--z-index-dragitem);
   top: -1000px;
   left: -1000px;
-  border: 1px solid var(--todo-border-color);
+  border: 1px solid var(--button-primary-bg);
 }
 
 .categoryIndicator {
@@ -129,8 +129,8 @@
 /* Styles for the day container when it's a drop target */
 /* IMPORTANT: Do not change the background color of the day container during drag */
 .dayDropTarget {
-  /* Keep the original white background */
-  background-color: white !important;
+  /* Keep the original dark background */
+  background-color: var(--todo-bg-color) !important;
   /* Add a border instead to indicate it's a drop target */
   border: 2px dashed var(--button-primary-bg) !important;
   /* Add some padding to prevent content shift */
@@ -139,8 +139,8 @@
 
 /* IMPORTANT: Make sure task items remain fully visible during drag */
 .dayDropTarget [data-id] {
-  /* Force white background */
-  background-color: white !important;
+  /* Force dark background */
+  background-color: var(--todo-bg-color) !important;
   /* Force full opacity */
   opacity: 1 !important;
   /* Add a subtle shadow for better visibility */

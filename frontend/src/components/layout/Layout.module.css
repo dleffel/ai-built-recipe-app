@@ -4,7 +4,7 @@
   flex-direction: column;
   position: relative;
   z-index: 1;
-  background: transparent;
+  background: var(--color-bg);
 }
 
 .header {
@@ -17,8 +17,8 @@
   width: 100%;
   height: 60px;
   padding: 0 var(--page-margin);
-  background: var(--color-bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
   z-index: 100; /* Ensure it's above other content */
 }
 
@@ -56,7 +56,7 @@
   width: 100%;
   animation: fadeIn 0.3s ease-out;
   box-sizing: border-box;
-  background: transparent;
+  background: var(--color-bg);
   padding: 60px var(--page-margin) 0; /* Add top padding to account for fixed header */
   max-width: var(--content-width);
   margin: 0 auto;

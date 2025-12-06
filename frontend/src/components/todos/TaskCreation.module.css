@@ -11,7 +11,7 @@
   /* Left padding aligns category dropdown with category indicators in TaskItem */
   /* TaskItem: dragHandle (18px + 4px margin) + checkbox (16px + 8px margin) = 46px */
   padding: 4px 8px 4px 54px;
-  background-color: white;
+  background-color: var(--todo-bg-color);
   border-bottom: 1px solid var(--todo-border-color);
   min-height: 32px;
   gap: 8px;
@@ -31,7 +31,7 @@
   min-width: 70px;
   height: 22px;
   transition: all var(--transition-fast);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 4px center;
 }
@@ -78,7 +78,7 @@
 .inlineTitleInput::placeholder {
   color: var(--todo-muted-color);
   font-style: italic;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .inlineTitleInput:disabled {

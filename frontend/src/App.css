@@ -5,16 +5,28 @@
 }
 
 :root {
-  /* Modern, sleek color palette */
-  --color-bg: #FFFFFF;
-  --color-text: #1A2B3D;
-  --color-muted: #64748B;
-  --color-border: #E2E8F0;
-  --color-active: #2563EB;
-  --color-accent: #2563EB;
-  --color-accent-light: #EFF6FF;
-  --color-success: #059669;
-  --color-card-hover: #F8FAFC;
+  /* Dark mode color palette */
+  --color-bg: #0F172A;
+  --color-bg-secondary: #1E293B;
+  --color-bg-tertiary: #334155;
+  --color-surface: #1E293B;
+  --color-surface-hover: #334155;
+  --color-text: #F1F5F9;
+  --color-text-secondary: #CBD5E1;
+  --color-muted: #94A3B8;
+  --color-border: #334155;
+  --color-border-light: #475569;
+  --color-active: #3B82F6;
+  --color-accent: #3B82F6;
+  --color-accent-light: rgba(59, 130, 246, 0.15);
+  --color-accent-hover: #60A5FA;
+  --color-success: #10B981;
+  --color-success-light: rgba(16, 185, 129, 0.15);
+  --color-card-hover: #1E293B;
+  --color-error: #EF4444;
+  --color-error-light: rgba(239, 68, 68, 0.15);
+  --color-warning: #F59E0B;
+  --color-warning-light: rgba(245, 158, 11, 0.15);
   
   /* Spacing */
   --spacing-1: 0.25rem;
@@ -29,9 +41,14 @@
   /* Layout */
   --page-margin: 1.5rem;
   --content-width: calc(100% - (var(--page-margin) * 2));
+  
+  /* Shadows for dark mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.5);
 }
 
-/* Kindle paper texture */
+/* Dark mode base styles */
 html, body {
   margin: 0;
   padding: 0;
@@ -59,13 +76,13 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, var(--color-bg) 25%, transparent 25%),
-              linear-gradient(-45deg, var(--color-bg) 25%, transparent 25%),
-              linear-gradient(45deg, transparent 75%, var(--color-bg) 75%),
-              linear-gradient(-45deg, transparent 75%, var(--color-bg) 75%);
+  background: linear-gradient(45deg, var(--color-bg-secondary) 25%, transparent 25%),
+              linear-gradient(-45deg, var(--color-bg-secondary) 25%, transparent 25%),
+              linear-gradient(45deg, transparent 75%, var(--color-bg-secondary) 75%),
+              linear-gradient(-45deg, transparent 75%, var(--color-bg-secondary) 75%);
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-  opacity: 0.3;
+  opacity: 0.1;
   pointer-events: none;
   z-index: 0;
 }
@@ -87,8 +104,8 @@ body::before {
   height: 60px;
   padding: 0 var(--page-margin);
   margin-bottom: var(--spacing-4);
-  background: var(--color-bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
   font-feature-settings: var(--features-ui);
 }
 
@@ -231,21 +248,20 @@ body::before {
   gap: var(--spacing-2);
   font-family: var(--font-ui);
   height: 40px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   font-feature-settings: var(--features-ui);
 }
 
 .create-button:hover {
-  background: var(--color-accent);
-  filter: brightness(110%);
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .create-button:active {
   transform: translateY(0);
   filter: brightness(95%);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 @keyframes fadeIn {
