@@ -1,10 +1,7 @@
 /* Typography System - Single source of truth */
 
 /* Font loading optimization for Proxima Nova (loaded via Adobe Fonts in index.html) */
-@font-face {
-  font-family: 'proxima-nova';
-  font-display: swap;
-}
+/* Note: font-display behavior is configured in Adobe Fonts project settings */
 
 :root {
   /* Typography - Proxima Nova for all text */
