@@ -1,23 +1,15 @@
 /* Typography System - Single source of truth */
 
-/* Font imports */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..700,0..100,0..1&family=Inter:wght@400..700&display=swap');
-
-/* Font loading optimization */
+/* Font loading optimization for Proxima Nova (loaded via Adobe Fonts in index.html) */
 @font-face {
-  font-family: 'Inter';
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Fraunces';
+  font-family: 'proxima-nova';
   font-display: swap;
 }
 
 :root {
-  /* Typography */
-  --font-content: 'Fraunces', Georgia, serif;
-  --font-ui: 'Inter', system-ui, sans-serif;
+  /* Typography - Proxima Nova for all text */
+  --font-content: 'proxima-nova', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-ui: 'proxima-nova', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   
   /* Font weights using variable font capabilities */
   --font-weight-normal: 400;
