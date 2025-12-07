@@ -36,7 +36,7 @@ export const ContactList: React.FC<ContactListProps> = ({
       const result = await contactApi.list({
         skip: params.skip ?? pagination.skip,
         take: params.take ?? pagination.take,
-        search: params.search,
+        search: params.search ?? (debouncedSearchQuery || undefined),
         sortBy: 'lastName',
         sortOrder: 'asc',
       });
