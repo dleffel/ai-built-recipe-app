@@ -15,6 +15,7 @@ import { TodoPlaceholder } from './components/todos/TodoPlaceholder';
 import { Button } from './components/ui/Button';
 import { ContactList, ContactDetail, ContactForm } from './components/crm';
 import { Contact, CreateContactDTO } from './types/contact';
+import { GmailSettings } from './components/gmail';
 
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -382,6 +383,19 @@ const AppContent: React.FC = () => {
                   }
                 />
               </Routes>
+            </Layout>
+          }
+        />
+        <Route
+          path="/settings/*"
+          element={
+            <Layout>
+              <ProtectedRoute>
+                <Routes>
+                  <Route path="/" element={<GmailSettings />} />
+                  <Route path="/gmail" element={<GmailSettings />} />
+                </Routes>
+              </ProtectedRoute>
             </Layout>
           }
         />
