@@ -4,6 +4,7 @@ import { getMockUser } from '../config/passport';
 import { UserService } from '../services/userService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import crypto from 'crypto';
+import { GMAIL_SCOPES } from '../types/gmail';
 
 // Simple token-based auth for dev login (workaround for iOS third-party cookie blocking)
 // This is only used for dev login in Railway preview environments
@@ -57,9 +58,13 @@ const formatUserResponse = (dbUser: { id: string; email: string }, sessionUser?:
 
 /* istanbul ignore next */
 // Google OAuth routes
+// Include Gmail scopes to enable Gmail integration features
+// Users will be prompted to grant Gmail permissions during login
 router.get('/google', passport.authenticate('google', {
-  scope: ['profile', 'email']
-}));
+  scope: ['profile', 'email', ...GMAIL_SCOPES],
+  accessType: 'offline', // Required for refresh token
+  prompt: 'consent' // Force consent to ensure refresh token is returned
+} as any)); // Type assertion needed because passport-google-oauth20 types don't include accessType/prompt
 
 /* istanbul ignore next */
 router.get('/google/callback',
