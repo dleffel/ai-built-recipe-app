@@ -44,6 +44,7 @@ export interface GmailMessage {
   to?: string;
   subject?: string;
   date?: string;
+  body?: string; // Plain text email body for agent analysis
 }
 
 export interface GmailHistoryItem {
@@ -116,7 +117,6 @@ export interface GmailAccountResponse {
 // Gmail Scopes
 export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
-  'https://www.googleapis.com/auth/gmail.metadata',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
 ] as const;
