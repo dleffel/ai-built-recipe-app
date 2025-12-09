@@ -52,11 +52,16 @@ export class GmailAccountService extends BaseService {
     userId: string,
     data: CreateGmailAccountDTO
   ): Promise<GmailAccount> {
+    console.log('[GmailAccount] createAccount: Starting', { userId, email: data.email, isPrimary: data.isPrimary });
+    
     // Encrypt tokens before storing
+    console.log('[GmailAccount] createAccount: Encrypting tokens...');
     const encryptedAccessToken = encrypt(data.accessToken);
     const encryptedRefreshToken = encrypt(data.refreshToken);
+    console.log('[GmailAccount] createAccount: Tokens encrypted successfully');
 
-    return getGmailAccountModel(this.prisma).create({
+    console.log('[GmailAccount] createAccount: Creating account in database...');
+    const account = await getGmailAccountModel(this.prisma).create({
       data: {
         userId,
         email: data.email,
@@ -67,6 +72,13 @@ export class GmailAccountService extends BaseService {
         isActive: true,
       },
     });
+    console.log('[GmailAccount] createAccount: Account created successfully', {
+      id: account.id,
+      email: account.email,
+      isPrimary: account.isPrimary,
+    });
+    
+    return account;
   }
 
   /**
@@ -77,14 +89,22 @@ export class GmailAccountService extends BaseService {
     userId: string,
     data: CreateGmailAccountDTO
   ): Promise<GmailAccount> {
+    console.log('[GmailAccount] createOrUpdatePrimaryAccount: Starting', { userId, email: data.email });
+    
+    console.log('[GmailAccount] createOrUpdatePrimaryAccount: Checking for existing account...');
     const existing = await getGmailAccountModel(this.prisma).findFirst({
       where: {
         userId,
         email: data.email,
       },
     });
+    console.log('[GmailAccount] createOrUpdatePrimaryAccount: Existing account check result', {
+      found: !!existing,
+      existingId: existing?.id,
+    });
 
     if (existing) {
+      console.log('[GmailAccount] createOrUpdatePrimaryAccount: Updating existing account');
       return this.updateAccount(existing.id, userId, {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
@@ -93,13 +113,16 @@ export class GmailAccountService extends BaseService {
     }
 
     // Check if user already has a primary account
+    console.log('[GmailAccount] createOrUpdatePrimaryAccount: Checking for existing primary account...');
     const hasPrimary = await getGmailAccountModel(this.prisma).findFirst({
       where: {
         userId,
         isPrimary: true,
       },
     });
+    console.log('[GmailAccount] createOrUpdatePrimaryAccount: Has primary account:', !!hasPrimary);
 
+    console.log('[GmailAccount] createOrUpdatePrimaryAccount: Creating new account, isPrimary:', !hasPrimary);
     return this.createAccount(userId, {
       ...data,
       isPrimary: !hasPrimary, // Make primary if no existing primary
@@ -132,7 +155,8 @@ export class GmailAccountService extends BaseService {
     userId: string,
     email: string
   ): Promise<GmailAccount | null> {
-    return getGmailAccountModel(this.prisma).findUnique({
+    console.log('[GmailAccount] findByUserAndEmail: Searching', { userId, email });
+    const account = await getGmailAccountModel(this.prisma).findUnique({
       where: {
         userId_email: {
           userId,
@@ -140,19 +164,27 @@ export class GmailAccountService extends BaseService {
         },
       },
     });
+    console.log('[GmailAccount] findByUserAndEmail: Result', {
+      found: !!account,
+      accountId: account?.id,
+    });
+    return account;
   }
 
   /**
    * Get all Gmail accounts for a user
    */
   static async getAccountsByUserId(userId: string): Promise<GmailAccount[]> {
-    return getGmailAccountModel(this.prisma).findMany({
+    console.log('[GmailAccount] getAccountsByUserId: Fetching accounts for user:', userId);
+    const accounts = await getGmailAccountModel(this.prisma).findMany({
       where: { userId },
       orderBy: [
         { isPrimary: 'desc' },
         { createdAt: 'asc' },
       ],
     });
+    console.log('[GmailAccount] getAccountsByUserId: Found accounts:', accounts.length);
+    return accounts;
   }
 
   /**
@@ -172,21 +204,32 @@ export class GmailAccountService extends BaseService {
     userId: string,
     data: UpdateGmailAccountDTO
   ): Promise<GmailAccount> {
+    console.log('[GmailAccount] updateAccount: Starting', { id, userId });
+    
     // Verify ownership
+    console.log('[GmailAccount] updateAccount: Verifying ownership...');
     const account = await getGmailAccountModel(this.prisma).findUnique({
       where: { id },
     });
 
     if (!account || account.userId !== userId) {
+      console.error('[GmailAccount] updateAccount: Account not found or unauthorized', {
+        found: !!account,
+        accountUserId: account?.userId,
+        requestUserId: userId,
+      });
       throw new Error('Gmail account not found or unauthorized');
     }
+    console.log('[GmailAccount] updateAccount: Ownership verified');
 
     const updateData: Record<string, unknown> = {};
 
     if (data.accessToken !== undefined) {
+      console.log('[GmailAccount] updateAccount: Encrypting access token...');
       updateData.accessToken = encrypt(data.accessToken);
     }
     if (data.refreshToken !== undefined) {
+      console.log('[GmailAccount] updateAccount: Encrypting refresh token...');
       updateData.refreshToken = encrypt(data.refreshToken);
     }
     if (data.tokenExpiresAt !== undefined) {
@@ -202,10 +245,17 @@ export class GmailAccountService extends BaseService {
       updateData.lastSyncAt = data.lastSyncAt;
     }
 
-    return getGmailAccountModel(this.prisma).update({
+    console.log('[GmailAccount] updateAccount: Updating account in database...');
+    const updatedAccount = await getGmailAccountModel(this.prisma).update({
       where: { id },
       data: updateData,
     });
+    console.log('[GmailAccount] updateAccount: Account updated successfully', {
+      id: updatedAccount.id,
+      email: updatedAccount.email,
+    });
+    
+    return updatedAccount;
   }
 
   /**

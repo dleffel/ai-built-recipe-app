@@ -93,25 +93,40 @@ export class GmailOAuthService {
    * Exchange an authorization code for tokens
    */
   static async exchangeCodeForTokens(code: string): Promise<GmailTokens> {
+    console.log('[GmailOAuth] exchangeCodeForTokens: Starting token exchange');
     const oauth2Client = this.createOAuth2Client();
     
+    console.log('[GmailOAuth] exchangeCodeForTokens: Calling getToken...');
     const { tokens } = await oauth2Client.getToken(code);
+    console.log('[GmailOAuth] exchangeCodeForTokens: Got response from Google', {
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      hasExpiryDate: !!tokens.expiry_date,
+      expiryDate: tokens.expiry_date,
+    });
     
     if (!tokens.access_token || !tokens.refresh_token) {
+      console.error('[GmailOAuth] exchangeCodeForTokens: Missing tokens', {
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+      });
       throw new Error('Failed to obtain tokens from Google');
     }
 
-    return {
+    const result = {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       expiresAt: new Date(tokens.expiry_date || Date.now() + 3600 * 1000),
     };
+    console.log('[GmailOAuth] exchangeCodeForTokens: Token exchange successful, expires at:', result.expiresAt);
+    return result;
   }
 
   /**
    * Get the email address associated with the OAuth tokens
    */
   static async getEmailFromTokens(tokens: GmailTokens): Promise<string> {
+    console.log('[GmailOAuth] getEmailFromTokens: Starting email retrieval');
     const oauth2Client = this.createOAuth2Client();
     
     oauth2Client.setCredentials({
@@ -119,13 +134,20 @@ export class GmailOAuthService {
       refresh_token: tokens.refreshToken,
     });
 
+    console.log('[GmailOAuth] getEmailFromTokens: Calling userinfo.get...');
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const userInfo = await oauth2.userinfo.get();
+    console.log('[GmailOAuth] getEmailFromTokens: Got userinfo response', {
+      hasEmail: !!userInfo.data.email,
+      email: userInfo.data.email,
+    });
     
     if (!userInfo.data.email) {
+      console.error('[GmailOAuth] getEmailFromTokens: No email in response');
       throw new Error('Could not retrieve email from Google');
     }
 
+    console.log('[GmailOAuth] getEmailFromTokens: Successfully retrieved email:', userInfo.data.email);
     return userInfo.data.email;
   }
 
