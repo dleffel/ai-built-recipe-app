@@ -44,6 +44,7 @@ export interface GmailMessage {
   to?: string;
   subject?: string;
   date?: string;
+  body?: string; // Plain text email body for agent analysis
 }
 
 export interface GmailHistoryItem {
