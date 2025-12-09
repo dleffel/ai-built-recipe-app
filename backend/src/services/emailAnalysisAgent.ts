@@ -163,7 +163,18 @@ First, extract the sender's email address and look up the contact. Then analyze 
         // Process tool calls
         for (const toolCall of assistantMessage.tool_calls) {
           const functionName = toolCall.function.name;
-          const args = JSON.parse(toolCall.function.arguments);
+          let args;
+          try {
+            args = JSON.parse(toolCall.function.arguments);
+          } catch (parseError) {
+            console.error(`[Agent] Failed to parse tool arguments for ${functionName}:`, parseError);
+            messages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify({ error: 'Invalid tool arguments' }),
+            });
+            continue;
+          }
 
           console.log(`[Tool] Calling ${functionName} with:`, args);
 
