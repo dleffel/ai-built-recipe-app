@@ -7,17 +7,17 @@ RUN apk add --no-cache python3 make g++
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and prisma schema first
+# Prisma schema is needed for the postinstall script (prisma generate)
 COPY package*.json ./
+COPY prisma ./prisma/
 
 # Install all dependencies (including dev dependencies for build)
+# This will run postinstall which calls prisma generate
 RUN npm ci
 
-# Copy source code and prisma schema
+# Copy remaining source code
 COPY . .
-
-# Generate Prisma client
-RUN npx prisma generate
 
 # Build TypeScript code
 RUN npm run build
