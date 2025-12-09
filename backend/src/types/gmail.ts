@@ -115,9 +115,10 @@ export interface GmailAccountResponse {
 }
 
 // Gmail Scopes
+// Note: gmail.readonly provides full read access to messages including body content
+// This is required for the email analysis agent to extract contact information from signatures
 export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
-  'https://www.googleapis.com/auth/gmail.metadata',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
 ] as const;

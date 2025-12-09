@@ -74,8 +74,8 @@ export class GmailHistoryService {
 
   /**
    * Get details for a specific message including full body
-   * Requires gmail.readonly scope - users with only gmail.metadata scope
-   * will need to re-authorize with the correct scopes
+   * Requires gmail.readonly scope which is now the only Gmail scope we request
+   * (gmail.metadata was removed as it's redundant - gmail.readonly provides full access)
    */
   private static async getMessageDetails(
     gmail: any,
