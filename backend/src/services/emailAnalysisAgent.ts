@@ -24,6 +24,39 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'createContact',
+      description: 'Create a new contact in the CRM. Use this when lookupContactByEmail returns found: false. Extract the name from the email From field if available.',
+      parameters: {
+        type: 'object',
+        properties: {
+          email: {
+            type: 'string',
+            description: 'The email address for the new contact',
+          },
+          firstName: {
+            type: 'string',
+            description: 'First name extracted from the email From field or signature',
+          },
+          lastName: {
+            type: 'string',
+            description: 'Last name extracted from the email From field or signature. Use empty string if only one name is available.',
+          },
+          company: {
+            type: 'string',
+            description: 'Company name if found in email signature (optional)',
+          },
+          title: {
+            type: 'string',
+            description: 'Job title if found in email signature (optional)',
+          },
+        },
+        required: ['email', 'firstName', 'lastName'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'updateContactField',
       description: 'Update a specific field on a contact record. Use this to update information discovered in the email.',
       parameters: {
@@ -99,24 +132,35 @@ export class EmailAnalysisAgent {
 3. If a contact exists, analyze the email for any updated contact information such as:
    - Name changes or corrections
    - Company name from signature
-   - Job title from signature  
+   - Job title from signature
    - Phone numbers from signature
-4. Update the contact record with any new information you discover
+4. If NO contact exists, CREATE a new contact using:
+   - The email address from the From field
+   - The name parsed from the From field (e.g., "John Doe" from "John Doe <john@example.com>")
+   - Any company/title information found in the email signature
+5. Update the contact record with any new information you discover
+
+Guidelines for name parsing:
+- From field format is typically "First Last <email@domain.com>"
+- If only one name is present, use it as firstName and set lastName to empty string
+- If no name is present (just email), use the part before @ as firstName
 
 Only update fields if you find clear, reliable information in the email signature or body. Do not guess or make assumptions.
-Always explain your reasoning when making updates.
+Always explain your reasoning when making updates or creating contacts.
 
 Important guidelines:
 - Extract email addresses from format like "John Doe <john@example.com>"
 - Look for signature blocks at the end of emails for contact info
 - Company names often appear after job titles in signatures
 - Phone numbers may be formatted in various ways
+- Do NOT create contacts for automated/system emails (noreply@, no-reply@, mailer-daemon@, etc.)
+- Do NOT create a contact for the user's own email address (${accountEmail})
 
 Current user context:
 - User ID: ${userId}
 - Account Email: ${accountEmail}`;
 
-    const userPrompt = `Analyze this email and update the CRM contact if needed:
+    const userPrompt = `Analyze this email and update or create CRM contacts as needed:
 
 From: ${message.from || 'Unknown'}
 To: ${message.to || 'Unknown'}
@@ -126,7 +170,11 @@ Date: ${message.date || 'Unknown'}
 Email Body:
 ${emailBody || message.snippet || '(No body content)'}
 
-First, extract the sender's email address and look up the contact. Then analyze the email for any contact information updates.`;
+Instructions:
+1. First, extract the sender's email address from the From field and look up the contact
+2. If no contact exists, create one using the name and email from the From field
+3. Analyze the email for any contact information updates (company, title, etc.)
+4. Skip creating contacts for automated emails (noreply, no-reply, mailer-daemon, etc.)`;
 
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -182,6 +230,8 @@ First, extract the sender's email address and look up the contact. Then analyze 
           try {
             if (functionName === 'lookupContactByEmail') {
               result = await this.handleLookupContact(userId, args.email);
+            } else if (functionName === 'createContact') {
+              result = await this.handleCreateContact(userId, args);
             } else if (functionName === 'updateContactField') {
               result = await this.handleUpdateContact(userId, args);
             } else {
@@ -229,7 +279,91 @@ First, extract the sender's email address and look up the contact. Then analyze 
     }
     
     console.log(`[Tool] No contact found for email: ${email}`);
-    return JSON.stringify({ found: false, contact: null });
+    return JSON.stringify({
+      found: false,
+      contact: null,
+      message: 'No contact found. You should create a new contact using the createContact tool.',
+    });
+  }
+
+  /**
+   * Handle createContact tool call
+   */
+  private static async handleCreateContact(
+    userId: string,
+    args: {
+      email: string;
+      firstName: string;
+      lastName: string;
+      company?: string;
+      title?: string;
+    }
+  ): Promise<string> {
+    console.log('[Tool] createContact:');
+    console.log('  Email:', args.email);
+    console.log('  Name:', args.firstName, args.lastName);
+    if (args.company) console.log('  Company:', args.company);
+    if (args.title) console.log('  Title:', args.title);
+
+    // Validate email
+    if (!args.email || !args.email.includes('@')) {
+      console.log('[Tool] Invalid email address');
+      return JSON.stringify({
+        success: false,
+        message: 'Invalid email address provided',
+      });
+    }
+
+    // Check for automated email addresses that should be skipped
+    const automatedPatterns = [
+      'noreply@', 'no-reply@', 'no_reply@',
+      'mailer-daemon@', 'postmaster@',
+      'notifications@', 'notification@',
+      'donotreply@', 'do-not-reply@',
+    ];
+    const emailLower = args.email.toLowerCase();
+    if (automatedPatterns.some(pattern => emailLower.startsWith(pattern))) {
+      console.log('[Tool] Skipping automated email address');
+      return JSON.stringify({
+        success: false,
+        message: 'Skipped: This appears to be an automated email address',
+      });
+    }
+
+    try {
+      // Check if contact already exists (race condition protection)
+      const existingContact = await ContactService.findByEmailAddress(userId, args.email);
+      if (existingContact) {
+        console.log('[Tool] Contact already exists:', existingContact.id);
+        return JSON.stringify({
+          success: false,
+          message: 'Contact with this email already exists',
+          contact: this.formatContactForAgent(existingContact),
+        });
+      }
+
+      const contact = await ContactService.createContact(userId, {
+        firstName: args.firstName,
+        lastName: args.lastName,
+        company: args.company,
+        title: args.title,
+        emails: [{ email: args.email, label: 'work', isPrimary: true }],
+      });
+      
+      console.log('[Tool] Successfully created contact:', contact.id);
+      return JSON.stringify({
+        success: true,
+        message: `Created new contact: ${args.firstName} ${args.lastName}`,
+        contact: this.formatContactForAgent(contact),
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[Tool] Failed to create contact:', errorMessage);
+      return JSON.stringify({
+        success: false,
+        message: `Failed to create contact: ${errorMessage}`,
+      });
+    }
   }
 
   /**
