@@ -1,4 +1,5 @@
 import { GmailMessage } from '../types/gmail';
+import { EmailAnalysisAgent } from './emailAnalysisAgent';
 
 // Type for GmailAccount since Prisma client isn't generated yet
 interface GmailAccountType {
@@ -11,14 +12,10 @@ interface GmailAccountType {
 
 /**
  * Email Action Handler
- * Processes new emails and triggers appropriate actions
+ * Processes new emails and triggers AI analysis for CRM updates
  * 
- * For the POC, this simply logs each new email to the console.
- * In the future, this will integrate with the CRM to:
- * - Match email addresses to contacts
- * - Create activity records
- * - Update contact information
- * - Trigger automated workflows
+ * This handler receives new emails from Gmail and invokes the
+ * EmailAnalysisAgent to analyze them and update CRM contacts.
  */
 export class EmailActionHandler {
   /**
@@ -29,38 +26,26 @@ export class EmailActionHandler {
     account: GmailAccountType,
     message: GmailMessage
   ): Promise<void> {
-    // POC: Log the email details
-    console.log('='.repeat(60));
-    console.log('NEW EMAIL DETECTED');
-    console.log('='.repeat(60));
-    console.log('Account:', account.email);
-    console.log('Account ID:', account.id);
-    console.log('User ID:', account.userId);
-    console.log('Is Primary:', account.isPrimary);
-    console.log('-'.repeat(60));
-    console.log('Message ID:', message.id);
-    console.log('Thread ID:', message.threadId);
-    console.log('From:', message.from || 'N/A');
-    console.log('To:', message.to || 'N/A');
-    console.log('Subject:', message.subject || '(No Subject)');
-    console.log('Date:', message.date || 'N/A');
-    console.log('Labels:', message.labelIds.join(', ') || 'None');
-    console.log('Snippet:', message.snippet?.substring(0, 100) || 'N/A');
-    console.log('='.repeat(60));
+    // Log basic info for debugging
+    console.log('New email received:', {
+      from: message.from,
+      subject: message.subject,
+      date: message.date,
+      hasBody: !!message.body,
+      bodyLength: message.body?.length || 0,
+    });
 
     // Determine email direction
     const direction = this.determineEmailDirection(account.email, message);
-    console.log('Direction:', direction);
+    console.log('Email direction:', direction);
 
-    // Log additional metadata
-    console.log('Processed at:', new Date().toISOString());
-    console.log('='.repeat(60));
-    console.log('');
-
-    // Future enhancements would go here:
-    // - await this.matchToContact(message);
-    // - await this.createActivityRecord(account, message);
-    // - await this.triggerWorkflows(account, message);
+    // Invoke the AI agent to analyze and process the email
+    await EmailAnalysisAgent.analyzeEmail(
+      account.userId,
+      account.email,
+      message,
+      message.body || message.snippet || ''
+    );
   }
 
   /**
@@ -97,7 +82,7 @@ export class EmailActionHandler {
    * Extract email address from a formatted email string
    * e.g., "John Doe <john@example.com>" -> "john@example.com"
    */
-  private static extractEmailAddress(emailString: string): string | null {
+  static extractEmailAddress(emailString: string): string | null {
     const match = emailString.match(/<([^>]+)>/);
     if (match) {
       return match[1].toLowerCase();
@@ -112,7 +97,7 @@ export class EmailActionHandler {
   /**
    * Extract all email addresses from a comma-separated list
    */
-  private static extractAllEmailAddresses(emailString: string): string[] {
+  static extractAllEmailAddresses(emailString: string): string[] {
     const addresses: string[] = [];
     const parts = emailString.split(',');
     
@@ -125,40 +110,4 @@ export class EmailActionHandler {
     
     return addresses;
   }
-
-  // ============================================================
-  // Future CRM Integration Methods (Placeholders)
-  // ============================================================
-
-  /**
-   * Match email addresses to existing contacts
-   * @future This will query the CRM database for matching contacts
-   */
-  // private static async matchToContact(message: GmailMessage): Promise<void> {
-  //   // TODO: Implement contact matching
-  //   // const fromEmail = this.extractEmailAddress(message.from || '');
-  //   // const contact = await ContactService.findByEmail(fromEmail);
-  // }
-
-  /**
-   * Create an activity record for the email
-   * @future This will create a record in the CRM activity timeline
-   */
-  // private static async createActivityRecord(
-  //   account: GmailAccountType,
-  //   message: GmailMessage
-  // ): Promise<void> {
-  //   // TODO: Implement activity recording
-  // }
-
-  /**
-   * Trigger any automated workflows based on the email
-   * @future This will check for and execute workflow rules
-   */
-  // private static async triggerWorkflows(
-  //   account: GmailAccountType,
-  //   message: GmailMessage
-  // ): Promise<void> {
-  //   // TODO: Implement workflow triggers
-  // }
 }

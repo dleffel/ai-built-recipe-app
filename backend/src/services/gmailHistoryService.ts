@@ -73,7 +73,7 @@ export class GmailHistoryService {
   }
 
   /**
-   * Get details for a specific message
+   * Get details for a specific message including full body
    */
   private static async getMessageDetails(
     gmail: any,
@@ -83,8 +83,7 @@ export class GmailHistoryService {
       const response = await gmail.users.messages.get({
         userId: 'me',
         id: messageId,
-        format: 'metadata',
-        metadataHeaders: ['From', 'To', 'Subject', 'Date'],
+        format: 'full', // Get full message including body
       });
 
       const message = response.data;
@@ -109,6 +108,8 @@ export class GmailHistoryService {
     internalDate?: string | null;
     payload?: {
       headers?: Array<{ name?: string | null; value?: string | null }> | null;
+      body?: { data?: string | null } | null;
+      parts?: any[] | null;
     } | null;
   }): GmailMessage {
     const headers = message.payload?.headers || [];
@@ -119,6 +120,9 @@ export class GmailHistoryService {
       );
       return header?.value || undefined;
     };
+
+    // Extract plain text body from message parts
+    const body = this.extractPlainTextBody(message.payload);
 
     return {
       id: message.id || '',
@@ -131,7 +135,37 @@ export class GmailHistoryService {
       to: getHeader('To'),
       subject: getHeader('Subject'),
       date: getHeader('Date'),
+      body,
     };
+  }
+
+  /**
+   * Extract plain text body from Gmail message payload
+   * Handles both simple messages and multipart messages
+   */
+  private static extractPlainTextBody(payload: any): string {
+    if (!payload) return '';
+
+    // Direct body data (simple messages)
+    if (payload.body?.data) {
+      return Buffer.from(payload.body.data, 'base64').toString('utf-8');
+    }
+
+    // Check parts for text/plain (multipart messages)
+    if (payload.parts) {
+      for (const part of payload.parts) {
+        if (part.mimeType === 'text/plain' && part.body?.data) {
+          return Buffer.from(part.body.data, 'base64').toString('utf-8');
+        }
+        // Recursively check nested parts (e.g., multipart/alternative)
+        if (part.parts) {
+          const nested = this.extractPlainTextBody(part);
+          if (nested) return nested;
+        }
+      }
+    }
+
+    return '';
   }
 
   /**

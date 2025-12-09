@@ -348,6 +348,34 @@ export class ContactService extends BaseService {
   }
 
   /**
+   * Find a contact by email address
+   * Used by the email analysis agent to match incoming emails to contacts
+   */
+  static async findByEmailAddress(
+    userId: string,
+    emailAddress: string
+  ): Promise<ContactWithRelations | null> {
+    return this.prisma.contact.findFirst({
+      where: {
+        userId,
+        isDeleted: false,
+        emails: {
+          some: {
+            email: {
+              equals: emailAddress,
+              mode: 'insensitive',
+            },
+          },
+        },
+      },
+      include: {
+        emails: true,
+        phones: true,
+      },
+    });
+  }
+
+  /**
    * Create a snapshot of the current contact state
    */
   private static createSnapshot(contact: ContactWithRelations): ContactSnapshot {
