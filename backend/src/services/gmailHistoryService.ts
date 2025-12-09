@@ -74,53 +74,25 @@ export class GmailHistoryService {
 
   /**
    * Get details for a specific message including full body
-   * Falls back to metadata format if the user's OAuth scope doesn't allow full format
+   * Requires gmail.readonly scope - users with only gmail.metadata scope
+   * will need to re-authorize with the correct scopes
    */
   private static async getMessageDetails(
     gmail: any,
     messageId: string
   ): Promise<GmailMessage | null> {
     try {
-      // First try to get full message (requires gmail.readonly scope)
       const response = await gmail.users.messages.get({
         userId: 'me',
         id: messageId,
-        format: 'full', // Get full message including body
+        format: 'full', // Requires gmail.readonly scope
       });
 
       const message = response.data;
       if (!message) return null;
 
       return this.parseMessage(message);
-    } catch (error: any) {
-      // Check if the error is due to metadata scope limitation
-      const isMetadataScopeError =
-        error?.status === 403 &&
-        error?.errors?.some((e: any) =>
-          e.message?.includes("Metadata scope doesn't allow format FULL")
-        );
-
-      if (isMetadataScopeError) {
-        // Fall back to metadata format (works with gmail.metadata scope)
-        console.log(`Falling back to metadata format for message ${messageId} (user has metadata-only scope)`);
-        try {
-          const metadataResponse = await gmail.users.messages.get({
-            userId: 'me',
-            id: messageId,
-            format: 'metadata',
-            metadataHeaders: ['From', 'To', 'Subject', 'Date'],
-          });
-
-          const message = metadataResponse.data;
-          if (!message) return null;
-
-          return this.parseMessage(message);
-        } catch (metadataError) {
-          console.error(`Error fetching message ${messageId} with metadata format:`, metadataError);
-          return null;
-        }
-      }
-
+    } catch (error) {
       console.error(`Error fetching message ${messageId}:`, error);
       return null;
     }
