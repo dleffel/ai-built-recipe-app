@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
 import { ContactService, ContactWithRelations } from './contactService';
 import { GmailMessage } from '../types/gmail';
-import { NotesParser, parseNotes, serializeNotes, applyUpdate, NoteUpdate } from '../utils/notesParser';
 
 // Tool definitions for the agent
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
@@ -88,17 +87,10 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'enhanceContactNotes',
-      description: `Add high-confidence information to contact notes. Use this to record relationship context, preferences, key interactions, and insights learned from emails.
-      
-SECTIONS:
-- relationshipSummary: How you know them, their role, who introduced you
-- whatTheyCareAbout: Their goals, pain points, topics that engage them
-- keyHistory: Dated entries of important interactions (always include date)
-- currentStatus: Where things stand, risks, next steps
-- preferences: Communication preferences, style, things to avoid, personal details
+      name: 'appendToNotes',
+      description: `Append high-confidence information to contact notes. Use this to record relationship context, preferences, key interactions, and insights learned from emails. The note will be appended with a date prefix.
 
-Only use this for HIGH-CONFIDENCE information that is explicitly stated or clearly inferable from the email.`,
+Only use this for HIGH-CONFIDENCE information that is explicitly stated or clearly inferable from the email. Keep notes concise and factual.`,
       parameters: {
         type: 'object',
         properties: {
@@ -106,35 +98,12 @@ Only use this for HIGH-CONFIDENCE information that is explicitly stated or clear
             type: 'string',
             description: 'The ID of the contact to update',
           },
-          section: {
+          note: {
             type: 'string',
-            enum: ['relationshipSummary', 'whatTheyCareAbout', 'keyHistory', 'currentStatus', 'preferences'],
-            description: 'The notes section to update',
-          },
-          field: {
-            type: 'string',
-            description: `The specific field within the section:
-- relationshipSummary: role, howWeMet, relationshipOwner
-- whatTheyCareAbout: goals, pains, hotButtons
-- keyHistory: (use "entry" - value should be the interaction summary)
-- currentStatus: whereThingsStand, risks, nextStep
-- preferences: communication, style, landmines, personal`,
-          },
-          value: {
-            type: 'string',
-            description: 'The information to add. For keyHistory, this is the interaction summary.',
-          },
-          confidence: {
-            type: 'string',
-            enum: ['explicit', 'inferred'],
-            description: 'Whether this was explicitly stated in the email or inferred from context',
-          },
-          source: {
-            type: 'string',
-            description: 'Brief description of where in the email this information was found',
+            description: 'The note to append. Keep it concise and factual. Examples: "Prefers email over phone", "Works at Acme Corp as VP of Sales", "Interested in Q1 launch timeline", "Met at SaaStr conference"',
           },
         },
-        required: ['contactId', 'section', 'field', 'value', 'confidence', 'source'],
+        required: ['contactId', 'note'],
       },
     },
   },
@@ -189,55 +158,28 @@ export class EmailAnalysisAgent {
    - Create new contacts for unknown senders (skip automated emails)
    - Update basic fields (name, company, title, birthday) from signatures
 
-2. NOTES ENHANCEMENT (PRIMARY FOCUS)
+2. NOTES ENHANCEMENT
    Analyze each email for high-signal information to add to contact notes.
    Only record HIGH-CONFIDENCE information - things explicitly stated or clearly inferable.
 
-   WHAT TO CAPTURE:
-
-   A. Relationship Context (relationshipSummary section)
-      - How you connected (if mentioned: "Great meeting you at...")
-      - Their role/influence level (decision-maker, champion, blocker)
-      - Who introduced them or how they found you
-
-   B. What They Care About (whatTheyCareAbout section)
-      - Goals they mention ("We're trying to improve...")
-      - Pain points ("Our biggest challenge is...")
-      - Topics that engage them (what they ask about, emphasize)
-
-   C. Key Interactions (keyHistory section - add dated entries)
-      - Important requests or asks
-      - Commitments made (by them or to them)
-      - Decisions or outcomes ("We've decided to...")
-      - Significant updates to the relationship
-
-   D. Current Status (currentStatus section)
-      - Where things stand in any ongoing discussion
-      - Blockers or risks mentioned
-      - Next steps discussed
-
-   E. Preferences & Personal (preferences section)
-      - Communication preferences (if stated: "Best to reach me by...")
-      - Working style hints (detail-oriented, prefers brevity, etc.)
-      - Personal details for rapport (mentioned hobbies, family, etc.)
-      - Things to avoid (complaints, sensitivities)
+   WHAT TO CAPTURE (use appendToNotes):
+   - How you connected (if mentioned: "Great meeting you at...")
+   - Their role/influence level (decision-maker, champion, blocker)
+   - Goals they mention ("We're trying to improve...")
+   - Pain points ("Our biggest challenge is...")
+   - Important requests or commitments
+   - Communication preferences (if stated: "Best to reach me by...")
+   - Personal details for rapport (mentioned hobbies, family, etc.)
 
    WHAT NOT TO CAPTURE:
    - Gossip or subjective judgments
    - Sensitive personal information
-   - Anything discriminatory
    - Low-confidence guesses
    - Routine pleasantries
 
-   CONFIDENCE LEVELS:
-   - "explicit": Directly stated in the email
-   - "inferred": Clearly implied by context (e.g., signature shows title)
-
 3. GUIDELINES
    - Be factual and professional
-   - Date all history entries using the email date
-   - Keep entries concise but informative
-   - Preserve existing notes - add to them, don't replace
+   - Keep notes concise but informative
    - Skip if no high-signal information found
    - Do NOT create contacts for automated/system emails (noreply@, no-reply@, mailer-daemon@, etc.)
    - Do NOT create a contact for the user's own email address (${accountEmail})
@@ -250,29 +192,6 @@ Guidelines for name parsing:
 HIGH CONFIDENCE REQUIREMENT FOR ALL UPDATES:
 Only update contact fields when there is EXPLICIT, HIGH-CONFIDENCE evidence in the email.
 Do not guess, infer, or make assumptions about contact information.
-Always document the source of information in the reason field.
-
-Examples of HIGH-CONFIDENCE evidence:
-- Name: Explicit signature block, "My name is...", corrections like "Actually, it's spelled..."
-- Company: Clear signature block with company name, "I work at...", company email domain
-- Title: Signature block with job title, "I'm the [title] at..."
-- Birthday: Direct statements like "my birthday is January 15th", "I was born on 03/20/1985", or "It's my birthday today!"
-
-Examples of LOW-CONFIDENCE evidence (DO NOT USE):
-- Name: Informal nicknames without confirmation, ambiguous references
-- Company: Vague mentions of organizations, assumptions from email domain
-- Title: Informal role descriptions, assumptions based on email content
-- Birthday: Age mentions without dates, zodiac references, vague celebration mentions
-
-BIRTHDAY FIELD SPECIFIC GUIDELINES:
-- Use ISO date format (YYYY-MM-DD). If year is unknown, use 1900 as the year (e.g., "1900-01-15")
-- The source will be automatically appended to the contact's notes for audit purposes
-
-Important guidelines:
-- Extract email addresses from format like "John Doe <john@example.com>"
-- Look for signature blocks at the end of emails for contact info
-- Company names often appear after job titles in signatures
-- Phone numbers may be formatted in various ways
 
 Current context:
 - User ID: ${userId}
@@ -292,14 +211,8 @@ ${emailBody || message.snippet || '(No body content)'}
 INSTRUCTIONS:
 1. Look up the sender contact (or create if new, skip automated emails)
 2. Update basic contact info if found in signature (company, title)
-3. Analyze for high-signal information to add to notes:
-   - Relationship context clues
-   - Goals, pains, interests mentioned
-   - Key interaction details worth recording
-   - Status updates on any ongoing matters
-   - Communication preferences or personal details
-4. Use enhanceContactNotes for each piece of valuable information found
-5. Skip routine emails with no notable content`;
+3. Use appendToNotes for any high-signal information worth recording
+4. Skip routine emails with no notable content`;
 
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -359,8 +272,8 @@ INSTRUCTIONS:
               result = await this.handleCreateContact(userId, args);
             } else if (functionName === 'updateContactField') {
               result = await this.handleUpdateContact(userId, args);
-            } else if (functionName === 'enhanceContactNotes') {
-              result = await this.handleEnhanceNotes(userId, args, emailDate);
+            } else if (functionName === 'appendToNotes') {
+              result = await this.handleAppendToNotes(userId, args, emailDate);
             } else {
               result = JSON.stringify({ error: `Unknown function: ${functionName}` });
             }
@@ -558,27 +471,19 @@ INSTRUCTIONS:
   }
 
   /**
-   * Handle enhanceContactNotes tool call
+   * Handle appendToNotes tool call - simple text append to notes field
    */
-  private static async handleEnhanceNotes(
+  private static async handleAppendToNotes(
     userId: string,
     args: {
       contactId: string;
-      section: 'relationshipSummary' | 'whatTheyCareAbout' | 'keyHistory' | 'currentStatus' | 'preferences';
-      field: string;
-      value: string;
-      confidence: 'explicit' | 'inferred';
-      source: string;
+      note: string;
     },
     emailDate: string
   ): Promise<string> {
-    console.log(`[Tool] enhanceContactNotes:`);
+    console.log(`[Tool] appendToNotes:`);
     console.log(`  Contact ID: ${args.contactId}`);
-    console.log(`  Section: ${args.section}`);
-    console.log(`  Field: ${args.field}`);
-    console.log(`  Value: ${args.value}`);
-    console.log(`  Confidence: ${args.confidence}`);
-    console.log(`  Source: ${args.source}`);
+    console.log(`  Note: ${args.note}`);
 
     try {
       // Get current contact
@@ -590,40 +495,29 @@ INSTRUCTIONS:
         return JSON.stringify({ success: false, message: 'Unauthorized' });
       }
 
-      // Parse existing notes
+      // Simple append with date prefix
       const existingNotes = contact.notes || '';
-      const parsed = parseNotes(existingNotes);
+      const newEntry = `[${emailDate}] ${args.note}`;
+      const updatedNotes = existingNotes
+        ? `${existingNotes}\n\n${newEntry}`
+        : newEntry;
 
-      // Apply the update
-      const update: NoteUpdate = {
-        section: args.section,
-        field: args.field,
-        value: args.value,
-        confidence: args.confidence,
-        date: emailDate,
-      };
-      const updated = applyUpdate(parsed, update);
-
-      // Serialize back to markdown
-      const newNotes = serializeNotes(updated);
-
-      // Update contact (this creates a version automatically)
+      // Update contact
       await ContactService.updateContact(args.contactId, userId, {
-        notes: newNotes,
+        notes: updatedNotes,
       });
 
-      console.log(`[Tool] Successfully enhanced notes: ${args.section}.${args.field}`);
+      console.log(`[Tool] Successfully appended note`);
       return JSON.stringify({
         success: true,
-        message: `Added ${args.field} to ${args.section}`,
-        confidence: args.confidence,
+        message: 'Note appended successfully',
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[Tool] Failed to enhance notes:`, errorMessage);
+      console.error(`[Tool] Failed to append note:`, errorMessage);
       return JSON.stringify({
         success: false,
-        message: `Failed to enhance notes: ${errorMessage}`,
+        message: `Failed to append note: ${errorMessage}`,
       });
     }
   }
