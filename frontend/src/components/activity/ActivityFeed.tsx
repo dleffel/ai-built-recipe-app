@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ActivityFeedItem as ActivityFeedItemType } from '../../types/activity';
 import { activityApi } from '../../services/activityApi';
 import { ActivityFeedItem } from './ActivityFeedItem';
@@ -13,11 +13,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ limit = 20 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchActivities();
-  }, [limit]);
-
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -29,7 +25,11 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ limit = 20 }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
+
+  useEffect(() => {
+    fetchActivities();
+  }, [fetchActivities]);
 
   if (loading) {
     return (
