@@ -14,7 +14,7 @@ import HomePage from './components/HomePage';
 import { TodoPlaceholder } from './components/todos/TodoPlaceholder';
 import { Button } from './components/ui/Button';
 import { ContactList, ContactDetail, ContactForm } from './components/crm';
-import { Contact, CreateContactDTO } from './types/contact';
+import { Contact, CreateContactDTO, UpdateContactDTO } from './types/contact';
 import { GmailSettings } from './components/gmail';
 
 // Protected route wrapper component
@@ -273,12 +273,12 @@ const ContactFormPage: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) => {
     return <div className="loading">Loading contact...</div>;
   }
 
-  const handleSubmit = async (data: CreateContactDTO) => {
+  const handleSubmit = async (data: CreateContactDTO | UpdateContactDTO) => {
     try {
       if (mode === 'edit' && contact) {
-        await contactApi.update(contact.id, data);
+        await contactApi.update(contact.id, data as UpdateContactDTO);
       } else {
-        await contactApi.create(data);
+        await contactApi.create(data as CreateContactDTO);
       }
       navigate('/contacts');
     } catch (error) {
