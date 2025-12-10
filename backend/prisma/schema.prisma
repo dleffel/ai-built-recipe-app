@@ -124,6 +124,7 @@ model Contact {
   title       String?
   notes       String?
   linkedInUrl String?
+  birthday    DateTime?
   isDeleted   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

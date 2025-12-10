@@ -19,11 +19,11 @@ const router = Router();
 // Create contact
 const createContact: RequestHandler = async (req, res) => {
   try {
-    const { firstName, lastName, company, title, notes, emails, phones } = req.body;
+    const { firstName, lastName, company, title, notes, linkedInUrl, birthday, emails, phones } = req.body;
     
     if (!firstName || !lastName) {
-      res.status(400).json({ 
-        error: 'Missing required fields: firstName and lastName are required' 
+      res.status(400).json({
+        error: 'Missing required fields: firstName and lastName are required'
       });
       return;
     }
@@ -34,6 +34,8 @@ const createContact: RequestHandler = async (req, res) => {
       company,
       title,
       notes,
+      linkedInUrl,
+      birthday,
       emails,
       phones,
     };

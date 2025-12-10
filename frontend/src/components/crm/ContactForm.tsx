@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Contact, CreateContactDTO, EMAIL_LABELS, PHONE_LABELS } from '../../types/contact';
 import { MultiValueInput } from './MultiValueInput';
 import { Button } from '../ui/Button';
+import { parseBirthdayComponents, parseBirthdayInput, isValidBirthday } from '../../utils/birthdayUtils';
 import styles from './ContactForm.module.css';
 
 interface ContactFormProps {
@@ -27,11 +28,23 @@ export const ContactForm: React.FC<ContactFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  // Parse existing birthday into components
+  const existingBirthday = parseBirthdayComponents(contact?.birthday || null);
+  
   const [firstName, setFirstName] = useState(contact?.firstName || '');
   const [lastName, setLastName] = useState(contact?.lastName || '');
   const [company, setCompany] = useState(contact?.company || '');
   const [title, setTitle] = useState(contact?.title || '');
   const [linkedInUrl, setLinkedInUrl] = useState(contact?.linkedInUrl || '');
+  const [birthdayMonth, setBirthdayMonth] = useState<string>(
+    existingBirthday.month ? String(existingBirthday.month) : ''
+  );
+  const [birthdayDay, setBirthdayDay] = useState<string>(
+    existingBirthday.day ? String(existingBirthday.day) : ''
+  );
+  const [birthdayYear, setBirthdayYear] = useState<string>(
+    existingBirthday.year ? String(existingBirthday.year) : ''
+  );
   const [notes, setNotes] = useState(contact?.notes || '');
   const [emails, setEmails] = useState<EmailItem[]>(
     contact?.emails.map(e => ({
@@ -64,12 +77,25 @@ export const ContactForm: React.FC<ContactFormProps> = ({
     setError(null);
 
     try {
+      // Build birthday value if month and day are provided
+      let birthdayValue: string | undefined;
+      if (birthdayMonth && birthdayDay) {
+        const month = parseInt(birthdayMonth, 10);
+        const day = parseInt(birthdayDay, 10);
+        const year = birthdayYear ? parseInt(birthdayYear, 10) : undefined;
+        
+        if (isValidBirthday(month, day, year)) {
+          birthdayValue = parseBirthdayInput(month, day, year);
+        }
+      }
+
       const data: CreateContactDTO = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         company: company.trim() || undefined,
         title: title.trim() || undefined,
         linkedInUrl: linkedInUrl.trim() || undefined,
+        birthday: birthdayValue,
         notes: notes.trim() || undefined,
         emails: emails.map(e => ({
           email: e.value,
@@ -174,6 +200,63 @@ export const ContactForm: React.FC<ContactFormProps> = ({
               className={styles.input}
               placeholder="https://linkedin.com/in/username"
             />
+          </div>
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.field}>
+            <label className={styles.label}>Birthday</label>
+            <div className={styles.birthdayInputs}>
+              <select
+                id="birthdayMonth"
+                value={birthdayMonth}
+                onChange={(e) => setBirthdayMonth(e.target.value)}
+                className={styles.select}
+                aria-label="Birthday month"
+              >
+                <option value="">Month</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <select
+                id="birthdayDay"
+                value={birthdayDay}
+                onChange={(e) => setBirthdayDay(e.target.value)}
+                className={styles.select}
+                aria-label="Birthday day"
+              >
+                <option value="">Day</option>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                  <option key={day} value={day}>{day}</option>
+                ))}
+              </select>
+              <input
+                id="birthdayYear"
+                type="text"
+                value={birthdayYear}
+                onChange={(e) => {
+                  // Only allow numeric input
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value.length <= 4) {
+                    setBirthdayYear(value);
+                  }
+                }}
+                className={styles.yearInput}
+                placeholder="Year (optional)"
+                aria-label="Birthday year (optional)"
+                maxLength={4}
+              />
+            </div>
           </div>
         </div>
       </div>

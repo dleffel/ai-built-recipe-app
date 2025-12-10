@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Contact } from '../../types/contact';
 import { ContactHistory } from './ContactHistory';
 import { Button } from '../ui/Button';
+import { formatBirthday } from '../../utils/birthdayUtils';
 import styles from './ContactDetail.module.css';
 
 interface ContactDetailProps {
@@ -157,6 +158,18 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
                     >
                       {contact.linkedInUrl}
                     </a>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {contact.birthday && (
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>Personal Information</h2>
+                <div className={styles.infoGroup}>
+                  <h3 className={styles.infoLabel}>Birthday</h3>
+                  <div className={styles.infoItem}>
+                    {formatBirthday(contact.birthday)}
                   </div>
                 </div>
               </section>
