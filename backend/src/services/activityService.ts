@@ -5,7 +5,7 @@ import {
   ActivityFeedResponse,
   ActivityType,
 } from '../types/activity';
-import { ContactChanges, ContactSnapshot } from '../types/contact';
+import { ContactChanges } from '../types/contact';
 
 /**
  * Service for aggregating activity feed data from various sources
