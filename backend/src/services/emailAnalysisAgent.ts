@@ -58,7 +58,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'updateContactField',
-      description: 'Update a specific field on a contact record. Use this to update information discovered in the email.',
+      description: 'Update a specific field on a contact record. Use this to update information discovered in the email. For birthday, only set when there is HIGH CONFIDENCE evidence (explicit mention like "my birthday is..." or "born on...").',
       parameters: {
         type: 'object',
         properties: {
@@ -68,16 +68,16 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           field: {
             type: 'string',
-            enum: ['firstName', 'lastName', 'company', 'title', 'notes'],
+            enum: ['firstName', 'lastName', 'company', 'title', 'notes', 'birthday'],
             description: 'The field to update',
           },
           value: {
             type: 'string',
-            description: 'The new value for the field',
+            description: 'The new value for the field. For birthday, use ISO date format (YYYY-MM-DD). If year is unknown, use 1900 as the year.',
           },
           reason: {
             type: 'string',
-            description: 'Explanation of why this update is being made and where the information was found',
+            description: 'Explanation of why this update is being made and where the information was found. This is especially important for birthday to document the source.',
           },
         },
         required: ['contactId', 'field', 'value', 'reason'],
@@ -134,6 +134,7 @@ export class EmailAnalysisAgent {
    - Company name from signature
    - Job title from signature
    - Phone numbers from signature
+   - Birthday (only with HIGH CONFIDENCE evidence)
 4. If NO contact exists, CREATE a new contact using:
    - The email address from the From field
    - The name parsed from the From field (e.g., "John Doe" from "John Doe <john@example.com>")
@@ -147,6 +148,19 @@ Guidelines for name parsing:
 
 Only update fields if you find clear, reliable information in the email signature or body. Do not guess or make assumptions.
 Always explain your reasoning when making updates or creating contacts.
+
+BIRTHDAY FIELD GUIDELINES (HIGH CONFIDENCE REQUIRED):
+- Only set birthday when there is EXPLICIT, HIGH-CONFIDENCE evidence such as:
+  * Direct statements: "my birthday is January 15th", "I was born on 03/20/1985"
+  * Birthday announcements: "It's my birthday today!" (use email date)
+  * Calendar invites or reminders explicitly about their birthday
+- Do NOT infer birthday from:
+  * Age mentions without specific dates
+  * Zodiac sign references
+  * Vague references to celebrations
+- When setting birthday, ALWAYS document the source in the reason field
+- Use ISO date format (YYYY-MM-DD). If year is unknown, use 1900 as the year (e.g., "1900-01-15")
+- The source will be automatically appended to the contact's notes for audit purposes
 
 Important guidelines:
 - Extract email addresses from format like "John Doe <john@example.com>"
@@ -380,20 +394,52 @@ Instructions:
     console.log(`  Reason: ${args.reason}`);
 
     try {
+      // For birthday field, also append source information to notes
+      if (args.field === 'birthday') {
+        // First get the current contact to access existing notes
+        const contact = await ContactService.findById(args.contactId);
+        if (contact && contact.userId === userId) {
+          const timestamp = new Date().toISOString().split('T')[0];
+          const sourceNote = `[${timestamp}] Birthday set via email analysis: ${args.reason}`;
+          const existingNotes = contact.notes || '';
+          const updatedNotes = existingNotes
+            ? `${existingNotes}\n\n${sourceNote}`
+            : sourceNote;
+          
+          // Parse the birthday value - convert YYYY-MM-DD to ISO date string
+          let birthdayValue = args.value;
+          if (/^\d{4}-\d{2}-\d{2}$/.test(args.value)) {
+            // It's in YYYY-MM-DD format, convert to ISO string
+            const [year, month, day] = args.value.split('-').map(Number);
+            birthdayValue = new Date(Date.UTC(year, month - 1, day)).toISOString();
+          }
+          
+          await ContactService.updateContact(args.contactId, userId, {
+            birthday: birthdayValue,
+            notes: updatedNotes,
+          });
+          console.log(`[Tool] Successfully updated birthday and appended source to notes`);
+          return JSON.stringify({
+            success: true,
+            message: `Updated birthday to "${args.value}" and documented source in notes`
+          });
+        }
+      }
+      
       await ContactService.updateContact(args.contactId, userId, {
         [args.field]: args.value,
       });
       console.log(`[Tool] Successfully updated ${args.field}`);
-      return JSON.stringify({ 
-        success: true, 
-        message: `Updated ${args.field} to "${args.value}"` 
+      return JSON.stringify({
+        success: true,
+        message: `Updated ${args.field} to "${args.value}"`
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error(`[Tool] Failed to update contact:`, errorMessage);
-      return JSON.stringify({ 
-        success: false, 
-        message: `Failed to update: ${errorMessage}` 
+      return JSON.stringify({
+        success: false,
+        message: `Failed to update: ${errorMessage}`
       });
     }
   }

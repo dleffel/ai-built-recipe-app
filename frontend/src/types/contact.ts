@@ -71,7 +71,17 @@ export interface CreateContactDTO {
   phones?: Array<{ phone: string; label: string; isPrimary?: boolean }>;
 }
 
-export type UpdateContactDTO = Partial<CreateContactDTO>;
+export interface UpdateContactDTO {
+  firstName?: string;
+  lastName?: string;
+  company?: string | null;
+  title?: string | null;
+  notes?: string | null;
+  linkedInUrl?: string | null;
+  birthday?: string | null;
+  emails?: Array<{ email: string; label: string; isPrimary?: boolean }>;
+  phones?: Array<{ phone: string; label: string; isPrimary?: boolean }>;
+}
 
 export interface ContactListParams {
   skip?: number;

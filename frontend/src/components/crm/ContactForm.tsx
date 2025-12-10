@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Contact, CreateContactDTO, EMAIL_LABELS, PHONE_LABELS } from '../../types/contact';
+import { Contact, CreateContactDTO, UpdateContactDTO, EMAIL_LABELS, PHONE_LABELS } from '../../types/contact';
 import { MultiValueInput } from './MultiValueInput';
 import { Button } from '../ui/Button';
 import { parseBirthdayComponents, parseBirthdayInput, isValidBirthday } from '../../utils/birthdayUtils';
@@ -7,7 +7,7 @@ import styles from './ContactForm.module.css';
 
 interface ContactFormProps {
   contact?: Contact;
-  onSubmit: (data: CreateContactDTO) => Promise<void>;
+  onSubmit: (data: CreateContactDTO | UpdateContactDTO) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -78,7 +78,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
 
     try {
       // Build birthday value if month and day are provided
-      let birthdayValue: string | undefined;
+      let birthdayValue: string | null | undefined;
       if (birthdayMonth && birthdayDay) {
         const month = parseInt(birthdayMonth, 10);
         const day = parseInt(birthdayDay, 10);
@@ -87,15 +87,37 @@ export const ContactForm: React.FC<ContactFormProps> = ({
         if (isValidBirthday(month, day, year)) {
           birthdayValue = parseBirthdayInput(month, day, year);
         }
+      } else if (isEditing && contact?.birthday) {
+        // If editing and the contact had a birthday but fields are now empty, explicitly clear it
+        birthdayValue = null;
       }
 
-      const data: CreateContactDTO = {
+      // Use UpdateContactDTO when editing to allow null values for clearing fields
+      const data: CreateContactDTO | UpdateContactDTO = isEditing ? {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        company: company.trim() || null,
+        title: title.trim() || null,
+        linkedInUrl: linkedInUrl.trim() || null,
+        birthday: birthdayValue,
+        notes: notes.trim() || null,
+        emails: emails.map(e => ({
+          email: e.value,
+          label: e.label,
+          isPrimary: e.isPrimary,
+        })),
+        phones: phones.map(p => ({
+          phone: p.value,
+          label: p.label,
+          isPrimary: p.isPrimary,
+        })),
+      } : {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         company: company.trim() || undefined,
         title: title.trim() || undefined,
         linkedInUrl: linkedInUrl.trim() || undefined,
-        birthday: birthdayValue,
+        birthday: birthdayValue || undefined,
         notes: notes.trim() || undefined,
         emails: emails.map(e => ({
           email: e.value,

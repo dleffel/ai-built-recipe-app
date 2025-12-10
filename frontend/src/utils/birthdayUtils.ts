@@ -15,9 +15,10 @@ export function formatBirthday(birthday: string | null): string | null {
   if (!birthday) return null;
   
   const date = new Date(birthday);
-  const month = date.toLocaleDateString('en-US', { month: 'long' });
-  const day = date.getDate();
-  const year = date.getFullYear();
+  // Use UTC methods to avoid timezone issues - the date is stored as UTC
+  const month = date.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+  const day = date.getUTCDate();
+  const year = date.getUTCFullYear();
   
   if (year === UNKNOWN_YEAR) {
     return `${month} ${day}`;
@@ -34,10 +35,11 @@ export function formatBirthday(birthday: string | null): string | null {
  */
 export function calculateAge(birthDate: Date): number {
   const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
+  // Use UTC methods for consistent age calculation
+  let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+  const monthDiff = today.getUTCMonth() - birthDate.getUTCMonth();
   
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getUTCDate() < birthDate.getUTCDate())) {
     age--;
   }
   
@@ -53,7 +55,8 @@ export function calculateAge(birthDate: Date): number {
  */
 export function parseBirthdayInput(month: number, day: number, year?: number): string {
   const effectiveYear = year ?? UNKNOWN_YEAR;
-  const date = new Date(effectiveYear, month - 1, day);
+  // Use Date.UTC to create a UTC date, avoiding timezone issues
+  const date = new Date(Date.UTC(effectiveYear, month - 1, day));
   return date.toISOString();
 }
 
@@ -63,7 +66,7 @@ export function parseBirthdayInput(month: number, day: number, year?: number): s
  * @returns true if the year is known, false if it's the sentinel value
  */
 export function hasKnownYear(birthday: string): boolean {
-  return new Date(birthday).getFullYear() !== UNKNOWN_YEAR;
+  return new Date(birthday).getUTCFullYear() !== UNKNOWN_YEAR;
 }
 
 /**
@@ -81,11 +84,12 @@ export function parseBirthdayComponents(birthday: string | null): {
   }
   
   const date = new Date(birthday);
-  const year = date.getFullYear();
+  // Use UTC methods to avoid timezone issues
+  const year = date.getUTCFullYear();
   
   return {
-    month: date.getMonth() + 1, // Convert from 0-indexed to 1-indexed
-    day: date.getDate(),
+    month: date.getUTCMonth() + 1, // Convert from 0-indexed to 1-indexed
+    day: date.getUTCDate(),
     year: year === UNKNOWN_YEAR ? null : year,
   };
 }
