@@ -58,7 +58,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'updateContactField',
-      description: 'Update a specific field on a contact record. Only use this when there is HIGH CONFIDENCE evidence in the email (explicit mentions, clear signature blocks, or direct statements). Do not guess or infer information.',
+      description: 'Update a specific field on a contact record. Use this to update basic contact information (name, company, title, birthday) discovered in the email. Only use when there is HIGH CONFIDENCE evidence in the email (explicit mentions, clear signature blocks, or direct statements). Do not guess or infer information.',
       parameters: {
         type: 'object',
         properties: {
@@ -68,7 +68,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           field: {
             type: 'string',
-            enum: ['firstName', 'lastName', 'company', 'title', 'notes', 'birthday'],
+            enum: ['firstName', 'lastName', 'company', 'title', 'birthday'],
             description: 'The field to update',
           },
           value: {
@@ -81,6 +81,29 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
         },
         required: ['contactId', 'field', 'value', 'reason'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'appendToNotes',
+      description: `Append high-confidence information to contact notes. Use this to record relationship context, preferences, key interactions, and insights learned from emails. The note will be appended with a date prefix.
+
+Only use this for HIGH-CONFIDENCE information that is explicitly stated or clearly inferable from the email. Keep notes concise and factual.`,
+      parameters: {
+        type: 'object',
+        properties: {
+          contactId: {
+            type: 'string',
+            description: 'The ID of the contact to update',
+          },
+          note: {
+            type: 'string',
+            description: 'The note to append. Keep it concise and factual. Examples: "Prefers email over phone", "Works at Acme Corp as VP of Sales", "Interested in Q1 launch timeline", "Met at SaaStr conference"',
+          },
+        },
+        required: ['contactId', 'note'],
       },
     },
   },
@@ -126,20 +149,40 @@ export class EmailAnalysisAgent {
       return;
     }
 
+    const emailDate = message.date || new Date().toISOString().split('T')[0];
+    
     const systemPrompt = `You are an email analysis agent for a CRM system. Your job is to:
-1. Extract the sender's email address from the "From" field
-2. Look up if we have an existing contact with that email
-3. If a contact exists, analyze the email for any updated contact information such as:
-   - Name changes or corrections
-   - Company name from signature
-   - Job title from signature
-   - Phone numbers from signature
-   - Birthday
-4. If NO contact exists, CREATE a new contact using:
-   - The email address from the From field
-   - The name parsed from the From field (e.g., "John Doe" from "John Doe <john@example.com>")
-   - Any company/title information found in the email signature
-5. Update the contact record with any new information you discover
+
+1. CONTACT MANAGEMENT
+   - Extract sender email and look up existing contact
+   - Create new contacts for unknown senders (skip automated emails)
+   - Update basic fields (name, company, title, birthday) from signatures
+
+2. NOTES ENHANCEMENT
+   Analyze each email for high-signal information to add to contact notes.
+   Only record HIGH-CONFIDENCE information - things explicitly stated or clearly inferable.
+
+   WHAT TO CAPTURE (use appendToNotes):
+   - How you connected (if mentioned: "Great meeting you at...")
+   - Their role/influence level (decision-maker, champion, blocker)
+   - Goals they mention ("We're trying to improve...")
+   - Pain points ("Our biggest challenge is...")
+   - Important requests or commitments
+   - Communication preferences (if stated: "Best to reach me by...")
+   - Personal details for rapport (mentioned hobbies, family, etc.)
+
+   WHAT NOT TO CAPTURE:
+   - Gossip or subjective judgments
+   - Sensitive personal information
+   - Low-confidence guesses
+   - Routine pleasantries
+
+3. GUIDELINES
+   - Be factual and professional
+   - Keep notes concise but informative
+   - Skip if no high-signal information found
+   - Do NOT create contacts for automated/system emails (noreply@, no-reply@, mailer-daemon@, etc.)
+   - Do NOT create a contact for the user's own email address (${accountEmail})
 
 Guidelines for name parsing:
 - From field format is typically "First Last <email@domain.com>"
@@ -149,51 +192,27 @@ Guidelines for name parsing:
 HIGH CONFIDENCE REQUIREMENT FOR ALL UPDATES:
 Only update contact fields when there is EXPLICIT, HIGH-CONFIDENCE evidence in the email.
 Do not guess, infer, or make assumptions about contact information.
-Always document the source of information in the reason field.
 
-Examples of HIGH-CONFIDENCE evidence:
-- Name: Explicit signature block, "My name is...", corrections like "Actually, it's spelled..."
-- Company: Clear signature block with company name, "I work at...", company email domain
-- Title: Signature block with job title, "I'm the [title] at..."
-- Birthday: Direct statements like "my birthday is January 15th", "I was born on 03/20/1985", or "It's my birthday today!"
-
-Examples of LOW-CONFIDENCE evidence (DO NOT USE):
-- Name: Informal nicknames without confirmation, ambiguous references
-- Company: Vague mentions of organizations, assumptions from email domain
-- Title: Informal role descriptions, assumptions based on email content
-- Birthday: Age mentions without dates, zodiac references, vague celebration mentions
-
-BIRTHDAY FIELD SPECIFIC GUIDELINES:
-- Use ISO date format (YYYY-MM-DD). If year is unknown, use 1900 as the year (e.g., "1900-01-15")
-- The source will be automatically appended to the contact's notes for audit purposes
-
-Important guidelines:
-- Extract email addresses from format like "John Doe <john@example.com>"
-- Look for signature blocks at the end of emails for contact info
-- Company names often appear after job titles in signatures
-- Phone numbers may be formatted in various ways
-- Do NOT create contacts for automated/system emails (noreply@, no-reply@, mailer-daemon@, etc.)
-- Do NOT create a contact for the user's own email address (${accountEmail})
-
-Current user context:
+Current context:
 - User ID: ${userId}
-- Account Email: ${accountEmail}`;
+- Account Email: ${accountEmail}
+- Email Date: ${emailDate}`;
 
-    const userPrompt = `Analyze this email and update or create CRM contacts as needed:
+    const userPrompt = `Analyze this email and update CRM contacts:
 
 From: ${message.from || 'Unknown'}
 To: ${message.to || 'Unknown'}
 Subject: ${message.subject || '(No Subject)'}
-Date: ${message.date || 'Unknown'}
+Date: ${emailDate}
 
 Email Body:
 ${emailBody || message.snippet || '(No body content)'}
 
-Instructions:
-1. First, extract the sender's email address from the From field and look up the contact
-2. If no contact exists, create one using the name and email from the From field
-3. Analyze the email for any contact information updates (company, title, etc.)
-4. Skip creating contacts for automated emails (noreply, no-reply, mailer-daemon, etc.)`;
+INSTRUCTIONS:
+1. Look up the sender contact (or create if new, skip automated emails)
+2. Update basic contact info if found in signature (company, title)
+3. Use appendToNotes for any high-signal information worth recording
+4. Skip routine emails with no notable content`;
 
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -253,6 +272,8 @@ Instructions:
               result = await this.handleCreateContact(userId, args);
             } else if (functionName === 'updateContactField') {
               result = await this.handleUpdateContact(userId, args);
+            } else if (functionName === 'appendToNotes') {
+              result = await this.handleAppendToNotes(userId, args, emailDate);
             } else {
               result = JSON.stringify({ error: `Unknown function: ${functionName}` });
             }
@@ -445,6 +466,58 @@ Instructions:
       return JSON.stringify({
         success: false,
         message: `Failed to update: ${errorMessage}`
+      });
+    }
+  }
+
+  /**
+   * Handle appendToNotes tool call - simple text append to notes field
+   */
+  private static async handleAppendToNotes(
+    userId: string,
+    args: {
+      contactId: string;
+      note: string;
+    },
+    emailDate: string
+  ): Promise<string> {
+    console.log(`[Tool] appendToNotes:`);
+    console.log(`  Contact ID: ${args.contactId}`);
+    console.log(`  Note: ${args.note}`);
+
+    try {
+      // Get current contact
+      const contact = await ContactService.findById(args.contactId);
+      if (!contact) {
+        return JSON.stringify({ success: false, message: 'Contact not found' });
+      }
+      if (contact.userId !== userId) {
+        return JSON.stringify({ success: false, message: 'Unauthorized' });
+      }
+
+      // Simple append with date prefix
+      const existingNotes = contact.notes || '';
+      const newEntry = `[${emailDate}] ${args.note}`;
+      const updatedNotes = existingNotes
+        ? `${existingNotes}\n\n${newEntry}`
+        : newEntry;
+
+      // Update contact
+      await ContactService.updateContact(args.contactId, userId, {
+        notes: updatedNotes,
+      });
+
+      console.log(`[Tool] Successfully appended note`);
+      return JSON.stringify({
+        success: true,
+        message: 'Note appended successfully',
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[Tool] Failed to append note:`, errorMessage);
+      return JSON.stringify({
+        success: false,
+        message: `Failed to append note: ${errorMessage}`,
       });
     }
   }
