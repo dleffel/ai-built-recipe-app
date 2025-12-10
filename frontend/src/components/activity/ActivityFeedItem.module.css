@@ -1,0 +1,208 @@
+.activityItem {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.activityItem:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.activityContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activityHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.activityIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activityText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activityDescription {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.entityLink {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.entityLink:hover {
+  text-decoration: underline;
+}
+
+.taskTitle {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.activityTime {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.expandButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-left: 40px;
+}
+
+.expandButton:hover {
+  text-decoration: underline;
+}
+
+.expandIcon {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.changeDetails {
+  margin-left: 40px;
+  padding: 12px;
+  background-color: var(--color-bg-tertiary);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.changeItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.changeField {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: capitalize;
+}
+
+.changeValues {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.oldValue {
+  color: #F85149;
+  background-color: var(--color-error-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+  word-break: break-word;
+}
+
+.changeArrow {
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.newValue {
+  color: #56D364;
+  background-color: var(--color-success-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+  word-break: break-word;
+}
+
+.taskMeta {
+  margin-left: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categoryBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+
+.categoryRooVet {
+  background-color: rgba(88, 166, 255, 0.15);
+  color: var(--color-accent);
+}
+
+.categoryRooCode {
+  background-color: rgba(63, 185, 80, 0.15);
+  color: var(--color-success);
+}
+
+.categoryPersonal {
+  background-color: rgba(210, 153, 34, 0.15);
+  color: var(--color-warning);
+}
+
+@media (max-width: 480px) {
+  .activityItem {
+    padding: 12px;
+  }
+
+  .activityHeader {
+    gap: 10px;
+  }
+
+  .activityIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+  }
+
+  .expandButton,
+  .changeDetails,
+  .taskMeta {
+    margin-left: 34px;
+  }
+
+  .changeValues {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .changeArrow {
+    display: none;
+  }
+
+  .newValue::before {
+    content: '→ ';
+    color: var(--color-muted);
+  }
+}

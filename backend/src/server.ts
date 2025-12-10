@@ -8,6 +8,7 @@ import taskRoutes from './routes/tasks';
 import contactRoutes from './routes/contacts';
 import gmailRoutes from './routes/gmail';
 import webhookRoutes from './routes/webhooks';
+import activityRoutes from './routes/activity';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
 import { UserService } from './services/userService';
@@ -355,6 +356,9 @@ app.use('/api/tasks', taskRoutes);
 
 // Contact routes
 app.use('/api/contacts', contactRoutes);
+
+// Activity routes
+app.use('/api/activity', activityRoutes);
 
 // Gmail routes
 app.use('/api/gmail', gmailRoutes);
