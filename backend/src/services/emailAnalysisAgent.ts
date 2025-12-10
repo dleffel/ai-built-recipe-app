@@ -58,7 +58,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'updateContactField',
-      description: 'Update a specific field on a contact record. Use this to update information discovered in the email. For birthday, only set when there is HIGH CONFIDENCE evidence (explicit mention like "my birthday is..." or "born on...").',
+      description: 'Update a specific field on a contact record. Only use this when there is HIGH CONFIDENCE evidence in the email (explicit mentions, clear signature blocks, or direct statements). Do not guess or infer information.',
       parameters: {
         type: 'object',
         properties: {
@@ -77,7 +77,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           reason: {
             type: 'string',
-            description: 'Explanation of why this update is being made and where the information was found. This is especially important for birthday to document the source.',
+            description: 'Explanation of why this update is being made and where the HIGH CONFIDENCE evidence was found in the email.',
           },
         },
         required: ['contactId', 'field', 'value', 'reason'],
@@ -134,7 +134,7 @@ export class EmailAnalysisAgent {
    - Company name from signature
    - Job title from signature
    - Phone numbers from signature
-   - Birthday (only with HIGH CONFIDENCE evidence)
+   - Birthday
 4. If NO contact exists, CREATE a new contact using:
    - The email address from the From field
    - The name parsed from the From field (e.g., "John Doe" from "John Doe <john@example.com>")
@@ -146,19 +146,24 @@ Guidelines for name parsing:
 - If only one name is present, use it as firstName and set lastName to empty string
 - If no name is present (just email), use the part before @ as firstName
 
-Only update fields if you find clear, reliable information in the email signature or body. Do not guess or make assumptions.
-Always explain your reasoning when making updates or creating contacts.
+HIGH CONFIDENCE REQUIREMENT FOR ALL UPDATES:
+Only update contact fields when there is EXPLICIT, HIGH-CONFIDENCE evidence in the email.
+Do not guess, infer, or make assumptions about contact information.
+Always document the source of information in the reason field.
 
-BIRTHDAY FIELD GUIDELINES (HIGH CONFIDENCE REQUIRED):
-- Only set birthday when there is EXPLICIT, HIGH-CONFIDENCE evidence such as:
-  * Direct statements: "my birthday is January 15th", "I was born on 03/20/1985"
-  * Birthday announcements: "It's my birthday today!" (use email date)
-  * Calendar invites or reminders explicitly about their birthday
-- Do NOT infer birthday from:
-  * Age mentions without specific dates
-  * Zodiac sign references
-  * Vague references to celebrations
-- When setting birthday, ALWAYS document the source in the reason field
+Examples of HIGH-CONFIDENCE evidence:
+- Name: Explicit signature block, "My name is...", corrections like "Actually, it's spelled..."
+- Company: Clear signature block with company name, "I work at...", company email domain
+- Title: Signature block with job title, "I'm the [title] at..."
+- Birthday: Direct statements like "my birthday is January 15th", "I was born on 03/20/1985", or "It's my birthday today!"
+
+Examples of LOW-CONFIDENCE evidence (DO NOT USE):
+- Name: Informal nicknames without confirmation, ambiguous references
+- Company: Vague mentions of organizations, assumptions from email domain
+- Title: Informal role descriptions, assumptions based on email content
+- Birthday: Age mentions without dates, zodiac references, vague celebration mentions
+
+BIRTHDAY FIELD SPECIFIC GUIDELINES:
 - Use ISO date format (YYYY-MM-DD). If year is unknown, use 1900 as the year (e.g., "1900-01-15")
 - The source will be automatically appended to the contact's notes for audit purposes
 
