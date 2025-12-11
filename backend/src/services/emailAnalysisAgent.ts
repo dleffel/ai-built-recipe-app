@@ -2,6 +2,37 @@ import OpenAI from 'openai';
 import { ContactService, ContactWithRelations } from './contactService';
 import { GmailMessage } from '../types/gmail';
 
+// Structured notes template - the format we want notes to evolve into
+const STRUCTURED_NOTES_TEMPLATE = `RELATIONSHIP SUMMARY
+- Role in our world:
+- How we met / intro:
+- Relationship owner:
+
+WHAT THEY CARE ABOUT
+- Goals / KPIs:
+- Main pains:
+- Hot buttons / themes:
+
+KEY HISTORY
+
+CURRENT STATUS
+- Where things stand:
+- Deal / project risks:
+- Next step + timing:
+
+PREFERENCES / NOTES
+- Comms:
+- Personal rapport:
+- Landmines:`;
+
+// Section names for the structured notes
+type NotesSection = 
+  | 'RELATIONSHIP SUMMARY'
+  | 'WHAT THEY CARE ABOUT'
+  | 'KEY HISTORY'
+  | 'CURRENT STATUS'
+  | 'PREFERENCES / NOTES';
+
 // Tool definitions for the agent
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
@@ -87,23 +118,33 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'appendToNotes',
-      description: `Record a specific INSIGHT about the contact - something you learned ABOUT THEM as a person, not a summary of what the email discussed.
+      name: 'updateNotesSection',
+      description: `Update a specific section or field in the contact's structured notes. The notes follow a structured format with sections like RELATIONSHIP SUMMARY, WHAT THEY CARE ABOUT, KEY HISTORY, CURRENT STATUS, and PREFERENCES / NOTES.
 
-INSIGHTS are facts about the contact that would be useful for future interactions:
-- Their preferences: "Prefers email over phone calls"
-- Their priorities: "Values work-life balance highly"
-- Their decision-making style: "Needs data/metrics to make decisions"
-- Their relationships: "Close with the CEO, can escalate issues"
-- Their personality: "Direct communicator, appreciates brevity"
-- Personal details: "Has two kids, coaches little league"
+Use this to record insights about the contact that would be useful for future interactions. Each section has specific fields:
 
-DO NOT record summaries of email content like:
-- "Discussed Q4 budget planning" (this is what the email was about, not an insight)
-- "Following up on project timeline" (this is email context, not an insight)
-- "Negotiating compensation package" (this is a topic, not an insight about the person)
+RELATIONSHIP SUMMARY:
+- "Role in our world": Their role relative to us (prospect, customer, partner, vendor, etc.)
+- "How we met / intro": How the relationship started
+- "Relationship owner": Who on our team owns this relationship
 
-Only call this when you discover something meaningful ABOUT THE CONTACT that would help in future interactions.`,
+WHAT THEY CARE ABOUT:
+- "Goals / KPIs": What they're trying to achieve
+- "Main pains": Their challenges and frustrations
+- "Hot buttons / themes": Topics that resonate with them
+
+KEY HISTORY:
+- Use this for chronological entries about significant interactions (format: "YYYY-MM-DD - Event description")
+
+CURRENT STATUS:
+- "Where things stand": Current state of the relationship/deal
+- "Deal / project risks": Potential blockers or concerns
+- "Next step + timing": What's next and when
+
+PREFERENCES / NOTES:
+- "Comms": Communication preferences (email vs phone, time zones, etc.)
+- "Personal rapport": Personal details for building relationship
+- "Landmines": Things to avoid, past negative experiences`,
       parameters: {
         type: 'object',
         properties: {
@@ -111,16 +152,199 @@ Only call this when you discover something meaningful ABOUT THE CONTACT that wou
             type: 'string',
             description: 'The ID of the contact to update',
           },
-          note: {
+          section: {
             type: 'string',
-            description: 'A specific insight about the contact (NOT a summary of the email). Examples: "Prefers Roo over competitors despite lower compensation", "Decision-maker for engineering hires", "Responsive to data-driven arguments", "Values transparency in negotiations"',
+            enum: ['RELATIONSHIP SUMMARY', 'WHAT THEY CARE ABOUT', 'KEY HISTORY', 'CURRENT STATUS', 'PREFERENCES / NOTES'],
+            description: 'The section of the notes to update',
+          },
+          field: {
+            type: 'string',
+            description: 'The specific field within the section to update (e.g., "Role in our world", "Goals / KPIs"). For KEY HISTORY, leave this empty and use the value for the chronological entry.',
+          },
+          value: {
+            type: 'string',
+            description: 'The value to set or append. For KEY HISTORY, include the date prefix (e.g., "2025-03-10 - First call, interested in X").',
+          },
+          append: {
+            type: 'boolean',
+            description: 'If true, append to existing value instead of replacing. Default is false for fields, true for KEY HISTORY entries.',
           },
         },
-        required: ['contactId', 'note'],
+        required: ['contactId', 'section', 'value'],
       },
     },
   },
 ];
+
+/**
+ * Helper functions for structured notes management
+ */
+class StructuredNotesHelper {
+  /**
+   * Parse structured notes into sections
+   */
+  static parseSections(notes: string): Map<string, string> {
+    const sections = new Map<string, string>();
+    if (!notes) return sections;
+
+    const sectionHeaders = [
+      'RELATIONSHIP SUMMARY',
+      'WHAT THEY CARE ABOUT',
+      'KEY HISTORY',
+      'CURRENT STATUS',
+      'PREFERENCES / NOTES',
+    ];
+
+    let currentSection = '';
+    let currentContent: string[] = [];
+
+    const lines = notes.split('\n');
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (sectionHeaders.includes(trimmedLine)) {
+        // Save previous section
+        if (currentSection) {
+          sections.set(currentSection, currentContent.join('\n').trim());
+        }
+        currentSection = trimmedLine;
+        currentContent = [];
+      } else if (currentSection) {
+        currentContent.push(line);
+      }
+    }
+
+    // Save last section
+    if (currentSection) {
+      sections.set(currentSection, currentContent.join('\n').trim());
+    }
+
+    return sections;
+  }
+
+  /**
+   * Update a specific field within a section
+   */
+  static updateSectionField(
+    sectionContent: string,
+    field: string,
+    value: string,
+    append: boolean = false
+  ): string {
+    const lines = sectionContent.split('\n');
+    const fieldPrefix = `- ${field}:`;
+    let fieldFound = false;
+    
+    const updatedLines = lines.map(line => {
+      if (line.trim().startsWith(fieldPrefix)) {
+        fieldFound = true;
+        const existingValue = line.substring(line.indexOf(':') + 1).trim();
+        if (append && existingValue) {
+          return `- ${field}: ${existingValue}; ${value}`;
+        }
+        return `- ${field}: ${value}`;
+      }
+      return line;
+    });
+
+    // If field wasn't found, add it
+    if (!fieldFound) {
+      updatedLines.push(`- ${field}: ${value}`);
+    }
+
+    return updatedLines.join('\n');
+  }
+
+  /**
+   * Add an entry to KEY HISTORY section
+   */
+  static addHistoryEntry(sectionContent: string, entry: string): string {
+    const lines = sectionContent.split('\n').filter(l => l.trim());
+    lines.push(`- ${entry}`);
+    return lines.join('\n');
+  }
+
+  /**
+   * Rebuild the full notes from sections
+   */
+  static rebuildNotes(sections: Map<string, string>): string {
+    const sectionOrder = [
+      'RELATIONSHIP SUMMARY',
+      'WHAT THEY CARE ABOUT',
+      'KEY HISTORY',
+      'CURRENT STATUS',
+      'PREFERENCES / NOTES',
+    ];
+
+    const parts: string[] = [];
+    for (const section of sectionOrder) {
+      const content = sections.get(section) || this.getDefaultSectionContent(section);
+      parts.push(`${section}\n${content}`);
+    }
+
+    return parts.join('\n\n');
+  }
+
+  /**
+   * Get default content for a section
+   */
+  static getDefaultSectionContent(section: string): string {
+    switch (section) {
+      case 'RELATIONSHIP SUMMARY':
+        return '- Role in our world:\n- How we met / intro:\n- Relationship owner:';
+      case 'WHAT THEY CARE ABOUT':
+        return '- Goals / KPIs:\n- Main pains:\n- Hot buttons / themes:';
+      case 'KEY HISTORY':
+        return '';
+      case 'CURRENT STATUS':
+        return '- Where things stand:\n- Deal / project risks:\n- Next step + timing:';
+      case 'PREFERENCES / NOTES':
+        return '- Comms:\n- Personal rapport:\n- Landmines:';
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Initialize notes with the structured template
+   */
+  static initializeStructuredNotes(): string {
+    return STRUCTURED_NOTES_TEMPLATE;
+  }
+
+  /**
+   * Check if notes are already in structured format
+   */
+  static isStructuredFormat(notes: string): boolean {
+    if (!notes) return false;
+    return notes.includes('RELATIONSHIP SUMMARY') || 
+           notes.includes('KEY HISTORY') || 
+           notes.includes('CURRENT STATUS');
+  }
+
+  /**
+   * Migrate unstructured notes to structured format
+   * Preserves existing content in the KEY HISTORY section
+   */
+  static migrateToStructuredFormat(existingNotes: string): string {
+    if (!existingNotes || this.isStructuredFormat(existingNotes)) {
+      return existingNotes || this.initializeStructuredNotes();
+    }
+
+    // Put existing unstructured notes into KEY HISTORY
+    const sections = new Map<string, string>();
+    sections.set('RELATIONSHIP SUMMARY', this.getDefaultSectionContent('RELATIONSHIP SUMMARY'));
+    sections.set('WHAT THEY CARE ABOUT', this.getDefaultSectionContent('WHAT THEY CARE ABOUT'));
+    
+    // Add existing notes as legacy content in KEY HISTORY
+    const historyContent = `[Legacy notes migrated]\n${existingNotes}`;
+    sections.set('KEY HISTORY', historyContent);
+    
+    sections.set('CURRENT STATUS', this.getDefaultSectionContent('CURRENT STATUS'));
+    sections.set('PREFERENCES / NOTES', this.getDefaultSectionContent('PREFERENCES / NOTES'));
+
+    return this.rebuildNotes(sections);
+  }
+}
 
 /**
  * Email Analysis Agent
@@ -171,43 +395,52 @@ export class EmailAnalysisAgent {
    - Create new contacts for unknown senders (skip automated emails)
    - Update basic fields (name, company, title, birthday) from signatures
 
-2. EXTRACT INSIGHTS (NOT SUMMARIES)
-   Your goal is to learn things ABOUT THE CONTACT as a person - NOT to summarize what the email discussed.
+2. MAINTAIN STRUCTURED NOTES
+   The contact notes follow a structured format that you should evolve over time. The format has these sections:
 
-   INSIGHTS vs SUMMARIES - THIS IS CRITICAL:
-   
-   INSIGHTS (what we want) = Facts about the PERSON that help future interactions:
-   - "Prefers Roo over competitors despite lower compensation" (reveals their values/priorities)
-   - "Decision-maker for engineering hires" (reveals their role/authority)
-   - "Values transparency in negotiations" (reveals their communication style)
-   - "Has kids, coaches little league on weekends" (personal detail for rapport)
-   - "Responsive to data-driven arguments" (reveals how to persuade them)
-   - "Prefers email over phone calls" (communication preference)
-   
-   SUMMARIES (what we DON'T want) = Descriptions of email content/topics:
-   - "Discussed Q4 budget planning" - NO, this is what the email was about
-   - "Following up on project timeline" - NO, this is email context
-   - "Negotiating compensation package for candidate" - NO, this is a topic
-   - "Leading recruitment for Staff Growth Analyst position" - NO, this is activity
-   - "Proposing $10k sign-on bonus" - NO, this is transaction detail
+   RELATIONSHIP SUMMARY
+   - Role in our world: Their role relative to us (prospect, customer, partner, etc.)
+   - How we met / intro: How the relationship started
+   - Relationship owner: Who on our team owns this relationship
 
-   ASK YOURSELF: "Does this tell me something about WHO THIS PERSON IS that would help me interact with them better in the future?"
-   - If YES -> It's an insight, record it
-   - If NO -> It's a summary, skip it
+   WHAT THEY CARE ABOUT
+   - Goals / KPIs: What they're trying to achieve
+   - Main pains: Their challenges and frustrations
+   - Hot buttons / themes: Topics that resonate with them
 
-   GOOD INSIGHT CATEGORIES:
-   - Their preferences and values
-   - Their decision-making style
-   - Their role and influence level
-   - Their communication preferences
-   - Their goals and pain points (when explicitly stated)
-   - Personal details for building rapport
-   - How they like to work with others
+   KEY HISTORY
+   - Chronological entries of significant interactions (format: YYYY-MM-DD - Event description)
+   - Examples: "2025-03-10 - First call, interested in X, skeptical about Y"
+   - Only record SIGNIFICANT events, not every email
 
-3. GUIDELINES
+   CURRENT STATUS
+   - Where things stand: Current state of the relationship/deal
+   - Deal / project risks: Potential blockers or concerns
+   - Next step + timing: What's next and when
+
+   PREFERENCES / NOTES
+   - Comms: Communication preferences (email vs phone, time zones, etc.)
+   - Personal rapport: Personal details for building relationship (hobbies, family, etc.)
+   - Landmines: Things to avoid, past negative experiences
+
+3. WHAT TO RECORD
+   Focus on INSIGHTS about the contact that would help future interactions:
+   - Their preferences, values, and decision-making style
+   - Their goals, pain points, and what motivates them
+   - Significant milestones in the relationship
+   - Communication preferences and personal details
+   - Risks and things to avoid
+
+   DO NOT record:
+   - Routine email exchanges with no new information
+   - Every single interaction (only significant ones in KEY HISTORY)
+   - Summaries of what emails discussed (unless it reveals something about the person)
+
+4. GUIDELINES
    - Be factual and professional
-   - Keep notes concise but informative
-   - Skip appendToNotes entirely if no genuine insights found (most emails won't have any!)
+   - Keep entries concise but informative
+   - Use updateNotesSection to update specific fields or add history entries
+   - Skip updates entirely if no genuine insights found (most emails won't have any!)
    - Do NOT create contacts for automated/system emails (noreply@, no-reply@, mailer-daemon@, etc.)
    - Do NOT create a contact for the user's own email address (${accountEmail})
 
@@ -238,11 +471,12 @@ ${emailBody || message.snippet || '(No body content)'}
 INSTRUCTIONS:
 1. Look up the sender contact (or create if new, skip automated emails)
 2. Update basic contact info if found in signature (company, title)
-3. ONLY use appendToNotes if you discover a genuine INSIGHT about the contact as a person
-   - Ask: "What did I learn about WHO this person IS?"
-   - NOT: "What was this email about?"
-   - Most emails will have NO insights worth recording - that's fine, skip appendToNotes
-4. Skip routine emails with no notable content`;
+3. Review the contact's existing notes and update relevant sections if you discover:
+   - New information about their role, goals, or pain points
+   - Significant events worth recording in KEY HISTORY
+   - Communication preferences or personal details
+   - Current status changes or next steps
+4. Most emails will have NO insights worth recording - that's fine, skip updateNotesSection`;
 
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -302,8 +536,8 @@ INSTRUCTIONS:
               result = await this.handleCreateContact(userId, args);
             } else if (functionName === 'updateContactField') {
               result = await this.handleUpdateContact(userId, args);
-            } else if (functionName === 'appendToNotes') {
-              result = await this.handleAppendToNotes(userId, args, emailDate);
+            } else if (functionName === 'updateNotesSection') {
+              result = await this.handleUpdateNotesSection(userId, args);
             } else {
               result = JSON.stringify({ error: `Unknown function: ${functionName}` });
             }
@@ -412,11 +646,15 @@ INSTRUCTIONS:
         });
       }
 
+      // Initialize with structured notes template
+      const initialNotes = StructuredNotesHelper.initializeStructuredNotes();
+
       const contact = await ContactService.createContact(userId, {
         firstName: args.firstName,
         lastName: args.lastName,
         company: args.company,
         title: args.title,
+        notes: initialNotes,
         emails: [{ email: args.email, label: 'work', isPrimary: true }],
       });
       
@@ -456,11 +694,19 @@ INSTRUCTIONS:
         const contact = await ContactService.findById(args.contactId);
         if (contact && contact.userId === userId) {
           const timestamp = new Date().toISOString().split('T')[0];
-          const sourceNote = `[${timestamp}] Birthday set via email analysis: ${args.reason}`;
-          const existingNotes = contact.notes || '';
-          const updatedNotes = existingNotes
-            ? `${existingNotes}\n\n${sourceNote}`
-            : sourceNote;
+          
+          // Ensure notes are in structured format
+          let notes = contact.notes || '';
+          if (!StructuredNotesHelper.isStructuredFormat(notes)) {
+            notes = StructuredNotesHelper.migrateToStructuredFormat(notes);
+          }
+          
+          // Add birthday discovery to KEY HISTORY
+          const sections = StructuredNotesHelper.parseSections(notes);
+          const historyContent = sections.get('KEY HISTORY') || '';
+          const newHistoryEntry = `${timestamp} - Birthday discovered: ${args.value} (${args.reason})`;
+          sections.set('KEY HISTORY', StructuredNotesHelper.addHistoryEntry(historyContent, newHistoryEntry));
+          const updatedNotes = StructuredNotesHelper.rebuildNotes(sections);
           
           // Parse the birthday value - convert YYYY-MM-DD to ISO date string
           let birthdayValue = args.value;
@@ -501,19 +747,24 @@ INSTRUCTIONS:
   }
 
   /**
-   * Handle appendToNotes tool call - simple text append to notes field
+   * Handle updateNotesSection tool call - update structured notes sections
    */
-  private static async handleAppendToNotes(
+  private static async handleUpdateNotesSection(
     userId: string,
     args: {
       contactId: string;
-      note: string;
-    },
-    emailDate: string
+      section: NotesSection;
+      field?: string;
+      value: string;
+      append?: boolean;
+    }
   ): Promise<string> {
-    console.log(`[Tool] appendToNotes:`);
+    console.log(`[Tool] updateNotesSection:`);
     console.log(`  Contact ID: ${args.contactId}`);
-    console.log(`  Note: ${args.note}`);
+    console.log(`  Section: ${args.section}`);
+    console.log(`  Field: ${args.field || '(none)'}`);
+    console.log(`  Value: ${args.value}`);
+    console.log(`  Append: ${args.append ?? 'default'}`);
 
     try {
       // Get current contact
@@ -525,29 +776,59 @@ INSTRUCTIONS:
         return JSON.stringify({ success: false, message: 'Unauthorized' });
       }
 
-      // Simple append with date prefix
-      const existingNotes = contact.notes || '';
-      const newEntry = `[${emailDate}] ${args.note}`;
-      const updatedNotes = existingNotes
-        ? `${existingNotes}\n\n${newEntry}`
-        : newEntry;
+      // Ensure notes are in structured format
+      let notes = contact.notes || '';
+      if (!StructuredNotesHelper.isStructuredFormat(notes)) {
+        notes = StructuredNotesHelper.migrateToStructuredFormat(notes);
+      }
+
+      // Parse sections
+      const sections = StructuredNotesHelper.parseSections(notes);
+
+      // Get current section content
+      let sectionContent = sections.get(args.section) || 
+        StructuredNotesHelper.getDefaultSectionContent(args.section);
+
+      // Update based on section type
+      if (args.section === 'KEY HISTORY') {
+        // For KEY HISTORY, always append entries
+        sectionContent = StructuredNotesHelper.addHistoryEntry(sectionContent, args.value);
+      } else if (args.field) {
+        // For other sections with a field, update the specific field
+        const shouldAppend = args.append ?? false;
+        sectionContent = StructuredNotesHelper.updateSectionField(
+          sectionContent,
+          args.field,
+          args.value,
+          shouldAppend
+        );
+      } else {
+        // No field specified for non-history section - append as a new line
+        sectionContent = sectionContent ? `${sectionContent}\n- ${args.value}` : `- ${args.value}`;
+      }
+
+      // Update the section
+      sections.set(args.section, sectionContent);
+
+      // Rebuild notes
+      const updatedNotes = StructuredNotesHelper.rebuildNotes(sections);
 
       // Update contact
       await ContactService.updateContact(args.contactId, userId, {
         notes: updatedNotes,
       });
 
-      console.log(`[Tool] Successfully appended note`);
+      console.log(`[Tool] Successfully updated notes section: ${args.section}`);
       return JSON.stringify({
         success: true,
-        message: 'Note appended successfully',
+        message: `Updated ${args.section}${args.field ? ` - ${args.field}` : ''}`,
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[Tool] Failed to append note:`, errorMessage);
+      console.error(`[Tool] Failed to update notes section:`, errorMessage);
       return JSON.stringify({
         success: false,
-        message: `Failed to append note: ${errorMessage}`,
+        message: `Failed to update notes: ${errorMessage}`,
       });
     }
   }
@@ -589,3 +870,6 @@ INSTRUCTIONS:
     return null;
   }
 }
+
+// Export the helper for testing purposes
+export { StructuredNotesHelper };
