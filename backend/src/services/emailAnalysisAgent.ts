@@ -88,9 +88,22 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'appendToNotes',
-      description: `Append high-confidence information to contact notes. Use this to record relationship context, preferences, key interactions, and insights learned from emails. The note will be appended with a date prefix.
+      description: `Record a specific INSIGHT about the contact - something you learned ABOUT THEM as a person, not a summary of what the email discussed.
 
-Only use this for HIGH-CONFIDENCE information that is explicitly stated or clearly inferable from the email. Keep notes concise and factual.`,
+INSIGHTS are facts about the contact that would be useful for future interactions:
+- Their preferences: "Prefers email over phone calls"
+- Their priorities: "Values work-life balance highly"
+- Their decision-making style: "Needs data/metrics to make decisions"
+- Their relationships: "Close with the CEO, can escalate issues"
+- Their personality: "Direct communicator, appreciates brevity"
+- Personal details: "Has two kids, coaches little league"
+
+DO NOT record summaries of email content like:
+- "Discussed Q4 budget planning" (this is what the email was about, not an insight)
+- "Following up on project timeline" (this is email context, not an insight)
+- "Negotiating compensation package" (this is a topic, not an insight about the person)
+
+Only call this when you discover something meaningful ABOUT THE CONTACT that would help in future interactions.`,
       parameters: {
         type: 'object',
         properties: {
@@ -100,7 +113,7 @@ Only use this for HIGH-CONFIDENCE information that is explicitly stated or clear
           },
           note: {
             type: 'string',
-            description: 'The note to append. Keep it concise and factual. Examples: "Prefers email over phone", "Works at Acme Corp as VP of Sales", "Interested in Q1 launch timeline", "Met at SaaStr conference"',
+            description: 'A specific insight about the contact (NOT a summary of the email). Examples: "Prefers Roo over competitors despite lower compensation", "Decision-maker for engineering hires", "Responsive to data-driven arguments", "Values transparency in negotiations"',
           },
         },
         required: ['contactId', 'note'],
@@ -158,29 +171,43 @@ export class EmailAnalysisAgent {
    - Create new contacts for unknown senders (skip automated emails)
    - Update basic fields (name, company, title, birthday) from signatures
 
-2. NOTES ENHANCEMENT
-   Analyze each email for high-signal information to add to contact notes.
-   Only record HIGH-CONFIDENCE information - things explicitly stated or clearly inferable.
+2. EXTRACT INSIGHTS (NOT SUMMARIES)
+   Your goal is to learn things ABOUT THE CONTACT as a person - NOT to summarize what the email discussed.
 
-   WHAT TO CAPTURE (use appendToNotes):
-   - How you connected (if mentioned: "Great meeting you at...")
-   - Their role/influence level (decision-maker, champion, blocker)
-   - Goals they mention ("We're trying to improve...")
-   - Pain points ("Our biggest challenge is...")
-   - Important requests or commitments
-   - Communication preferences (if stated: "Best to reach me by...")
-   - Personal details for rapport (mentioned hobbies, family, etc.)
+   INSIGHTS vs SUMMARIES - THIS IS CRITICAL:
+   
+   INSIGHTS (what we want) = Facts about the PERSON that help future interactions:
+   - "Prefers Roo over competitors despite lower compensation" (reveals their values/priorities)
+   - "Decision-maker for engineering hires" (reveals their role/authority)
+   - "Values transparency in negotiations" (reveals their communication style)
+   - "Has kids, coaches little league on weekends" (personal detail for rapport)
+   - "Responsive to data-driven arguments" (reveals how to persuade them)
+   - "Prefers email over phone calls" (communication preference)
+   
+   SUMMARIES (what we DON'T want) = Descriptions of email content/topics:
+   - "Discussed Q4 budget planning" - NO, this is what the email was about
+   - "Following up on project timeline" - NO, this is email context
+   - "Negotiating compensation package for candidate" - NO, this is a topic
+   - "Leading recruitment for Staff Growth Analyst position" - NO, this is activity
+   - "Proposing $10k sign-on bonus" - NO, this is transaction detail
 
-   WHAT NOT TO CAPTURE:
-   - Gossip or subjective judgments
-   - Sensitive personal information
-   - Low-confidence guesses
-   - Routine pleasantries
+   ASK YOURSELF: "Does this tell me something about WHO THIS PERSON IS that would help me interact with them better in the future?"
+   - If YES -> It's an insight, record it
+   - If NO -> It's a summary, skip it
+
+   GOOD INSIGHT CATEGORIES:
+   - Their preferences and values
+   - Their decision-making style
+   - Their role and influence level
+   - Their communication preferences
+   - Their goals and pain points (when explicitly stated)
+   - Personal details for building rapport
+   - How they like to work with others
 
 3. GUIDELINES
    - Be factual and professional
    - Keep notes concise but informative
-   - Skip if no high-signal information found
+   - Skip appendToNotes entirely if no genuine insights found (most emails won't have any!)
    - Do NOT create contacts for automated/system emails (noreply@, no-reply@, mailer-daemon@, etc.)
    - Do NOT create a contact for the user's own email address (${accountEmail})
 
@@ -211,7 +238,10 @@ ${emailBody || message.snippet || '(No body content)'}
 INSTRUCTIONS:
 1. Look up the sender contact (or create if new, skip automated emails)
 2. Update basic contact info if found in signature (company, title)
-3. Use appendToNotes for any high-signal information worth recording
+3. ONLY use appendToNotes if you discover a genuine INSIGHT about the contact as a person
+   - Ask: "What did I learn about WHO this person IS?"
+   - NOT: "What was this email about?"
+   - Most emails will have NO insights worth recording - that's fine, skip appendToNotes
 4. Skip routine emails with no notable content`;
 
     try {
