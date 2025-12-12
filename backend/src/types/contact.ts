@@ -22,6 +22,14 @@ export interface ContactPhoneDTO {
 }
 
 /**
+ * Tag entry for a contact
+ */
+export interface TagDTO {
+  id?: string;
+  name: string;
+}
+
+/**
  * Snapshot of contact data for versioning
  */
 export interface ContactSnapshot {
@@ -34,6 +42,7 @@ export interface ContactSnapshot {
   birthday: string | null;
   emails: Array<{ email: string; label: string; isPrimary: boolean }>;
   phones: Array<{ phone: string; label: string; isPrimary: boolean }>;
+  tags: string[];  // Array of tag names
 }
 
 /**
@@ -59,6 +68,7 @@ export interface CreateContactDTO {
   birthday?: string;
   emails?: ContactEmailDTO[];
   phones?: ContactPhoneDTO[];
+  tags?: string[];  // Array of tag names
 }
 
 /**
@@ -74,6 +84,7 @@ export interface UpdateContactDTO {
   birthday?: string | null;
   emails?: ContactEmailDTO[];
   phones?: ContactPhoneDTO[];
+  tags?: string[];  // Array of tag names
 }
 
 /**

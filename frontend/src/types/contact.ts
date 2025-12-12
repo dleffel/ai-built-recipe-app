@@ -16,6 +16,20 @@ export interface ContactPhone {
   isPrimary: boolean;
 }
 
+export interface ContactTag {
+  id: string;
+  tag: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Contact {
   id: string;
   firstName: string;
@@ -27,6 +41,7 @@ export interface Contact {
   birthday: string | null;
   emails: ContactEmail[];
   phones: ContactPhone[];
+  tags: ContactTag[];
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -42,6 +57,7 @@ export interface ContactSnapshot {
   birthday: string | null;
   emails: Array<{ email: string; label: string; isPrimary: boolean }>;
   phones: Array<{ phone: string; label: string; isPrimary: boolean }>;
+  tags: string[];
 }
 
 export interface ContactChanges {
@@ -69,6 +85,7 @@ export interface CreateContactDTO {
   birthday?: string;
   emails?: Array<{ email: string; label: string; isPrimary?: boolean }>;
   phones?: Array<{ phone: string; label: string; isPrimary?: boolean }>;
+  tags?: string[];
 }
 
 export interface UpdateContactDTO {
@@ -81,6 +98,11 @@ export interface UpdateContactDTO {
   birthday?: string | null;
   emails?: Array<{ email: string; label: string; isPrimary?: boolean }>;
   phones?: Array<{ phone: string; label: string; isPrimary?: boolean }>;
+  tags?: string[];
+}
+
+export interface TagListResponse {
+  tags: Tag[];
 }
 
 export interface ContactListParams {

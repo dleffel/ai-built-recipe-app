@@ -6,6 +6,7 @@ import authRoutes, { validateDevAuthToken } from './routes/auth';
 import recipeRoutes from './routes/recipes';
 import taskRoutes from './routes/tasks';
 import contactRoutes from './routes/contacts';
+import tagRoutes from './routes/tags';
 import gmailRoutes from './routes/gmail';
 import webhookRoutes from './routes/webhooks';
 import activityRoutes from './routes/activity';
@@ -356,6 +357,9 @@ app.use('/api/tasks', taskRoutes);
 
 // Contact routes
 app.use('/api/contacts', contactRoutes);
+
+// Tag routes
+app.use('/api/tags', tagRoutes);
 
 // Activity routes
 app.use('/api/activity', activityRoutes);

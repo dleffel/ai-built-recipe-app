@@ -53,6 +53,22 @@
   color: var(--color-border);
 }
 
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.moreTagsIndicator {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
 @media (max-width: 480px) {
   .card {
     padding: 12px;
@@ -66,5 +82,10 @@
 
   .separator {
     display: none;
+  }
+
+  .tags {
+    margin-top: 8px;
+    padding-top: 8px;
   }
 }
