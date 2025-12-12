@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Contact } from '../../types/contact';
 import { ContactHistory } from './ContactHistory';
 import { Button } from '../ui/Button';
+import { TagPill } from '../ui/TagPill';
 import { formatBirthday } from '../../utils/birthdayUtils';
 import styles from './ContactDetail.module.css';
 
@@ -179,6 +180,21 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Notes</h2>
                 <p className={styles.notes}>{contact.notes}</p>
+              </section>
+            )}
+
+            {contact.tags.length > 0 && (
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>Tags</h2>
+                <div className={styles.tagsContainer}>
+                  {contact.tags.map((contactTag) => (
+                    <TagPill
+                      key={contactTag.id}
+                      name={contactTag.tag.name}
+                      size="md"
+                    />
+                  ))}
+                </div>
               </section>
             )}
 
