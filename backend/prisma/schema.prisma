@@ -25,6 +25,7 @@ model User {
   tasks         Task[]
   contacts      Contact[]
   gmailAccounts GmailAccount[]
+  tags          Tag[]
 
   @@map("users")
 }
@@ -135,6 +136,7 @@ model Contact {
   emails      ContactEmail[]
   phones      ContactPhone[]
   versions    ContactVersion[]
+  tags        ContactTag[]
 
   @@map("contacts")
   @@index([userId])
@@ -184,4 +186,36 @@ model ContactVersion {
   @@map("contact_versions")
   @@index([contactId])
   @@index([contactId, version])
+}
+
+// Tag Models
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  contacts  ContactTag[]
+
+  @@map("tags")
+  @@unique([userId, name])  // Tag names unique per user
+  @@index([userId])
+}
+
+model ContactTag {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  // Relations
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@map("contact_tags")
+  @@unique([contactId, tagId])
+  @@index([contactId])
+  @@index([tagId])
 }

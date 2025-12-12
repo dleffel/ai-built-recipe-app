@@ -70,6 +70,7 @@ const getFieldLabel = (field: string): string => {
     notes: 'notes',
     emails: 'emails',
     phones: 'phones',
+    tags: 'tags',
   };
   return labels[field] || field;
 };

@@ -1,19 +1,25 @@
-import type { Contact, ContactEmail, ContactPhone, ContactVersion, Prisma } from '@prisma/client';
+import type { Contact, ContactEmail, ContactPhone, ContactVersion, Tag, ContactTag, Prisma } from '@prisma/client';
 import { BaseService } from './BaseService';
+import { TagService } from './tagService';
 import {
   CreateContactDTO,
   UpdateContactDTO,
   ContactListParams,
   ContactSnapshot,
   ContactChanges,
-  ContactEmailDTO,
-  ContactPhoneDTO,
 } from '../types/contact';
+
+// Tag with basic info
+export type TagInfo = {
+  id: string;
+  name: string;
+};
 
 // Contact with relations type
 export type ContactWithRelations = Contact & {
   emails: ContactEmail[];
   phones: ContactPhone[];
+  tags: (ContactTag & { tag: Tag })[];
 };
 
 // Contact list response type
@@ -26,11 +32,29 @@ export interface ContactListResponse {
   };
 }
 
+// Standard include for contact queries
+const contactInclude = {
+  emails: true,
+  phones: true,
+  tags: {
+    include: {
+      tag: true,
+    },
+  },
+} as const;
+
 export class ContactService extends BaseService {
   /**
-   * Create a new contact with emails and phones
+   * Create a new contact with emails, phones, and tags
    */
   static async createContact(userId: string, data: CreateContactDTO): Promise<ContactWithRelations> {
+    // First, find or create tags if provided
+    let tagIds: string[] = [];
+    if (data.tags && data.tags.length > 0) {
+      const tags = await TagService.findOrCreateTags(userId, data.tags);
+      tagIds = tags.map(t => t.id);
+    }
+
     const contact = await this.prisma.contact.create({
       data: {
         firstName: data.firstName,
@@ -55,11 +79,11 @@ export class ContactService extends BaseService {
             isPrimary: p.isPrimary ?? index === 0, // First phone is primary by default
           })),
         } : undefined,
+        tags: tagIds.length > 0 ? {
+          create: tagIds.map(tagId => ({ tagId })),
+        } : undefined,
       },
-      include: {
-        emails: true,
-        phones: true,
-      },
+      include: contactInclude,
     });
 
     // Create initial version (version 1)
@@ -82,10 +106,7 @@ export class ContactService extends BaseService {
   static async findById(id: string): Promise<ContactWithRelations | null> {
     return this.prisma.contact.findUnique({
       where: { id },
-      include: {
-        emails: true,
-        phones: true,
-      },
+      include: contactInclude,
     });
   }
 
@@ -120,6 +141,7 @@ export class ContactService extends BaseService {
         { notes: { contains: searchLower, mode: 'insensitive' } },
         { emails: { some: { email: { contains: searchLower, mode: 'insensitive' } } } },
         { phones: { some: { phone: { contains: search } } } },
+        { tags: { some: { tag: { name: { contains: searchLower, mode: 'insensitive' } } } } },
       ];
     }
 
@@ -132,10 +154,7 @@ export class ContactService extends BaseService {
       skip,
       take,
       orderBy: { [sortBy]: sortOrder },
-      include: {
-        emails: true,
-        phones: true,
-      },
+      include: contactInclude,
     });
 
     return {
@@ -180,6 +199,17 @@ export class ContactService extends BaseService {
     if (data.linkedInUrl !== undefined) updateData.linkedInUrl = data.linkedInUrl;
     if (data.birthday !== undefined) updateData.birthday = data.birthday ? new Date(data.birthday) : null;
 
+    // Find or create tags if provided
+    let tagIds: string[] | undefined;
+    if (data.tags !== undefined) {
+      if (data.tags.length > 0) {
+        const tags = await TagService.findOrCreateTags(userId, data.tags);
+        tagIds = tags.map(t => t.id);
+      } else {
+        tagIds = [];
+      }
+    }
+
     // Wrap all database operations in a transaction to ensure atomicity
     const updatedContact = await this.prisma.$transaction(async (tx) => {
       // Handle emails update - delete all and recreate
@@ -212,14 +242,24 @@ export class ContactService extends BaseService {
         }
       }
 
+      // Handle tags update - delete all and recreate
+      if (tagIds !== undefined) {
+        await tx.contactTag.deleteMany({ where: { contactId: id } });
+        if (tagIds.length > 0) {
+          await tx.contactTag.createMany({
+            data: tagIds.map(tagId => ({
+              contactId: id,
+              tagId,
+            })),
+          });
+        }
+      }
+
       // Update the contact
       const contact = await tx.contact.update({
         where: { id },
         data: updateData,
-        include: {
-          emails: true,
-          phones: true,
-        },
+        include: contactInclude,
       });
 
       // Create new version
@@ -333,6 +373,7 @@ export class ContactService extends BaseService {
       birthday: snapshot.birthday,
       emails: snapshot.emails,
       phones: snapshot.phones,
+      tags: snapshot.tags,
     });
   }
 
@@ -371,10 +412,7 @@ export class ContactService extends BaseService {
           },
         },
       },
-      include: {
-        emails: true,
-        phones: true,
-      },
+      include: contactInclude,
     });
   }
 
@@ -400,6 +438,7 @@ export class ContactService extends BaseService {
         label: p.label,
         isPrimary: p.isPrimary,
       })),
+      tags: contact.tags.map(ct => ct.tag.name),
     };
   }
 
@@ -413,7 +452,7 @@ export class ContactService extends BaseService {
     const changes: ContactChanges = {};
 
     // Compare simple fields
-    const simpleFields: (keyof ContactSnapshot)[] = [
+    const simpleFields: (keyof Omit<ContactSnapshot, 'emails' | 'phones' | 'tags'>)[] = [
       'firstName',
       'lastName',
       'company',
@@ -449,6 +488,16 @@ export class ContactService extends BaseService {
       changes.phones = {
         from: previous.phones,
         to: current.phones,
+      };
+    }
+
+    // Compare tags
+    const prevTags = JSON.stringify([...previous.tags].sort());
+    const currTags = JSON.stringify([...current.tags].sort());
+    if (prevTags !== currTags) {
+      changes.tags = {
+        from: previous.tags,
+        to: current.tags,
       };
     }
 

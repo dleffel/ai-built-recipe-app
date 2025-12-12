@@ -19,7 +19,7 @@ const router = Router();
 // Create contact
 const createContact: RequestHandler = async (req, res) => {
   try {
-    const { firstName, lastName, company, title, notes, linkedInUrl, birthday, emails, phones } = req.body;
+    const { firstName, lastName, company, title, notes, linkedInUrl, birthday, emails, phones, tags } = req.body;
     
     if (!firstName || !lastName) {
       res.status(400).json({
@@ -38,6 +38,7 @@ const createContact: RequestHandler = async (req, res) => {
       birthday,
       emails,
       phones,
+      tags,
     };
 
     const contact = await ContactService.createContact(req.user!.id, data);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Contact, CreateContactDTO, UpdateContactDTO, EMAIL_LABELS, PHONE_LABELS } from '../../types/contact';
 import { MultiValueInput } from './MultiValueInput';
+import { TagInput } from './TagInput';
 import { Button } from '../ui/Button';
 import { parseBirthdayComponents, parseBirthdayInput, isValidBirthday } from '../../utils/birthdayUtils';
 import styles from './ContactForm.module.css';
@@ -60,6 +61,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({
       isPrimary: p.isPrimary,
     })) || []
   );
+  const [tags, setTags] = useState<string[]>(
+    contact?.tags.map(ct => ct.tag.name) || []
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -111,6 +115,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
           label: p.label,
           isPrimary: p.isPrimary,
         })),
+        tags,
       } : {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -129,6 +134,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
           label: p.label,
           isPrimary: p.isPrimary,
         })),
+        tags: tags.length > 0 ? tags : undefined,
       };
 
       await onSubmit(data);
@@ -307,6 +313,18 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             placeholder="Enter phone number"
             type="tel"
             fieldName="phone"
+          />
+        </div>
+      </div>
+
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Tags</h3>
+        
+        <div className={styles.field}>
+          <TagInput
+            tags={tags}
+            onChange={setTags}
+            placeholder="Add tags..."
           />
         </div>
       </div>
