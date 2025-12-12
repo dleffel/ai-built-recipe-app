@@ -174,6 +174,48 @@ PREFERENCES / NOTES:
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'addTagToContact',
+      description: `Add a tag to a contact. Use this to categorize contacts.
+
+IMPORTANT: Apply the "Cold Inbound" tag when you CREATE A NEW CONTACT and the email is cold outreach:
+- Sales/product pitches from someone the user hasn't met
+- Recruiter outreach about job opportunities
+- Investor inquiries or funding-related outreach
+- Partnership or business development cold emails
+- Any unsolicited outreach where the sender is trying to sell, recruit, or pitch something
+
+Signs of cold outreach:
+- "Reaching out" or "wanted to connect" language without prior relationship
+- Mentions of scheduling demos, calls, or meetings
+- Product/service descriptions and value propositions
+- LinkedIn connection context followed by pitch
+- Mentions of pricing, ROI, or business benefits
+- "I noticed your company..." or similar research-based openers
+
+Do NOT apply "Cold Inbound" to existing contacts, personal emails, or transactional emails.`,
+      parameters: {
+        type: 'object',
+        properties: {
+          contactId: {
+            type: 'string',
+            description: 'The ID of the contact to tag',
+          },
+          tagName: {
+            type: 'string',
+            description: 'The name of the tag to apply (e.g., "Cold Inbound")',
+          },
+          reason: {
+            type: 'string',
+            description: 'Brief explanation of why this tag is being applied',
+          },
+        },
+        required: ['contactId', 'tagName', 'reason'],
+      },
+    },
+  },
 ];
 
 /**
@@ -395,7 +437,32 @@ export class EmailAnalysisAgent {
    - Create new contacts for unknown senders (skip automated emails)
    - Update basic fields (name, company, title, birthday) from signatures
 
-2. MAINTAIN STRUCTURED NOTES
+2. COLD INBOUND TAGGING
+   When you CREATE A NEW CONTACT (not existing contacts), evaluate if the email is cold outreach.
+   
+   Apply the "Cold Inbound" tag using addTagToContact if the email appears to be:
+   - Sales/product pitches from someone the user hasn't met
+   - Recruiter outreach about job opportunities
+   - Investor inquiries or funding-related outreach
+   - Partnership or business development cold emails
+   - Any unsolicited outreach where the sender is trying to sell, recruit, or pitch something
+   
+   Signs of cold outreach:
+   - "Reaching out" or "wanted to connect" language without prior relationship
+   - Mentions of scheduling demos, calls, or meetings
+   - Product/service descriptions and value propositions
+   - LinkedIn connection context followed by pitch
+   - Mentions of pricing, ROI, or business benefits
+   - "I noticed your company..." or similar research-based openers
+   
+   Do NOT apply "Cold Inbound" to:
+   - Existing contacts (only new contacts you just created)
+   - Personal emails from friends/family
+   - Transactional emails (receipts, confirmations)
+   - Automated system emails
+   - Responses to emails the user sent first
+
+3. MAINTAIN STRUCTURED NOTES
    The contact notes follow a structured format that you should evolve over time. The format has these sections:
 
    RELATIONSHIP SUMMARY
@@ -423,7 +490,7 @@ export class EmailAnalysisAgent {
    - Personal rapport: Personal details for building relationship (hobbies, family, etc.)
    - Landmines: Things to avoid, past negative experiences
 
-3. WHAT TO RECORD
+4. WHAT TO RECORD
    Focus on INSIGHTS about the contact that would help future interactions:
    - Their preferences, values, and decision-making style
    - Their goals, pain points, and what motivates them
@@ -436,7 +503,7 @@ export class EmailAnalysisAgent {
    - Every single interaction (only significant ones in KEY HISTORY)
    - Summaries of what emails discussed (unless it reveals something about the person)
 
-4. GUIDELINES
+5. GUIDELINES
    - Be factual and professional
    - Keep entries concise but informative
    - Use updateNotesSection to update specific fields or add history entries
@@ -470,13 +537,14 @@ ${emailBody || message.snippet || '(No body content)'}
 
 INSTRUCTIONS:
 1. Look up the sender contact (or create if new, skip automated emails)
-2. Update basic contact info if found in signature (company, title)
-3. Review the contact's existing notes and update relevant sections if you discover:
+2. If you CREATE A NEW CONTACT, evaluate if this is cold outreach (sales pitch, recruiter, investor, etc.) and apply the "Cold Inbound" tag using addTagToContact if so
+3. Update basic contact info if found in signature (company, title)
+4. Review the contact's existing notes and update relevant sections if you discover:
    - New information about their role, goals, or pain points
    - Significant events worth recording in KEY HISTORY
    - Communication preferences or personal details
    - Current status changes or next steps
-4. Most emails will have NO insights worth recording - that's fine, skip updateNotesSection`;
+5. Most emails will have NO insights worth recording - that's fine, skip updateNotesSection`;
 
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -538,6 +606,8 @@ INSTRUCTIONS:
               result = await this.handleUpdateContact(userId, args);
             } else if (functionName === 'updateNotesSection') {
               result = await this.handleUpdateNotesSection(userId, args);
+            } else if (functionName === 'addTagToContact') {
+              result = await this.handleAddTagToContact(userId, args);
             } else {
               result = JSON.stringify({ error: `Unknown function: ${functionName}` });
             }
@@ -829,6 +899,61 @@ INSTRUCTIONS:
       return JSON.stringify({
         success: false,
         message: `Failed to update notes: ${errorMessage}`,
+      });
+    }
+  }
+
+  /**
+   * Handle addTagToContact tool call - add a tag to a contact
+   */
+  private static async handleAddTagToContact(
+    userId: string,
+    args: { contactId: string; tagName: string; reason: string }
+  ): Promise<string> {
+    console.log(`[Tool] addTagToContact:`);
+    console.log(`  Contact ID: ${args.contactId}`);
+    console.log(`  Tag: ${args.tagName}`);
+    console.log(`  Reason: ${args.reason}`);
+
+    try {
+      // Get the contact to verify ownership and get current tags
+      const contact = await ContactService.findById(args.contactId);
+      if (!contact) {
+        return JSON.stringify({ success: false, message: 'Contact not found' });
+      }
+      if (contact.userId !== userId) {
+        return JSON.stringify({ success: false, message: 'Unauthorized' });
+      }
+
+      // Get current tag names
+      const currentTags = contact.tags.map(ct => ct.tag.name);
+      
+      // Check if tag already exists on contact
+      if (currentTags.some(t => t.toLowerCase() === args.tagName.toLowerCase())) {
+        console.log(`[Tool] Tag "${args.tagName}" already exists on contact`);
+        return JSON.stringify({
+          success: true,
+          message: `Tag "${args.tagName}" already exists on contact`,
+        });
+      }
+
+      // Add the new tag
+      const updatedTags = [...currentTags, args.tagName];
+      await ContactService.updateContact(args.contactId, userId, {
+        tags: updatedTags,
+      });
+
+      console.log(`[Tool] Successfully added tag "${args.tagName}" to contact`);
+      return JSON.stringify({
+        success: true,
+        message: `Added tag "${args.tagName}" to contact`,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[Tool] Failed to add tag:`, errorMessage);
+      return JSON.stringify({
+        success: false,
+        message: `Failed to add tag: ${errorMessage}`,
       });
     }
   }
