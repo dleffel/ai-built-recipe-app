@@ -192,6 +192,12 @@
   color: var(--color-text);
 }
 
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .metadata {
   display: flex;
   flex-direction: column;
