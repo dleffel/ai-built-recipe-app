@@ -1,4 +1,4 @@
-import { Tag, TagListResponse } from '../types/contact';
+import { TagListResponse } from '../types/contact';
 import api from './api';
 
 /**
