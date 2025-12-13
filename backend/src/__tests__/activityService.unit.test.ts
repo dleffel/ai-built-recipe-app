@@ -146,10 +146,10 @@ describe('ActivityService Unit Tests', () => {
 
       await ActivityService.getRecentActivity(userId);
 
-      // Default limit is 20, but we fetch limit + 10 = 30
+      // Default limit is 20, but we fetch (limit + 10) * 2 = 60 to account for grouping
       expect(mockPrismaContactVersion.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          take: 30,
+          take: 60,
         })
       );
     });
@@ -160,10 +160,10 @@ describe('ActivityService Unit Tests', () => {
 
       await ActivityService.getRecentActivity(userId, { limit: 10, offset: 5 });
 
-      // Custom limit is 10, so we fetch 10 + 10 = 20
+      // Custom limit is 10, so we fetch (10 + 10) * 2 = 40 to account for grouping
       expect(mockPrismaContactVersion.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          take: 20,
+          take: 40,
         })
       );
     });
