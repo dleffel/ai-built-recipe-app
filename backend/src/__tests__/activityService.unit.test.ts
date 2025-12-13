@@ -20,6 +20,9 @@ jest.mock('../lib/prisma', () => ({
     contact: {
       findFirst: jest.fn(),
     },
+    contactMerge: {
+      findMany: jest.fn(),
+    },
   },
 }));
 
@@ -28,6 +31,7 @@ const mockPrismaContactVersion = prisma.contactVersion as any;
 const mockPrismaTask = prisma.task as any;
 const mockPrismaHiddenFeedContact = prisma.hiddenFeedContact as any;
 const mockPrismaContact = prisma.contact as any;
+const mockPrismaContactMerge = prisma.contactMerge as any;
 
 describe('ActivityService Unit Tests', () => {
   const userId = 'test-user-id';
@@ -73,6 +77,8 @@ describe('ActivityService Unit Tests', () => {
     ActivityService.resetPrisma();
     // Default: no hidden contacts
     mockPrismaHiddenFeedContact.findMany.mockResolvedValue([]);
+    // Default: no contact merges
+    mockPrismaContactMerge.findMany.mockResolvedValue([]);
   });
 
   afterEach(() => {
