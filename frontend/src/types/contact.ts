@@ -128,3 +128,39 @@ export const PHONE_LABELS = ['mobile', 'work', 'home', 'other'] as const;
 
 export type EmailLabel = typeof EMAIL_LABELS[number];
 export type PhoneLabel = typeof PHONE_LABELS[number];
+
+// vCard Import Types
+export interface ParsedVCard {
+  firstName: string;
+  lastName: string;
+  company?: string;
+  title?: string;
+  notes?: string;
+  birthday?: string;
+  linkedInUrl?: string;
+  emails: Array<{ email: string; label: string; isPrimary: boolean }>;
+  phones: Array<{ phone: string; label: string; isPrimary: boolean }>;
+}
+
+export interface ImportPreview {
+  contacts: ParsedVCard[];
+  duplicates: Array<{
+    contact: ParsedVCard;
+    existingId: string;
+    existingName: string;
+  }>;
+  total: number;
+  newCount: number;
+  duplicateCount: number;
+}
+
+export interface ImportResult {
+  created: number;
+  skipped: number;
+  errors: number;
+  duplicates: Array<{
+    imported: ParsedVCard;
+    existingId: string;
+    existingName: string;
+  }>;
+}

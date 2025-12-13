@@ -1,6 +1,9 @@
-import { Router, RequestHandler } from 'express';
+import { Router, RequestHandler, Request } from 'express';
 import { User } from '@prisma/client';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const multer = require('multer');
 import { ContactService } from '../services/contactService';
+import { VCardService } from '../services/vcardService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { requireAuth } from '../middleware/auth';
 import { CreateContactDTO, UpdateContactDTO, ContactListParams } from '../types/contact';
@@ -13,6 +16,25 @@ declare global {
     }
   }
 }
+
+// Configure multer for file uploads (memory storage for vCard files)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size
+  },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fileFilter: (_req: any, file: any, cb: any) => {
+    // Accept .vcf files
+    if (file.mimetype === 'text/vcard' ||
+        file.mimetype === 'text/x-vcard' ||
+        file.originalname.endsWith('.vcf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only .vcf (vCard) files are allowed'));
+    }
+  },
+});
 
 const router = Router();
 
@@ -207,10 +229,79 @@ const restoreContactVersion: RequestHandler = async (req, res) => {
   }
 };
 
+// Preview vCard import (parse file and check for duplicates)
+const previewImport: RequestHandler = async (req, res) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const file = (req as any).file;
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Parse the vCard content
+    const content = file.buffer.toString('utf-8');
+    const contacts = VCardService.parseVCardFile(content);
+
+    if (contacts.length === 0) {
+      res.status(400).json({ error: 'No valid contacts found in file' });
+      return;
+    }
+
+    // Preview with duplicate detection
+    const preview = await VCardService.previewImport(req.user!.id, contacts);
+    res.json(preview);
+  } catch (error: unknown) {
+    console.error('Preview import error:', error);
+    if (error instanceof Error && error.message.includes('.vcf')) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to preview import' });
+    }
+  }
+};
+
+// Import contacts from vCard file
+const importContacts: RequestHandler = async (req, res) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const file = (req as any).file;
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Parse the vCard content
+    const content = file.buffer.toString('utf-8');
+    const contacts = VCardService.parseVCardFile(content);
+
+    if (contacts.length === 0) {
+      res.status(400).json({ error: 'No valid contacts found in file' });
+      return;
+    }
+
+    // Get skipDuplicates option from request body or default to true
+    const skipDuplicates = req.body?.skipDuplicates !== 'false';
+
+    // Import the contacts
+    const result = await VCardService.importContacts(req.user!.id, contacts, { skipDuplicates });
+    res.json(result);
+  } catch (error: unknown) {
+    console.error('Import contacts error:', error);
+    if (error instanceof Error && error.message.includes('.vcf')) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to import contacts' });
+    }
+  }
+};
+
 // Apply routes with auth middleware
 router.use(requireAuth);
 router.post('/', createContact);
 router.get('/', getUserContacts);
+router.post('/import/preview', upload.single('file'), previewImport);
+router.post('/import', upload.single('file'), importContacts);
 router.get('/:id', getContact);
 router.put('/:id', updateContact);
 router.delete('/:id', deleteContact);

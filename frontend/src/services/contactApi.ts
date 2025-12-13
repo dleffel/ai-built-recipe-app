@@ -6,6 +6,8 @@ import {
   UpdateContactDTO,
   ContactListParams,
   ContactListResponse,
+  ImportPreview,
+  ImportResult,
 } from '../types/contact';
 
 /**
@@ -72,6 +74,35 @@ export const contactApi = {
    */
   restoreVersion: async (id: string, version: number): Promise<Contact> => {
     const response = await api.post<Contact>(`/api/contacts/${id}/restore/${version}`);
+    return response.data;
+  },
+
+  /**
+   * Preview vCard import - parse file and check for duplicates
+   */
+  previewImport: async (file: File): Promise<ImportPreview> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post<ImportPreview>('/api/contacts/import/preview', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Import contacts from vCard file
+   */
+  importFromVCard: async (file: File, skipDuplicates: boolean = true): Promise<ImportResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('skipDuplicates', String(skipDuplicates));
+    const response = await api.post<ImportResult>('/api/contacts/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 };
