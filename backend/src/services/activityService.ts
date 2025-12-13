@@ -228,6 +228,15 @@ export class ActivityService extends BaseService {
             id: true,
             firstName: true,
             lastName: true,
+            company: true,
+            title: true,
+            tags: {
+              include: {
+                tag: {
+                  select: { name: true }
+                }
+              }
+            }
           },
         },
       },
@@ -246,6 +255,9 @@ export class ActivityService extends BaseService {
         name: `${cv.contact.firstName} ${cv.contact.lastName}`,
         changes: cv.changes as ContactChanges,
         version: cv.version,
+        company: cv.contact.company,
+        title: cv.contact.title,
+        tags: cv.contact.tags.map(t => t.tag.name),
       },
     }));
   }

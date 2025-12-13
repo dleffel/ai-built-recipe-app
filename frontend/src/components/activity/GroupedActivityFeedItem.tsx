@@ -37,6 +37,13 @@ export const GroupedActivityFeedItem: React.FC<GroupedActivityFeedItemProps> = (
 
   const { id, name, editCount, activities, latestTimestamp, earliestTimestamp } = groupedContact;
 
+  // Get context from the most recent activity
+  const latestContact = activities[0]?.contact;
+  const hasContext = latestContact && (
+    latestContact.company || latestContact.title ||
+    (latestContact.tags && latestContact.tags.length > 0)
+  );
+
   const handleHideContact = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -57,6 +64,27 @@ export const GroupedActivityFeedItem: React.FC<GroupedActivityFeedItemProps> = (
             {' '}
             <span className={styles.updateCount}>{editCount} updates</span>
           </span>
+          
+          {/* Contact context section */}
+          {hasContext && latestContact && (
+            <div className={styles.contactContext}>
+              {(latestContact.title || latestContact.company) && (
+                <span className={styles.contactRole}>
+                  {latestContact.title}
+                  {latestContact.title && latestContact.company && ' at '}
+                  {latestContact.company}
+                </span>
+              )}
+              {latestContact.tags && latestContact.tags.length > 0 && (
+                <div className={styles.contactTags}>
+                  {latestContact.tags.map((tag, index) => (
+                    <span key={index} className={styles.tagPill}>{tag}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
           <span className={styles.groupTime}>
             {formatTimeRange(earliestTimestamp, latestTimestamp)}
           </span>

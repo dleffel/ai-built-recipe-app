@@ -120,6 +120,7 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, on
 
     const { contact } = activity;
     const hasChanges = contact.changes && Object.keys(contact.changes).length > 0;
+    const hasContext = contact.company || contact.title || (contact.tags && contact.tags.length > 0);
 
     return (
       <div className={styles.activityContent}>
@@ -144,6 +145,27 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, on
                 </>
               )}
             </span>
+            
+            {/* Contact context section */}
+            {hasContext && (
+              <div className={styles.contactContext}>
+                {(contact.title || contact.company) && (
+                  <span className={styles.contactRole}>
+                    {contact.title}
+                    {contact.title && contact.company && ' at '}
+                    {contact.company}
+                  </span>
+                )}
+                {contact.tags && contact.tags.length > 0 && (
+                  <div className={styles.contactTags}>
+                    {contact.tags.map((tag, index) => (
+                      <span key={index} className={styles.tagPill}>{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            
             <span className={styles.activityTime}>{formatRelativeTime(activity.timestamp)}</span>
           </div>
           {onHideContact && !isNested && (

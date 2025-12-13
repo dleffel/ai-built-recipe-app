@@ -44,6 +44,9 @@ describe('ActivityService Unit Tests', () => {
       id: 'contact-1',
       firstName: 'Johnny',
       lastName: 'Doe',
+      company: 'Acme Corp',
+      title: 'Software Engineer',
+      tags: [{ tag: { name: 'VIP' } }],
     },
   };
 
@@ -98,6 +101,37 @@ describe('ActivityService Unit Tests', () => {
       expect(result.activities[0].contact).toBeDefined();
       expect(result.activities[0].contact?.name).toBe('Johnny Doe');
       expect(result.activities[0].contact?.changes).toEqual(mockContactVersion.changes);
+    });
+
+    it('should include contact context fields in activity', async () => {
+      mockPrismaContactVersion.findMany.mockResolvedValue([mockContactVersion]);
+      mockPrismaTask.findMany.mockResolvedValue([]);
+
+      const result = await ActivityService.getRecentActivity(userId);
+
+      expect(result.activities[0].contact?.company).toBe('Acme Corp');
+      expect(result.activities[0].contact?.title).toBe('Software Engineer');
+      expect(result.activities[0].contact?.tags).toEqual(['VIP']);
+    });
+
+    it('should handle null company and title in contact context', async () => {
+      const contactVersionWithNulls = {
+        ...mockContactVersion,
+        contact: {
+          ...mockContactVersion.contact,
+          company: null,
+          title: null,
+          tags: [],
+        },
+      };
+      mockPrismaContactVersion.findMany.mockResolvedValue([contactVersionWithNulls]);
+      mockPrismaTask.findMany.mockResolvedValue([]);
+
+      const result = await ActivityService.getRecentActivity(userId);
+
+      expect(result.activities[0].contact?.company).toBeNull();
+      expect(result.activities[0].contact?.title).toBeNull();
+      expect(result.activities[0].contact?.tags).toEqual([]);
     });
 
     it('should return task created activities', async () => {
