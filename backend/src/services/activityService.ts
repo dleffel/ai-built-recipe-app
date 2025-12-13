@@ -7,6 +7,9 @@ import {
 } from '../types/activity';
 import { ContactChanges } from '../types/contact';
 
+// Tag name used to identify cold outreach contacts that should be hidden from the feed
+const COLD_INBOUND_TAG = 'Cold Inbound';
+
 /**
  * Service for aggregating activity feed data from various sources
  */
@@ -46,6 +49,7 @@ export class ActivityService extends BaseService {
 
   /**
    * Get contact version activities (edits)
+   * Excludes contacts tagged with "Cold Inbound" to hide cold outreach from the feed
    */
   private static async getContactVersionActivities(
     userId: string,
@@ -53,12 +57,24 @@ export class ActivityService extends BaseService {
   ): Promise<ActivityFeedItem[]> {
     // Get contact versions where version > 1 (edits, not initial creation)
     // Join with contacts to get the contact name and verify ownership
+    // Exclude contacts that have the "Cold Inbound" tag
     const contactVersions = await this.prisma.contactVersion.findMany({
       where: {
         version: { gt: 1 }, // Only edits, not initial creation
         contact: {
           userId,
           isDeleted: false,
+          // Exclude contacts with the "Cold Inbound" tag
+          tags: {
+            none: {
+              tag: {
+                name: {
+                  equals: COLD_INBOUND_TAG,
+                  mode: 'insensitive',
+                },
+              },
+            },
+          },
         },
       },
       include: {
