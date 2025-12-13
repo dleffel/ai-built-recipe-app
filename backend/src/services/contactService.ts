@@ -674,6 +674,10 @@ export class ContactService extends BaseService {
     const mergedTagNames = [...new Set([...primaryTagNames, ...(mergeTags ? secondaryTagNames : [])])];
     tagsMerged = mergedTagNames.filter(t => !primaryTagNames.includes(t)).length;
 
+    // Store the secondary contact name before deletion
+    const secondaryContactName = `${secondaryContact.firstName} ${secondaryContact.lastName}`;
+    const primaryContactName = `${primaryContact.firstName} ${primaryContact.lastName}`;
+
     // Wrap both update and delete in a transaction to ensure atomicity
     // If either operation fails, both will be rolled back
     const updatedContact = await this.prisma.$transaction(async (tx) => {
@@ -777,6 +781,19 @@ export class ContactService extends BaseService {
       });
 
       return contact;
+    });
+
+    // Record the merge event for the activity feed
+    await this.prisma.contactMerge.create({
+      data: {
+        primaryContactId,
+        primaryContactName,
+        secondaryContactName,
+        emailsMerged,
+        phonesMerged,
+        tagsMerged,
+        userId,
+      },
     });
 
     return {

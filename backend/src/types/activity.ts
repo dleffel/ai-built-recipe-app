@@ -12,6 +12,7 @@ export type ActivityType =
   | 'contact_created'
   | 'contact_edited'
   | 'contact_edited_group'  // Grouped contact edits
+  | 'contact_merged'        // Contact merge event
   | 'task_created'
   | 'task_completed'
   | 'task_updated';
@@ -55,6 +56,19 @@ export interface GroupedContactActivityInfo {
 }
 
 /**
+ * Contact merge activity info
+ */
+export interface ContactMergeInfo {
+  id: string;
+  primaryContactId: string;
+  primaryContactName: string;
+  secondaryContactName: string;
+  emailsMerged: number;
+  phonesMerged: number;
+  tagsMerged: number;
+}
+
+/**
  * A single activity feed item
  */
 export interface ActivityFeedItem {
@@ -64,6 +78,7 @@ export interface ActivityFeedItem {
   contact?: ActivityContactInfo;
   task?: ActivityTaskInfo;
   groupedContact?: GroupedContactActivityInfo;
+  merge?: ContactMergeInfo;
 }
 
 /**

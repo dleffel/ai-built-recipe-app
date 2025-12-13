@@ -139,6 +139,7 @@ model Contact {
   versions        ContactVersion[]
   tags            ContactTag[]
   hiddenFromFeeds HiddenFeedContact[]
+  merges          ContactMerge[]
 
   @@map("contacts")
   @@index([userId])
@@ -236,4 +237,25 @@ model HiddenFeedContact {
   @@map("hidden_feed_contacts")
   @@unique([userId, contactId])
   @@index([userId])
+}
+
+// Contact Merge Events - tracks when contacts are merged for activity feed
+model ContactMerge {
+  id                    String   @id @default(uuid())
+  primaryContactId      String   // The contact that was kept
+  primaryContactName    String   // Name of primary contact at time of merge
+  secondaryContactName  String   // Name of the contact that was merged and deleted
+  emailsMerged          Int      @default(0)
+  phonesMerged          Int      @default(0)
+  tagsMerged            Int      @default(0)
+  createdAt             DateTime @default(now())
+  
+  // Relations
+  userId                String
+  contact               Contact  @relation(fields: [primaryContactId], references: [id], onDelete: Cascade)
+
+  @@map("contact_merges")
+  @@index([userId])
+  @@index([primaryContactId])
+  @@index([createdAt])
 }

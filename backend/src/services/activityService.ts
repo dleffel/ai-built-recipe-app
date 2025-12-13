@@ -5,6 +5,7 @@ import {
   ActivityFeedResponse,
   ActivityType,
   GroupedContactActivityInfo,
+  ContactMergeInfo,
 } from '../types/activity';
 import { ContactChanges } from '../types/contact';
 
@@ -99,8 +100,11 @@ export class ActivityService extends BaseService {
     // Fetch task activities
     const taskActivities = await this.getTaskActivities(userId, fetchLimit);
     
+    // Fetch contact merge activities
+    const mergeActivities = await this.getContactMergeActivities(userId, fetchLimit, hiddenContactIds);
+    
     // Merge and sort by timestamp (most recent first)
-    const allActivities = [...contactVersions, ...taskActivities]
+    const allActivities = [...contactVersions, ...taskActivities, ...mergeActivities]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
     // Group adjacent contact edits for the same contact within 24h window
@@ -331,5 +335,41 @@ export class ActivityService extends BaseService {
     }
 
     return activities;
+  }
+
+  /**
+   * Get contact merge activities
+   */
+  private static async getContactMergeActivities(
+    userId: string,
+    limit: number,
+    hiddenContactIds: string[] = []
+  ): Promise<ActivityFeedItem[]> {
+    // Get contact merge events, excluding hidden contacts
+    const mergeEvents = await this.prisma.contactMerge.findMany({
+      where: {
+        userId,
+        ...(hiddenContactIds.length > 0 && { primaryContactId: { notIn: hiddenContactIds } }),
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+    });
+
+    return mergeEvents.map((merge) => ({
+      id: `contact-merge-${merge.id}`,
+      type: 'contact_merged' as ActivityType,
+      timestamp: merge.createdAt.toISOString(),
+      merge: {
+        id: merge.id,
+        primaryContactId: merge.primaryContactId,
+        primaryContactName: merge.primaryContactName,
+        secondaryContactName: merge.secondaryContactName,
+        emailsMerged: merge.emailsMerged,
+        phonesMerged: merge.phonesMerged,
+        tagsMerged: merge.tagsMerged,
+      },
+    }));
   }
 }
