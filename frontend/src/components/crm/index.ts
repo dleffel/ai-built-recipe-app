@@ -6,3 +6,4 @@ export { ContactHistory } from './ContactHistory';
 export { ContactVersionDiff } from './ContactVersionDiff';
 export { MultiValueInput } from './MultiValueInput';
 export { ImportContactsModal } from './ImportContactsModal';
+export { MergeContactsModal } from './MergeContactsModal';

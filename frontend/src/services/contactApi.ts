@@ -8,6 +8,8 @@ import {
   ContactListResponse,
   ImportPreview,
   ImportResult,
+  MergeContactsDTO,
+  MergeContactsResult,
 } from '../types/contact';
 
 /**
@@ -103,6 +105,24 @@ export const contactApi = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+
+  /**
+   * Merge two contacts into one
+   * The primary contact is kept and updated with merged data
+   * The secondary contact is soft-deleted
+   */
+  merge: async (data: MergeContactsDTO): Promise<MergeContactsResult> => {
+    const response = await api.post<MergeContactsResult>('/api/contacts/merge', data);
+    return response.data;
+  },
+
+  /**
+   * Find potential duplicate contacts for a given contact
+   */
+  findDuplicates: async (id: string): Promise<Contact[]> => {
+    const response = await api.get<Contact[]>(`/api/contacts/${id}/duplicates`);
     return response.data;
   },
 };

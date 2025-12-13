@@ -7,6 +7,8 @@ import {
   ContactListParams,
   ContactSnapshot,
   ContactChanges,
+  MergeContactsDTO,
+  MergeContactsResult,
 } from '../types/contact';
 
 // Tag with basic info
@@ -502,5 +504,270 @@ export class ContactService extends BaseService {
     }
 
     return changes;
+  }
+
+  /**
+   * Merge two contacts into one
+   * The primary contact is kept and updated with merged data
+   * The secondary contact is soft-deleted
+   */
+  static async mergeContacts(
+    userId: string,
+    data: MergeContactsDTO
+  ): Promise<MergeContactsResult> {
+    const { primaryContactId, secondaryContactId, fieldResolution = {}, mergeEmails = true, mergePhones = true, mergeTags = true } = data;
+
+    // Validate that both contacts exist and belong to the user
+    const [primaryContact, secondaryContact] = await Promise.all([
+      this.findById(primaryContactId),
+      this.findById(secondaryContactId),
+    ]);
+
+    if (!primaryContact || primaryContact.userId !== userId) {
+      throw new Error('Primary contact not found or unauthorized');
+    }
+
+    if (!secondaryContact || secondaryContact.userId !== userId) {
+      throw new Error('Secondary contact not found or unauthorized');
+    }
+
+    if (primaryContact.isDeleted) {
+      throw new Error('Cannot merge into a deleted contact');
+    }
+
+    if (secondaryContact.isDeleted) {
+      throw new Error('Cannot merge a deleted contact');
+    }
+
+    if (primaryContactId === secondaryContactId) {
+      throw new Error('Cannot merge a contact with itself');
+    }
+
+    // Track which fields came from which contact
+    const fieldsFromPrimary: string[] = [];
+    const fieldsFromSecondary: string[] = [];
+
+    // Helper to resolve field value
+    const resolveField = <T>(
+      fieldName: string,
+      primaryValue: T | null,
+      secondaryValue: T | null,
+      resolution?: 'primary' | 'secondary'
+    ): T | null => {
+      if (resolution === 'secondary') {
+        if (secondaryValue !== null && secondaryValue !== undefined && secondaryValue !== '') {
+          fieldsFromSecondary.push(fieldName);
+          return secondaryValue;
+        }
+        fieldsFromPrimary.push(fieldName);
+        return primaryValue;
+      }
+      // Default: use primary if available, otherwise secondary
+      if (primaryValue !== null && primaryValue !== undefined && primaryValue !== '') {
+        fieldsFromPrimary.push(fieldName);
+        return primaryValue;
+      }
+      if (secondaryValue !== null && secondaryValue !== undefined && secondaryValue !== '') {
+        fieldsFromSecondary.push(fieldName);
+        return secondaryValue;
+      }
+      fieldsFromPrimary.push(fieldName);
+      return primaryValue;
+    };
+
+    // Resolve each field
+    const mergedFirstName = resolveField('firstName', primaryContact.firstName, secondaryContact.firstName, fieldResolution.firstName) || primaryContact.firstName;
+    const mergedLastName = resolveField('lastName', primaryContact.lastName, secondaryContact.lastName, fieldResolution.lastName) || primaryContact.lastName;
+    const mergedCompany = resolveField('company', primaryContact.company, secondaryContact.company, fieldResolution.company);
+    const mergedTitle = resolveField('title', primaryContact.title, secondaryContact.title, fieldResolution.title);
+    const mergedLinkedInUrl = resolveField('linkedInUrl', primaryContact.linkedInUrl, secondaryContact.linkedInUrl, fieldResolution.linkedInUrl);
+    const mergedBirthday = resolveField('birthday', primaryContact.birthday, secondaryContact.birthday, fieldResolution.birthday);
+
+    // Handle notes specially - can be merged
+    let mergedNotes: string | null;
+    if (fieldResolution.notes === 'merge') {
+      const notes: string[] = [];
+      if (primaryContact.notes) notes.push(primaryContact.notes);
+      if (secondaryContact.notes) notes.push(secondaryContact.notes);
+      mergedNotes = notes.length > 0 ? notes.join('\n\n---\n\n') : null;
+      if (primaryContact.notes) fieldsFromPrimary.push('notes');
+      if (secondaryContact.notes) fieldsFromSecondary.push('notes');
+    } else {
+      mergedNotes = resolveField('notes', primaryContact.notes, secondaryContact.notes, fieldResolution.notes);
+    }
+
+    // Merge emails - combine unique emails from both contacts
+    let emailsMerged = 0;
+    const mergedEmails: Array<{ email: string; label: string; isPrimary: boolean }> = [];
+    const seenEmails = new Set<string>();
+
+    // Add primary contact's emails first
+    for (const email of primaryContact.emails) {
+      const normalizedEmail = email.email.toLowerCase();
+      if (!seenEmails.has(normalizedEmail)) {
+        seenEmails.add(normalizedEmail);
+        mergedEmails.push({
+          email: email.email,
+          label: email.label,
+          isPrimary: email.isPrimary,
+        });
+      }
+    }
+
+    // Add secondary contact's emails if merging
+    if (mergeEmails) {
+      for (const email of secondaryContact.emails) {
+        const normalizedEmail = email.email.toLowerCase();
+        if (!seenEmails.has(normalizedEmail)) {
+          seenEmails.add(normalizedEmail);
+          mergedEmails.push({
+            email: email.email,
+            label: email.label,
+            isPrimary: false, // Secondary emails are not primary
+          });
+          emailsMerged++;
+        }
+      }
+    }
+
+    // Merge phones - combine unique phones from both contacts
+    let phonesMerged = 0;
+    const mergedPhones: Array<{ phone: string; label: string; isPrimary: boolean }> = [];
+    const seenPhones = new Set<string>();
+
+    // Normalize phone for comparison
+    const normalizePhone = (phone: string): string => phone.replace(/\D/g, '').slice(-10);
+
+    // Add primary contact's phones first
+    for (const phone of primaryContact.phones) {
+      const normalizedPhone = normalizePhone(phone.phone);
+      if (!seenPhones.has(normalizedPhone)) {
+        seenPhones.add(normalizedPhone);
+        mergedPhones.push({
+          phone: phone.phone,
+          label: phone.label,
+          isPrimary: phone.isPrimary,
+        });
+      }
+    }
+
+    // Add secondary contact's phones if merging
+    if (mergePhones) {
+      for (const phone of secondaryContact.phones) {
+        const normalizedPhone = normalizePhone(phone.phone);
+        if (!seenPhones.has(normalizedPhone)) {
+          seenPhones.add(normalizedPhone);
+          mergedPhones.push({
+            phone: phone.phone,
+            label: phone.label,
+            isPrimary: false, // Secondary phones are not primary
+          });
+          phonesMerged++;
+        }
+      }
+    }
+
+    // Merge tags - combine unique tags from both contacts
+    let tagsMerged = 0;
+    const primaryTagNames = primaryContact.tags.map(ct => ct.tag.name);
+    const secondaryTagNames = secondaryContact.tags.map(ct => ct.tag.name);
+    const mergedTagNames = [...new Set([...primaryTagNames, ...(mergeTags ? secondaryTagNames : [])])];
+    tagsMerged = mergedTagNames.filter(t => !primaryTagNames.includes(t)).length;
+
+    // Update the primary contact with merged data
+    const updatedContact = await this.updateContact(primaryContactId, userId, {
+      firstName: mergedFirstName,
+      lastName: mergedLastName,
+      company: mergedCompany,
+      title: mergedTitle,
+      notes: mergedNotes,
+      linkedInUrl: mergedLinkedInUrl,
+      birthday: mergedBirthday ? mergedBirthday.toISOString() : null,
+      emails: mergedEmails,
+      phones: mergedPhones,
+      tags: mergedTagNames,
+    });
+
+    // Soft delete the secondary contact
+    await this.deleteContact(secondaryContactId, userId);
+
+    return {
+      mergedContact: {
+        id: updatedContact.id,
+        firstName: updatedContact.firstName,
+        lastName: updatedContact.lastName,
+      },
+      deletedContactId: secondaryContactId,
+      fieldsFromPrimary,
+      fieldsFromSecondary,
+      emailsMerged,
+      phonesMerged,
+      tagsMerged,
+    };
+  }
+
+  /**
+   * Find potential duplicate contacts for a given contact
+   * Returns contacts that might be duplicates based on name or email similarity
+   */
+  static async findPotentialDuplicates(
+    contactId: string,
+    userId: string
+  ): Promise<ContactWithRelations[]> {
+    const contact = await this.findById(contactId);
+    if (!contact || contact.userId !== userId) {
+      throw new Error('Contact not found or unauthorized');
+    }
+
+    const duplicates: ContactWithRelations[] = [];
+    const seenIds = new Set<string>([contactId]);
+
+    // Find contacts with matching emails
+    for (const email of contact.emails) {
+      const match = await this.findByEmailAddress(userId, email.email);
+      if (match && !seenIds.has(match.id) && !match.isDeleted) {
+        duplicates.push(match);
+        seenIds.add(match.id);
+      }
+    }
+
+    // Find contacts with similar names
+    const nameMatches = await this.prisma.contact.findMany({
+      where: {
+        userId,
+        isDeleted: false,
+        id: { notIn: Array.from(seenIds) },
+        OR: [
+          // Exact name match (case insensitive)
+          {
+            firstName: { equals: contact.firstName, mode: 'insensitive' },
+            lastName: { equals: contact.lastName, mode: 'insensitive' },
+          },
+          // First name matches last name and vice versa (swapped names)
+          {
+            firstName: { equals: contact.lastName, mode: 'insensitive' },
+            lastName: { equals: contact.firstName, mode: 'insensitive' },
+          },
+        ],
+      },
+      include: {
+        emails: true,
+        phones: true,
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+    });
+
+    for (const match of nameMatches) {
+      if (!seenIds.has(match.id)) {
+        duplicates.push(match);
+        seenIds.add(match.id);
+      }
+    }
+
+    return duplicates;
   }
 }
