@@ -1,0 +1,132 @@
+.groupedItem {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.groupedItem:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.groupIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.groupText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.groupDescription {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.entityLink {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.entityLink:hover {
+  text-decoration: underline;
+}
+
+.updateCount {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  background-color: var(--color-bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  margin-left: 4px;
+}
+
+.groupTime {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.expandButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 8px 0 4px 40px;
+  margin-top: 4px;
+}
+
+.expandButton:hover {
+  text-decoration: underline;
+}
+
+.expandIcon {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.expandIcon.expanded {
+  transform: rotate(0deg);
+}
+
+.expandedContent {
+  margin-top: 12px;
+  margin-left: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--color-border);
+}
+
+.nestedItem {
+  background-color: var(--color-bg-tertiary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .groupedItem {
+    padding: 12px;
+  }
+
+  .groupHeader {
+    gap: 10px;
+  }
+
+  .groupIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+  }
+
+  .expandButton {
+    padding-left: 34px;
+  }
+
+  .expandedContent {
+    margin-left: 34px;
+    padding-left: 10px;
+  }
+}

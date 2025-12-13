@@ -7,9 +7,10 @@ import { ContactChanges } from './contact';
 /**
  * Types of activities that can appear in the feed
  */
-export type ActivityType = 
+export type ActivityType =
   | 'contact_created'
   | 'contact_edited'
+  | 'contact_edited_group'  // Grouped contact edits
   | 'task_created'
   | 'task_completed'
   | 'task_updated';
@@ -37,6 +38,18 @@ export interface ActivityTaskInfo {
 }
 
 /**
+ * Grouped contact activity info - contains multiple edits for the same contact
+ */
+export interface GroupedContactActivityInfo {
+  id: string;
+  name: string;
+  editCount: number;
+  activities: ActivityFeedItem[];
+  latestTimestamp: string;
+  earliestTimestamp: string;
+}
+
+/**
  * A single activity feed item
  */
 export interface ActivityFeedItem {
@@ -45,6 +58,7 @@ export interface ActivityFeedItem {
   timestamp: string;
   contact?: ActivityContactInfo;
   task?: ActivityTaskInfo;
+  groupedContact?: GroupedContactActivityInfo;
 }
 
 /**

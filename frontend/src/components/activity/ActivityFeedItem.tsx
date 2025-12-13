@@ -2,40 +2,15 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActivityFeedItem as ActivityFeedItemType } from '../../types/activity';
 import { ContactChanges } from '../../types/contact';
+import { formatRelativeTime } from '../../utils/dateUtils';
+import { GroupedActivityFeedItem } from './GroupedActivityFeedItem';
 import styles from './ActivityFeedItem.module.css';
 
 interface ActivityFeedItemProps {
   activity: ActivityFeedItemType;
+  /** When true, renders in a more compact style for nested display within groups */
+  isNested?: boolean;
 }
-
-/**
- * Format a timestamp to a relative time string (e.g., "2 hours ago")
- */
-const formatRelativeTime = (timestamp: string): string => {
-  const now = new Date();
-  const date = new Date(timestamp);
-  const diffMs = now.getTime() - date.getTime();
-  const diffSecs = Math.floor(diffMs / 1000);
-  const diffMins = Math.floor(diffSecs / 60);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSecs < 60) {
-    return 'just now';
-  } else if (diffMins < 60) {
-    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-  } else if (diffDays < 7) {
-    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  } else {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    });
-  }
-};
 
 /**
  * Get the icon for an activity type
@@ -120,8 +95,13 @@ const getChangeSummary = (changes: ContactChanges): string => {
   return `updated ${getFieldLabel(changedFields[0])} and ${changedFields.length - 1} other fields`;
 };
 
-export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity }) => {
+export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, isNested = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Handle grouped contact edits
+  if (activity.type === 'contact_edited_group' && activity.groupedContact) {
+    return <GroupedActivityFeedItem groupedContact={activity.groupedContact} />;
+  }
 
   const renderContactActivity = () => {
     if (!activity.contact) return null;
@@ -229,8 +209,12 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity }) 
     );
   };
 
+  const itemClassName = isNested
+    ? `${styles.activityItem} ${styles.nestedItem}`
+    : styles.activityItem;
+
   return (
-    <div className={styles.activityItem}>
+    <div className={itemClassName}>
       {activity.contact && renderContactActivity()}
       {activity.task && renderTaskActivity()}
     </div>
