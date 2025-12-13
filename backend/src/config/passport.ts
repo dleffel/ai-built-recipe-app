@@ -30,6 +30,7 @@ const mockUser: PrismaUser = {
   displayName: 'Development User',
   photoUrl: 'https://via.placeholder.com/150',
   googleId: 'mock-google-id',
+  hiddenFeedTags: [],
   createdAt: new Date(),
   updatedAt: new Date(),
   lastLoginAt: new Date()

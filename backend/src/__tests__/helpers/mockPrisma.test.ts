@@ -86,6 +86,7 @@ describe('mockPrisma', () => {
         googleId: 'test-google-id',
         displayName: 'Test User',
         photoUrl: 'test-photo.jpg',
+        hiddenFeedTags: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         lastLoginAt: new Date()

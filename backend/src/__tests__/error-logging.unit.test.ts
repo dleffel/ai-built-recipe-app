@@ -21,6 +21,7 @@ describe('Error Logging Format Tests', () => {
         displayName: 'Test User',
         photoUrl: 'https://example.com/photo.jpg',
         googleId: 'test-google-id',
+        hiddenFeedTags: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         lastLoginAt: new Date()

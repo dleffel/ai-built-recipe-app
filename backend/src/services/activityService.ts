@@ -6,6 +6,7 @@ import {
   ActivityType,
 } from '../types/activity';
 import { ContactChanges } from '../types/contact';
+import { UserSettingsService } from './userSettingsService';
 
 /**
  * Service for aggregating activity feed data from various sources
@@ -24,8 +25,11 @@ export class ActivityService extends BaseService {
     // Fetch more than needed to account for merging and sorting
     const fetchLimit = limit + 10;
     
+    // Get hidden feed tags for filtering
+    const hiddenFeedTags = await UserSettingsService.getHiddenFeedTags(userId);
+    
     // Fetch contact versions (edits only - version > 1)
-    const contactVersions = await this.getContactVersionActivities(userId, fetchLimit);
+    const contactVersions = await this.getContactVersionActivities(userId, fetchLimit, hiddenFeedTags);
     
     // Fetch task activities
     const taskActivities = await this.getTaskActivities(userId, fetchLimit);
@@ -46,20 +50,39 @@ export class ActivityService extends BaseService {
 
   /**
    * Get contact version activities (edits)
+   * Filters out contacts that have any of the hidden tags
    */
   private static async getContactVersionActivities(
     userId: string,
-    limit: number
+    limit: number,
+    hiddenFeedTags: string[] = []
   ): Promise<ActivityFeedItem[]> {
+    // Build the where clause for contact versions
+    // If there are hidden tags, exclude contacts that have any of those tags
+    const contactWhereClause: {
+      userId: string;
+      isDeleted: boolean;
+      tags?: { none: { tagId: { in: string[] } } };
+    } = {
+      userId,
+      isDeleted: false,
+    };
+
+    // If there are hidden tags, filter out contacts with those tags
+    if (hiddenFeedTags.length > 0) {
+      contactWhereClause.tags = {
+        none: {
+          tagId: { in: hiddenFeedTags },
+        },
+      };
+    }
+
     // Get contact versions where version > 1 (edits, not initial creation)
     // Join with contacts to get the contact name and verify ownership
     const contactVersions = await this.prisma.contactVersion.findMany({
       where: {
         version: { gt: 1 }, // Only edits, not initial creation
-        contact: {
-          userId,
-          isDeleted: false,
-        },
+        contact: contactWhereClause,
       },
       include: {
         contact: {

@@ -22,6 +22,7 @@ describe('Recipe Routes', () => {
       googleId: 'test-google-id',
       displayName: 'Test User',
       photoUrl: 'https://example.com/photo.jpg',
+      hiddenFeedTags: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       lastLoginAt: new Date()

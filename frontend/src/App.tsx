@@ -16,6 +16,7 @@ import { Button } from './components/ui/Button';
 import { ContactList, ContactDetail, ContactForm } from './components/crm';
 import { Contact, CreateContactDTO, UpdateContactDTO } from './types/contact';
 import { GmailSettings } from './components/gmail';
+import { FeedSettings } from './components/settings';
 
 // Protected route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -394,6 +395,7 @@ const AppContent: React.FC = () => {
                 <Routes>
                   <Route path="/" element={<GmailSettings />} />
                   <Route path="/gmail" element={<GmailSettings />} />
+                  <Route path="/feed" element={<FeedSettings />} />
                 </Routes>
               </ProtectedRoute>
             </Layout>

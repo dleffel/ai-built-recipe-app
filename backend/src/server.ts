@@ -10,6 +10,7 @@ import tagRoutes from './routes/tags';
 import gmailRoutes from './routes/gmail';
 import webhookRoutes from './routes/webhooks';
 import activityRoutes from './routes/activity';
+import settingsRoutes from './routes/settings';
 import serverConfig from './config/server-config';
 import { prisma } from './lib/prisma';
 import { UserService } from './services/userService';
@@ -363,6 +364,9 @@ app.use('/api/tags', tagRoutes);
 
 // Activity routes
 app.use('/api/activity', activityRoutes);
+
+// Settings routes
+app.use('/api/settings', settingsRoutes);
 
 // Gmail routes
 app.use('/api/gmail', gmailRoutes);

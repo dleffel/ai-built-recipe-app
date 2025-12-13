@@ -11,14 +11,15 @@ datasource db {
 }
 
 model User {
-  id          String    @id @default(uuid())
-  email       String    @unique
-  googleId    String?   @unique
-  displayName String?
-  photoUrl    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  lastLoginAt DateTime?
+  id             String    @id @default(uuid())
+  email          String    @unique
+  googleId       String?   @unique
+  displayName    String?
+  photoUrl       String?
+  hiddenFeedTags String[]  @default([]) // Tag IDs to hide from activity feed
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastLoginAt    DateTime?
 
   // Relations
   recipes       Recipe[]

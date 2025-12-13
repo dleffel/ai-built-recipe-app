@@ -33,6 +33,7 @@ declare global {
       displayName: string | null;
       photoUrl: string | null;
       googleId: string | null;
+      hiddenFeedTags: string[];
       createdAt: Date;
       updatedAt: Date;
       lastLoginAt: Date | null;
@@ -197,6 +198,7 @@ describe('Auth Routes', () => {
         displayName: 'Test User',
         photoUrl: 'https://test-photo.jpg',
         googleId: 'test-google-id',
+        hiddenFeedTags: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         lastLoginAt: new Date()
@@ -247,6 +249,7 @@ describe('Auth Routes', () => {
       displayName: 'Test User',
       photoUrl: 'test-photo.jpg',
       googleId: 'mock-google-id',
+      hiddenFeedTags: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       lastLoginAt: new Date()
@@ -367,6 +370,7 @@ describe('Auth Routes', () => {
       displayName: 'Test User',
       photoUrl: 'test-photo.jpg',
       googleId: 'mock-google-id',
+      hiddenFeedTags: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       lastLoginAt: new Date()
@@ -428,6 +432,7 @@ describe('Auth Routes', () => {
       displayName: 'Test User',
       photoUrl: 'test-photo.jpg',
       googleId: 'mock-google-id',
+      hiddenFeedTags: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       lastLoginAt: new Date()

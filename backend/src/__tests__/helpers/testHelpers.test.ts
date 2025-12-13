@@ -22,6 +22,7 @@ export const createTestUser = async (index: number): Promise<User> => {
     googleId: `google-${uniqueId}`,
     displayName: `Test User ${uniqueId}`,
     photoUrl: `https://via.placeholder.com/150?text=${uniqueId}`,
+    hiddenFeedTags: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     lastLoginAt: new Date()
@@ -71,6 +72,7 @@ export const createTestRecipe = async (user: User, index: number): Promise<Recip
     googleId: user.googleId,
     displayName: user.displayName,
     photoUrl: user.photoUrl,
+    hiddenFeedTags: user.hiddenFeedTags,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     lastLoginAt: user.lastLoginAt

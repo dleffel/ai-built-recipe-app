@@ -73,6 +73,7 @@ describe('setupTests', () => {
         const mockUser: User = {
           id: 'test-id',
           ...testData,
+          hiddenFeedTags: [],
           createdAt: new Date(),
           updatedAt: new Date(),
           lastLoginAt: new Date()
@@ -106,6 +107,7 @@ describe('setupTests', () => {
           id: 'test-id',
           ...testData,
           ...customData,
+          hiddenFeedTags: [],
           createdAt: new Date(),
           updatedAt: new Date(),
           lastLoginAt: new Date()
