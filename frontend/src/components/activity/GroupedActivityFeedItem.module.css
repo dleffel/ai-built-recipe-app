@@ -64,6 +64,17 @@
   font-size: 0.8rem;
 }
 
+.hideButton {
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.hideButton:hover {
+  opacity: 1;
+}
+
 .expandButton {
   display: inline-flex;
   align-items: center;

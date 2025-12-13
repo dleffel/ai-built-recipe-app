@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GroupedContactActivityInfo, ActivityFeedItem as ActivityFeedItemType } from '../../types/activity';
 import { formatRelativeTime } from '../../utils/dateUtils';
+import { IconButton } from '../ui/Button';
+import { EyeOffIcon } from '../ui/icons';
 import { ActivityFeedItem } from './ActivityFeedItem';
 import styles from './GroupedActivityFeedItem.module.css';
 
 interface GroupedActivityFeedItemProps {
   groupedContact: GroupedContactActivityInfo;
+  /** Callback when user wants to hide a contact from the feed */
+  onHideContact?: (contactId: string, contactName: string) => void;
 }
 
 /**
@@ -27,10 +31,19 @@ const formatTimeRange = (earliest: string, latest: string): string => {
 
 export const GroupedActivityFeedItem: React.FC<GroupedActivityFeedItemProps> = ({
   groupedContact,
+  onHideContact,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { id, name, editCount, activities, latestTimestamp, earliestTimestamp } = groupedContact;
+
+  const handleHideContact = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onHideContact) {
+      onHideContact(id, name);
+    }
+  };
 
   return (
     <div className={styles.groupedItem}>
@@ -48,6 +61,17 @@ export const GroupedActivityFeedItem: React.FC<GroupedActivityFeedItemProps> = (
             {formatTimeRange(earliestTimestamp, latestTimestamp)}
           </span>
         </div>
+        {onHideContact && (
+          <IconButton
+            icon={<EyeOffIcon size={14} />}
+            aria-label={`Hide ${name} from feed`}
+            variant="ghost"
+            size="sm"
+            className={styles.hideButton}
+            onClick={handleHideContact}
+            title={`Hide ${name} from feed`}
+          />
+        )}
       </div>
 
       <button
