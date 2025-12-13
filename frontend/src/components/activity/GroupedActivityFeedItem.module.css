@@ -106,17 +106,6 @@
   overflow: hidden;
 }
 
-/* Nested item overrides */
-.nestedItem :global(.activityItem) {
-  background-color: transparent;
-  border: none;
-  padding: 12px;
-}
-
-.nestedItem :global(.activityItem:hover) {
-  background-color: transparent;
-}
-
 @media (max-width: 480px) {
   .groupedItem {
     padding: 12px;
