@@ -23,6 +23,19 @@ export class ActivityService extends BaseService {
   }
 
   /**
+   * Check if a specific contact is hidden from the user's activity feed
+   */
+  static async isContactHiddenFromFeed(
+    userId: string,
+    contactId: string
+  ): Promise<boolean> {
+    const hiddenContact = await this.prisma.hiddenFeedContact.findUnique({
+      where: { userId_contactId: { userId, contactId } },
+    });
+    return hiddenContact !== null;
+  }
+
+  /**
    * Hide a contact from the user's activity feed
    */
   static async hideContactFromFeed(

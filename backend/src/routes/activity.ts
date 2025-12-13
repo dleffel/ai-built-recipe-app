@@ -93,9 +93,31 @@ const unhideContact: RequestHandler = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/activity/hide-contact/:contactId
+ * Check if a contact is hidden from the activity feed
+ */
+const isContactHidden: RequestHandler = async (req, res) => {
+  try {
+    const { contactId } = req.params;
+    
+    if (!contactId) {
+      res.status(400).json({ error: 'Contact ID is required' });
+      return;
+    }
+
+    const isHidden = await ActivityService.isContactHiddenFromFeed(req.user!.id, contactId);
+    res.json({ isHidden });
+  } catch (error: unknown) {
+    console.error('Check hidden contact error:', error);
+    res.status(500).json({ error: 'Failed to check hidden status' });
+  }
+};
+
 // Apply routes with auth middleware
 router.use(requireAuth);
 router.get('/', getActivityFeed);
+router.get('/hide-contact/:contactId', isContactHidden);
 router.post('/hide-contact/:contactId', hideContact);
 router.delete('/hide-contact/:contactId', unhideContact);
 
