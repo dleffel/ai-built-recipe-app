@@ -13,6 +13,13 @@ interface HideContactResponse {
 }
 
 /**
+ * Response from check hidden status endpoint
+ */
+interface IsContactHiddenResponse {
+  isHidden: boolean;
+}
+
+/**
  * Activity API service for fetching activity feed data
  */
 export const activityApi = {
@@ -47,6 +54,16 @@ export const activityApi = {
    */
   unhideContact: async (contactId: string): Promise<void> => {
     await api.delete(`/api/activity/hide-contact/${contactId}`);
+  },
+
+  /**
+   * Check if a contact is hidden from the activity feed
+   * @param contactId - The ID of the contact to check
+   * @returns Whether the contact is hidden
+   */
+  isContactHidden: async (contactId: string): Promise<boolean> => {
+    const response = await api.get<IsContactHiddenResponse>(`/api/activity/hide-contact/${contactId}`);
+    return response.data.isHidden;
   },
 };
 

@@ -80,6 +80,35 @@
   color: var(--color-text-secondary);
 }
 
+/* Hidden from feed banner */
+.hiddenBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: var(--color-warning-bg, rgba(234, 179, 8, 0.1));
+  border: 1px solid var(--color-warning-border, rgba(234, 179, 8, 0.3));
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.hiddenBannerContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hiddenIcon {
+  color: var(--color-warning, #eab308);
+  flex-shrink: 0;
+}
+
+.hiddenText {
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
 .tabs {
   display: flex;
   gap: 4px;

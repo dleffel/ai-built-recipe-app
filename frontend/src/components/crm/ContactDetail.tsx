@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Contact } from '../../types/contact';
 import { ContactHistory } from './ContactHistory';
 import { Button } from '../ui/Button';
 import { TagPill } from '../ui/TagPill';
+import { EyeIcon, EyeOffIcon } from '../ui/icons';
 import { formatBirthday } from '../../utils/birthdayUtils';
+import { activityApi } from '../../services/activityApi';
 import styles from './ContactDetail.module.css';
 
 interface ContactDetailProps {
@@ -26,9 +28,37 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>('details');
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isHiddenFromFeed, setIsHiddenFromFeed] = useState<boolean | null>(null);
+  const [unhiding, setUnhiding] = useState(false);
 
   const fullName = `${contact.firstName} ${contact.lastName}`;
   const subtitle = [contact.title, contact.company].filter(Boolean).join(' at ');
+
+  // Fetch hidden status when contact changes
+  useEffect(() => {
+    const fetchHiddenStatus = async () => {
+      try {
+        const hidden = await activityApi.isContactHidden(contact.id);
+        setIsHiddenFromFeed(hidden);
+      } catch (err) {
+        console.error('Error fetching hidden status:', err);
+        setIsHiddenFromFeed(false);
+      }
+    };
+    fetchHiddenStatus();
+  }, [contact.id]);
+
+  const handleUnhide = async () => {
+    setUnhiding(true);
+    try {
+      await activityApi.unhideContact(contact.id);
+      setIsHiddenFromFeed(false);
+    } catch (err) {
+      console.error('Error unhiding contact:', err);
+    } finally {
+      setUnhiding(false);
+    }
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -70,6 +100,27 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
         <h1 className={styles.name}>{fullName}</h1>
         {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
       </div>
+
+      {isHiddenFromFeed && (
+        <div className={styles.hiddenBanner}>
+          <div className={styles.hiddenBannerContent}>
+            <EyeOffIcon size={18} className={styles.hiddenIcon} />
+            <span className={styles.hiddenText}>
+              This contact is hidden from your activity feed
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleUnhide}
+            disabled={unhiding}
+            loading={unhiding}
+            leftIcon={<EyeIcon size={14} />}
+          >
+            {unhiding ? 'Unhiding...' : 'Show in Feed'}
+          </Button>
+        </div>
+      )}
 
       <div className={styles.tabs}>
         <button
