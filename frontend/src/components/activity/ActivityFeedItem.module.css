@@ -209,6 +209,19 @@
   color: var(--color-warning);
 }
 
+/* Merge activity styles */
+.mergeContactName {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.mergeDetails {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
 /* Nested item styles for grouped activity display */
 .nestedItem {
   background-color: transparent;

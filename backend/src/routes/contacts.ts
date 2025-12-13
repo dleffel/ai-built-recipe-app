@@ -6,7 +6,7 @@ import { ContactService } from '../services/contactService';
 import { VCardService } from '../services/vcardService';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { requireAuth } from '../middleware/auth';
-import { CreateContactDTO, UpdateContactDTO, ContactListParams } from '../types/contact';
+import { CreateContactDTO, UpdateContactDTO, ContactListParams, MergeContactsDTO } from '../types/contact';
 
 // Extend the Express Request type to include the user property
 declare global {
@@ -316,6 +316,60 @@ const importContacts: RequestHandler = async (req, res) => {
   }
 };
 
+// Merge two contacts
+const mergeContacts: RequestHandler = async (req, res) => {
+  try {
+    const { primaryContactId, secondaryContactId, fieldResolution, mergeEmails, mergePhones, mergeTags } = req.body;
+
+    if (!primaryContactId || !secondaryContactId) {
+      res.status(400).json({
+        error: 'Missing required fields: primaryContactId and secondaryContactId are required'
+      });
+      return;
+    }
+
+    const data: MergeContactsDTO = {
+      primaryContactId,
+      secondaryContactId,
+      fieldResolution,
+      mergeEmails,
+      mergePhones,
+      mergeTags,
+    };
+
+    const result = await ContactService.mergeContacts(req.user!.id, data);
+    res.json(result);
+  } catch (error: unknown) {
+    console.error('Merge contacts error:', error);
+    if (error instanceof Error) {
+      if (error.message.includes('not found') || error.message.includes('unauthorized')) {
+        res.status(404).json({ error: error.message });
+      } else if (error.message.includes('Cannot merge') || error.message.includes('itself')) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Failed to merge contacts' });
+      }
+    } else {
+      res.status(500).json({ error: 'Failed to merge contacts' });
+    }
+  }
+};
+
+// Find potential duplicate contacts
+const findDuplicates: RequestHandler = async (req, res) => {
+  try {
+    const duplicates = await ContactService.findPotentialDuplicates(req.params.id, req.user!.id);
+    res.json(duplicates);
+  } catch (error: unknown) {
+    console.error('Find duplicates error:', error);
+    if (error instanceof Error && error.message.includes('not found')) {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to find duplicates' });
+    }
+  }
+};
+
 // Apply routes with auth middleware
 router.use(requireAuth);
 router.post('/', createContact);
@@ -323,11 +377,14 @@ router.get('/', getUserContacts);
 // Import routes with multer error handling
 router.post('/import/preview', upload.single('file'), handleMulterError, previewImport);
 router.post('/import', upload.single('file'), handleMulterError, importContacts);
+// Merge route - must be before /:id routes
+router.post('/merge', mergeContacts);
 router.get('/:id', getContact);
 router.put('/:id', updateContact);
 router.delete('/:id', deleteContact);
 router.get('/:id/versions', getContactVersions);
 router.get('/:id/versions/:version', getContactVersion);
 router.post('/:id/restore/:version', restoreContactVersion);
+router.get('/:id/duplicates', findDuplicates);
 
 export default router;

@@ -25,6 +25,8 @@ const getActivityIcon = (type: ActivityFeedItemType['type']): string => {
       return '👤';
     case 'contact_edited':
       return '✏️';
+    case 'contact_merged':
+      return '🔀';
     case 'task_created':
       return '📝';
     case 'task_completed':
@@ -254,6 +256,40 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, on
     );
   };
 
+  const renderMergeActivity = () => {
+    if (!activity.merge) return null;
+
+    const { merge } = activity;
+    const mergeDetails: string[] = [];
+    if (merge.emailsMerged > 0) mergeDetails.push(`${merge.emailsMerged} email${merge.emailsMerged > 1 ? 's' : ''}`);
+    if (merge.phonesMerged > 0) mergeDetails.push(`${merge.phonesMerged} phone${merge.phonesMerged > 1 ? 's' : ''}`);
+    if (merge.tagsMerged > 0) mergeDetails.push(`${merge.tagsMerged} tag${merge.tagsMerged > 1 ? 's' : ''}`);
+
+    return (
+      <div className={styles.activityContent}>
+        <div className={styles.activityHeader}>
+          <span className={styles.activityIcon}>{getActivityIcon(activity.type)}</span>
+          <div className={styles.activityText}>
+            <span className={styles.activityDescription}>
+              Merged{' '}
+              <span className={styles.mergeContactName}>{merge.secondaryContactName}</span>
+              {' '}into{' '}
+              <Link to={`/contacts/${merge.primaryContactId}`} className={styles.entityLink}>
+                {merge.primaryContactName}
+              </Link>
+            </span>
+            {mergeDetails.length > 0 && (
+              <span className={styles.mergeDetails}>
+                Added {mergeDetails.join(', ')}
+              </span>
+            )}
+            <span className={styles.activityTime}>{formatRelativeTime(activity.timestamp)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const itemClassName = isNested
     ? `${styles.activityItem} ${styles.nestedItem}`
     : styles.activityItem;
@@ -262,6 +298,7 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, on
     <div className={itemClassName}>
       {activity.contact && renderContactActivity()}
       {activity.task && renderTaskActivity()}
+      {activity.merge && renderMergeActivity()}
     </div>
   );
 };

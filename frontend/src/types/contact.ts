@@ -164,3 +164,38 @@ export interface ImportResult {
     existingName: string;
   }>;
 }
+
+// Contact Merge Types
+export interface MergeContactsDTO {
+  primaryContactId: string;
+  secondaryContactId: string;
+  fieldResolution?: {
+    firstName?: 'primary' | 'secondary';
+    lastName?: 'primary' | 'secondary';
+    company?: 'primary' | 'secondary';
+    title?: 'primary' | 'secondary';
+    notes?: 'primary' | 'secondary' | 'merge';
+    linkedInUrl?: 'primary' | 'secondary';
+    birthday?: 'primary' | 'secondary';
+  };
+  mergeEmails?: boolean;
+  mergePhones?: boolean;
+  mergeTags?: boolean;
+}
+
+export interface MergeContactsResult {
+  mergedContact: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  deletedContactId: string;
+  fieldsFromPrimary: string[];
+  fieldsFromSecondary: string[];
+  emailsMerged: number;
+  phonesMerged: number;
+  tagsMerged: number;
+}
+
+export type FieldResolutionKey = 'firstName' | 'lastName' | 'company' | 'title' | 'notes' | 'linkedInUrl' | 'birthday';
+export type FieldResolutionValue = 'primary' | 'secondary' | 'merge';

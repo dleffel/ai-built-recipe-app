@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Contact } from '../../types/contact';
 import { ContactHistory } from './ContactHistory';
+import { MergeContactsModal } from './MergeContactsModal';
 import { Button } from '../ui/Button';
 import { TagPill } from '../ui/TagPill';
 import { EyeIcon, EyeOffIcon } from '../ui/icons';
@@ -28,6 +29,7 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>('details');
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
   const [isHiddenFromFeed, setIsHiddenFromFeed] = useState<boolean | null>(null);
   const [unhiding, setUnhiding] = useState(false);
 
@@ -83,11 +85,14 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
           &larr; Back
         </Button>
         <div className={styles.actions}>
+          <Button variant="secondary" size="md" onClick={() => setShowMergeModal(true)}>
+            Merge
+          </Button>
           <Button variant="primary" size="md" onClick={onEdit}>
             Edit
           </Button>
-          <Button 
-            variant="danger" 
+          <Button
+            variant="danger"
             size="md"
             onClick={() => setShowDeleteConfirm(true)}
           >
@@ -315,6 +320,17 @@ export const ContactDetail: React.FC<ContactDetailProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {showMergeModal && (
+        <MergeContactsModal
+          primaryContact={contact}
+          onMergeComplete={(mergedContact) => {
+            setShowMergeModal(false);
+            onContactUpdated(mergedContact);
+          }}
+          onClose={() => setShowMergeModal(false)}
+        />
       )}
     </div>
   );

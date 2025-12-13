@@ -109,3 +109,54 @@ export type EmailLabel = typeof EMAIL_LABELS[number];
  */
 export const PHONE_LABELS = ['mobile', 'work', 'home', 'other'] as const;
 export type PhoneLabel = typeof PHONE_LABELS[number];
+
+/**
+ * DTO for merging two contacts
+ * The primary contact is kept, the secondary contact is merged into it and deleted
+ */
+export interface MergeContactsDTO {
+  primaryContactId: string;
+  secondaryContactId: string;
+  /**
+   * Field resolution strategy - which contact's value to use for each field
+   * If not specified, primary contact's value is used (unless empty, then secondary's)
+   */
+  fieldResolution?: {
+    firstName?: 'primary' | 'secondary';
+    lastName?: 'primary' | 'secondary';
+    company?: 'primary' | 'secondary';
+    title?: 'primary' | 'secondary';
+    notes?: 'primary' | 'secondary' | 'merge';  // 'merge' concatenates both notes
+    linkedInUrl?: 'primary' | 'secondary';
+    birthday?: 'primary' | 'secondary';
+  };
+  /**
+   * Whether to merge emails from both contacts (default: true)
+   */
+  mergeEmails?: boolean;
+  /**
+   * Whether to merge phones from both contacts (default: true)
+   */
+  mergePhones?: boolean;
+  /**
+   * Whether to merge tags from both contacts (default: true)
+   */
+  mergeTags?: boolean;
+}
+
+/**
+ * Result of a contact merge operation
+ */
+export interface MergeContactsResult {
+  mergedContact: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  deletedContactId: string;
+  fieldsFromPrimary: string[];
+  fieldsFromSecondary: string[];
+  emailsMerged: number;
+  phonesMerged: number;
+  tagsMerged: number;
+}
