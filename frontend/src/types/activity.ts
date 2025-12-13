@@ -23,6 +23,10 @@ export interface ActivityContactInfo {
   name: string;
   changes?: ContactChanges;
   version?: number;
+  // Context fields for richer display
+  company?: string | null;
+  title?: string | null;
+  tags?: string[];
 }
 
 /**

@@ -76,6 +76,34 @@
   font-size: 0.8rem;
 }
 
+/* Contact context styles */
+.contactContext {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.contactRole {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.contactTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tagPill {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+
 .expandButton {
   display: inline-flex;
   align-items: center;
