@@ -17,6 +17,37 @@ export interface UpdateRecipeDTO extends Partial<CreateRecipeDTO> {}
 
 export class RecipeService extends BaseService {
   /**
+   * Build search condition for recipe queries
+   * @param search - Optional search term to filter recipes
+   * @returns Prisma where input for search filtering
+   */
+  private static buildSearchCondition(search?: string): Prisma.RecipeWhereInput {
+    if (!search) return {};
+
+    return {
+      OR: [
+        {
+          title: {
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          description: {
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          ingredients: {
+            hasSome: [search]
+          }
+        }
+      ]
+    };
+  }
+
+  /**
    * Create a new recipe
    */
   static async createRecipe(userId: string, data: CreateRecipeDTO): Promise<Recipe> {
@@ -49,35 +80,7 @@ export class RecipeService extends BaseService {
     includeDeleted?: boolean;
     search?: string;
   }): Promise<Recipe[]> {
-    const searchCondition: Prisma.RecipeWhereInput = options?.search
-      ? {
-          OR: [
-            {
-              title: {
-                contains: options.search,
-                mode: 'insensitive'
-              }
-            },
-            {
-              description: {
-                contains: options.search,
-                mode: 'insensitive'
-              }
-            },
-            {
-              ingredients: {
-                hasSome: [options.search]
-              }
-            }
-          ]
-        }
-      : {};
-
-    console.log('[DEBUG] Recipe search query:', {
-      searchTerm: options?.search,
-      searchCondition: JSON.stringify(searchCondition, null, 2),
-      userId
-    });
+    const searchCondition = this.buildSearchCondition(options?.search);
 
     return this.prisma.recipe.findMany({
       where: {
@@ -135,29 +138,7 @@ export class RecipeService extends BaseService {
    * Count total recipes for a user with search (excluding soft-deleted)
    */
   static async countUserRecipes(userId: string, search?: string): Promise<number> {
-    const searchCondition: Prisma.RecipeWhereInput = search
-      ? {
-          OR: [
-            {
-              title: {
-                contains: search,
-                mode: 'insensitive'
-              }
-            },
-            {
-              description: {
-                contains: search,
-                mode: 'insensitive'
-              }
-            },
-            {
-              ingredients: {
-                hasSome: [search]
-              }
-            }
-          ]
-        }
-      : {};
+    const searchCondition = this.buildSearchCondition(search);
 
     return this.prisma.recipe.count({
       where: {
