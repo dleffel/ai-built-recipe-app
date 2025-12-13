@@ -4,8 +4,12 @@ import {
   ActivityFeedParams,
   ActivityFeedResponse,
   ActivityType,
+  GroupedContactActivityInfo,
 } from '../types/activity';
 import { ContactChanges } from '../types/contact';
+
+// 24 hours in milliseconds - the window for grouping contact edits
+const GROUPING_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Service for aggregating activity feed data from various sources
@@ -21,8 +25,8 @@ export class ActivityService extends BaseService {
   ): Promise<ActivityFeedResponse> {
     const { limit = 20, offset = 0 } = params;
     
-    // Fetch more than needed to account for merging and sorting
-    const fetchLimit = limit + 10;
+    // Fetch more than needed to account for merging, grouping, and sorting
+    const fetchLimit = (limit + 10) * 2;
     
     // Fetch contact versions (edits only - version > 1)
     const contactVersions = await this.getContactVersionActivities(userId, fetchLimit);
@@ -34,13 +38,102 @@ export class ActivityService extends BaseService {
     const allActivities = [...contactVersions, ...taskActivities]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
+    // Group adjacent contact edits for the same contact within 24h window
+    const groupedActivities = this.groupAdjacentContactEdits(allActivities);
+    
     // Apply pagination
-    const paginatedActivities = allActivities.slice(offset, offset + limit);
-    const hasMore = allActivities.length > offset + limit;
+    const paginatedActivities = groupedActivities.slice(offset, offset + limit);
+    const hasMore = groupedActivities.length > offset + limit;
     
     return {
       activities: paginatedActivities,
       hasMore,
+    };
+  }
+
+  /**
+   * Group adjacent contact_edited activities for the same contact within 24h window
+   * Adjacent means consecutive in the sorted list (no other activity types in between)
+   */
+  private static groupAdjacentContactEdits(activities: ActivityFeedItem[]): ActivityFeedItem[] {
+    if (activities.length === 0) return [];
+
+    const result: ActivityFeedItem[] = [];
+    let currentGroup: ActivityFeedItem[] = [];
+    let currentContactId: string | null = null;
+    let groupStartTimestamp: Date | null = null;
+
+    for (const activity of activities) {
+      // Check if this is a contact_edited activity
+      if (activity.type === 'contact_edited' && activity.contact) {
+        const activityTimestamp = new Date(activity.timestamp);
+        
+        // Check if we can add to existing group
+        const canAddToGroup = currentContactId === activity.contact.id &&
+          groupStartTimestamp !== null &&
+          (groupStartTimestamp.getTime() - activityTimestamp.getTime()) <= GROUPING_WINDOW_MS;
+
+        if (canAddToGroup) {
+          // Add to existing group
+          currentGroup.push(activity);
+        } else {
+          // Flush current group if exists
+          if (currentGroup.length > 0) {
+            result.push(this.createGroupedOrSingleItem(currentGroup));
+          }
+          // Start new group
+          currentGroup = [activity];
+          currentContactId = activity.contact.id;
+          groupStartTimestamp = activityTimestamp;
+        }
+      } else {
+        // Not a contact_edited activity - flush current group and add this item
+        if (currentGroup.length > 0) {
+          result.push(this.createGroupedOrSingleItem(currentGroup));
+          currentGroup = [];
+          currentContactId = null;
+          groupStartTimestamp = null;
+        }
+        result.push(activity);
+      }
+    }
+
+    // Flush any remaining group
+    if (currentGroup.length > 0) {
+      result.push(this.createGroupedOrSingleItem(currentGroup));
+    }
+
+    return result;
+  }
+
+  /**
+   * Create a grouped activity item if multiple activities, or return single item
+   */
+  private static createGroupedOrSingleItem(activities: ActivityFeedItem[]): ActivityFeedItem {
+    if (activities.length === 1) {
+      return activities[0];
+    }
+
+    // Multiple activities - create a grouped item
+    const firstActivity = activities[0];
+    const lastActivity = activities[activities.length - 1];
+    const contactId = firstActivity.contact!.id;
+    const contactName = firstActivity.contact!.name;
+
+    const groupedContact: GroupedContactActivityInfo = {
+      id: contactId,
+      name: contactName,
+      editCount: activities.length,
+      activities: activities,
+      latestTimestamp: firstActivity.timestamp,
+      earliestTimestamp: lastActivity.timestamp,
+    };
+
+    return {
+      id: `contact-edit-group-${contactId}-${firstActivity.timestamp}`,
+      type: 'contact_edited_group',
+      timestamp: firstActivity.timestamp,
+      groupedContact,
     };
   }
 

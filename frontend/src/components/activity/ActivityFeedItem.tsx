@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActivityFeedItem as ActivityFeedItemType } from '../../types/activity';
 import { ContactChanges } from '../../types/contact';
+import { GroupedActivityFeedItem } from './GroupedActivityFeedItem';
 import styles from './ActivityFeedItem.module.css';
 
 interface ActivityFeedItemProps {
   activity: ActivityFeedItemType;
+  /** When true, renders in a more compact style for nested display within groups */
+  isNested?: boolean;
 }
 
 /**
@@ -120,8 +123,13 @@ const getChangeSummary = (changes: ContactChanges): string => {
   return `updated ${getFieldLabel(changedFields[0])} and ${changedFields.length - 1} other fields`;
 };
 
-export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity }) => {
+export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, isNested = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Handle grouped contact edits
+  if (activity.type === 'contact_edited_group' && activity.groupedContact) {
+    return <GroupedActivityFeedItem groupedContact={activity.groupedContact} />;
+  }
 
   const renderContactActivity = () => {
     if (!activity.contact) return null;
@@ -229,8 +237,12 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity }) 
     );
   };
 
+  const itemClassName = isNested
+    ? `${styles.activityItem} ${styles.nestedItem}`
+    : styles.activityItem;
+
   return (
-    <div className={styles.activityItem}>
+    <div className={itemClassName}>
       {activity.contact && renderContactActivity()}
       {activity.task && renderTaskActivity()}
     </div>
