@@ -100,6 +100,60 @@
   max-width: 300px;
 }
 
+/* Toast notification for hide/undo actions */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.toastMessage {
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.undoButton {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.toastDismiss {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 4px;
+}
+
+.toastDismiss:hover {
+  color: var(--color-text);
+}
+
 @media (max-width: 480px) {
   .title {
     font-size: 1.1rem;
@@ -116,5 +170,23 @@
 
   .emptyIcon {
     font-size: 2.5rem;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    bottom: 16px;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

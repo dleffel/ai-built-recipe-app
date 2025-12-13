@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActivityFeedItem as ActivityFeedItemType } from '../../types/activity';
 import { ContactChanges } from '../../types/contact';
+import { IconButton } from '../ui/Button';
+import { EyeOffIcon } from '../ui/icons';
 import styles from './ActivityFeedItem.module.css';
 
 interface ActivityFeedItemProps {
   activity: ActivityFeedItemType;
+  /** Callback when user wants to hide a contact from the feed */
+  onHideContact?: (contactId: string, contactName: string) => void;
 }
 
 /**
@@ -120,8 +124,16 @@ const getChangeSummary = (changes: ContactChanges): string => {
   return `updated ${getFieldLabel(changedFields[0])} and ${changedFields.length - 1} other fields`;
 };
 
-export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity }) => {
+export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, onHideContact }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleHideContact = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (activity.contact && onHideContact) {
+      onHideContact(activity.contact.id, activity.contact.name);
+    }
+  };
 
   const renderContactActivity = () => {
     if (!activity.contact) return null;
@@ -154,6 +166,17 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity }) 
             </span>
             <span className={styles.activityTime}>{formatRelativeTime(activity.timestamp)}</span>
           </div>
+          {onHideContact && (
+            <IconButton
+              icon={<EyeOffIcon size={14} />}
+              aria-label={`Hide ${contact.name} from feed`}
+              variant="ghost"
+              size="sm"
+              className={styles.hideButton}
+              onClick={handleHideContact}
+              title={`Hide ${contact.name} from feed`}
+            />
+          )}
         </div>
 
         {hasChanges && (

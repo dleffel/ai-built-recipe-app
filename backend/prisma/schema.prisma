@@ -21,11 +21,12 @@ model User {
   lastLoginAt DateTime?
 
   // Relations
-  recipes       Recipe[]
-  tasks         Task[]
-  contacts      Contact[]
-  gmailAccounts GmailAccount[]
-  tags          Tag[]
+  recipes            Recipe[]
+  tasks              Task[]
+  contacts           Contact[]
+  gmailAccounts      GmailAccount[]
+  tags               Tag[]
+  hiddenFeedContacts HiddenFeedContact[]
 
   @@map("users")
 }
@@ -131,12 +132,13 @@ model Contact {
   updatedAt   DateTime  @updatedAt
   
   // Relations
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  emails      ContactEmail[]
-  phones      ContactPhone[]
-  versions    ContactVersion[]
-  tags        ContactTag[]
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  emails          ContactEmail[]
+  phones          ContactPhone[]
+  versions        ContactVersion[]
+  tags            ContactTag[]
+  hiddenFromFeeds HiddenFeedContact[]
 
   @@map("contacts")
   @@index([userId])
@@ -218,4 +220,20 @@ model ContactTag {
   @@unique([contactId, tagId])
   @@index([contactId])
   @@index([tagId])
+}
+
+// Hidden Feed Contacts - tracks which contacts a user has hidden from their activity feed
+model HiddenFeedContact {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("hidden_feed_contacts")
+  @@unique([userId, contactId])
+  @@index([userId])
 }
