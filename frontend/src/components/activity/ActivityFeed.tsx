@@ -52,8 +52,10 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ limit = 20 }) => {
     try {
       await activityApi.hideContact(contactId);
       
-      // Remove activities for this contact from the list
-      setActivities(prev => prev.filter(a => a.contact?.id !== contactId));
+      // Remove activities for this contact from the list (both regular and grouped)
+      setActivities(prev => prev.filter(a =>
+        a.contact?.id !== contactId && a.groupedContact?.id !== contactId
+      ));
       
       // Clear any existing toast timeout
       if (toastTimeoutRef.current) {
@@ -147,7 +149,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ limit = 20 }) => {
           <ActivityFeedItem
             key={activity.id}
             activity={activity}
-            onHideContact={activity.contact ? handleHideContact : undefined}
+            onHideContact={activity.contact || activity.groupedContact ? handleHideContact : undefined}
           />
         ))}
       </div>
