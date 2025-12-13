@@ -58,6 +58,12 @@
   color: var(--color-text);
 }
 
+.headerButtons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .createButton {
   padding: 10px 20px;
   background-color: var(--color-success);
@@ -169,6 +175,15 @@
 
   .searchContainer {
     max-width: none;
+  }
+
+  .headerButtons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .headerButtons button {
+    width: 100%;
   }
 
   .createButton {

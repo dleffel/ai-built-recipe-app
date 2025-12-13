@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Contact, ContactListParams } from '../../types/contact';
 import { contactApi } from '../../services/contactApi';
 import { ContactCard } from './ContactCard';
+import { ImportContactsModal } from './ImportContactsModal';
 import { Button, IconButton } from '../ui/Button';
 import styles from './ContactList.module.css';
 
@@ -27,6 +28,7 @@ export const ContactList: React.FC<ContactListProps> = ({
     skip: 0,
     take: 20,
   });
+  const [showImportModal, setShowImportModal] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchContacts = useCallback(async (params: ContactListParams = {}) => {
@@ -107,6 +109,11 @@ export const ContactList: React.FC<ContactListProps> = ({
   const currentPage = Math.floor(pagination.skip / pagination.take) + 1;
   const totalPages = Math.ceil(pagination.total / pagination.take);
 
+  const handleImportSuccess = () => {
+    // Refresh the contacts list after successful import
+    fetchContacts({ skip: 0, search: undefined });
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -129,9 +136,14 @@ export const ContactList: React.FC<ContactListProps> = ({
             />
           )}
         </div>
-        <Button variant="primary" size="md" onClick={onCreateClick}>
-          + New Contact
-        </Button>
+        <div className={styles.headerButtons}>
+          <Button variant="secondary" size="md" onClick={() => setShowImportModal(true)}>
+            Import
+          </Button>
+          <Button variant="primary" size="md" onClick={onCreateClick}>
+            + New Contact
+          </Button>
+        </div>
       </div>
 
       {loading && contacts.length === 0 ? (
@@ -192,6 +204,13 @@ export const ContactList: React.FC<ContactListProps> = ({
             </div>
           )}
         </>
+      )}
+
+      {showImportModal && (
+        <ImportContactsModal
+          onClose={() => setShowImportModal(false)}
+          onSuccess={handleImportSuccess}
+        />
       )}
     </div>
   );
