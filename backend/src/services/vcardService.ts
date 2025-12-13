@@ -115,16 +115,34 @@ export class VCardService extends BaseService {
       const [propertyName, ...params] = propertyPart.split(';');
       const upperPropertyName = propertyName.toUpperCase();
       
-      // Parse parameters into object
+      // Parse parameters into object, collecting all TYPE values
+      // vCard can have multiple TYPE parameters like TEL;TYPE=CELL;TYPE=PREF
+      // or comma-separated like TEL;TYPE=CELL,PREF
       const parameters: Record<string, string> = {};
+      const typeValues: string[] = [];
+      
       for (const param of params) {
         const [key, value] = param.split('=');
         if (key && value) {
-          parameters[key.toUpperCase()] = value.toUpperCase();
+          const upperKey = key.toUpperCase();
+          const upperValue = value.toUpperCase();
+          
+          if (upperKey === 'TYPE') {
+            // Handle comma-separated TYPE values (e.g., TYPE=CELL,PREF)
+            const types = upperValue.split(',').map(t => t.trim());
+            typeValues.push(...types);
+          } else {
+            parameters[upperKey] = upperValue;
+          }
         } else if (key) {
-          // Handle TYPE=VALUE format where TYPE is implicit
-          parameters['TYPE'] = key.toUpperCase();
+          // Handle implicit TYPE format (e.g., TEL;CELL;PREF)
+          typeValues.push(key.toUpperCase());
         }
+      }
+      
+      // Join all TYPE values into a single string for easy checking
+      if (typeValues.length > 0) {
+        parameters['TYPE'] = typeValues.join(',');
       }
       
       // Unescape vCard values

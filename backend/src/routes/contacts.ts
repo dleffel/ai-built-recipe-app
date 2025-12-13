@@ -18,10 +18,12 @@ declare global {
 }
 
 // Configure multer for file uploads (memory storage for vCard files)
+// Note: vCard files from iPhone can be large when exporting all contacts
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max file size
+    fileSize: 50 * 1024 * 1024, // 50MB max file size (large contact exports can be big)
+    fieldSize: 50 * 1024 * 1024, // 50MB max field size
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fileFilter: (_req: any, file: any, cb: any) => {
@@ -35,6 +37,24 @@ const upload = multer({
     }
   },
 });
+
+// Error handler for multer errors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const handleMulterError = (err: any, req: any, res: any, next: any) => {
+  if (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({
+        error: 'File too large. Maximum file size is 50MB.'
+      });
+    }
+    if (err.message === 'Only .vcf (vCard) files are allowed') {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error('Multer error:', err);
+    return res.status(400).json({ error: 'File upload error: ' + err.message });
+  }
+  next();
+};
 
 const router = Router();
 
@@ -300,8 +320,9 @@ const importContacts: RequestHandler = async (req, res) => {
 router.use(requireAuth);
 router.post('/', createContact);
 router.get('/', getUserContacts);
-router.post('/import/preview', upload.single('file'), previewImport);
-router.post('/import', upload.single('file'), importContacts);
+// Import routes with multer error handling
+router.post('/import/preview', upload.single('file'), handleMulterError, previewImport);
+router.post('/import', upload.single('file'), handleMulterError, importContacts);
 router.get('/:id', getContact);
 router.put('/:id', updateContact);
 router.delete('/:id', deleteContact);
