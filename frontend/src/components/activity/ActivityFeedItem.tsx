@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActivityFeedItem as ActivityFeedItemType } from '../../types/activity';
 import { ContactChanges } from '../../types/contact';
+import { IconButton } from '../ui/Button';
+import { EyeOffIcon } from '../ui/icons';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { GroupedActivityFeedItem } from './GroupedActivityFeedItem';
 import styles from './ActivityFeedItem.module.css';
 
 interface ActivityFeedItemProps {
   activity: ActivityFeedItemType;
+  /** Callback when user wants to hide a contact from the feed */
+  onHideContact?: (contactId: string, contactName: string) => void;
   /** When true, renders in a more compact style for nested display within groups */
   isNested?: boolean;
 }
@@ -95,12 +99,20 @@ const getChangeSummary = (changes: ContactChanges): string => {
   return `updated ${getFieldLabel(changedFields[0])} and ${changedFields.length - 1} other fields`;
 };
 
-export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, isNested = false }) => {
+export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, onHideContact, isNested = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleHideContact = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (activity.contact && onHideContact) {
+      onHideContact(activity.contact.id, activity.contact.name);
+    }
+  };
 
   // Handle grouped contact edits
   if (activity.type === 'contact_edited_group' && activity.groupedContact) {
-    return <GroupedActivityFeedItem groupedContact={activity.groupedContact} />;
+    return <GroupedActivityFeedItem groupedContact={activity.groupedContact} onHideContact={onHideContact} />;
   }
 
   const renderContactActivity = () => {
@@ -134,6 +146,17 @@ export const ActivityFeedItem: React.FC<ActivityFeedItemProps> = ({ activity, is
             </span>
             <span className={styles.activityTime}>{formatRelativeTime(activity.timestamp)}</span>
           </div>
+          {onHideContact && !isNested && (
+            <IconButton
+              icon={<EyeOffIcon size={14} />}
+              aria-label={`Hide ${contact.name} from feed`}
+              variant="ghost"
+              size="sm"
+              className={styles.hideButton}
+              onClick={handleHideContact}
+              title={`Hide ${contact.name} from feed`}
+            />
+          )}
         </div>
 
         {hasChanges && (
