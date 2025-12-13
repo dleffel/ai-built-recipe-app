@@ -221,7 +221,7 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
       return null;
     }
 
-    // If both have notes, show merge option
+    // If both have notes, show all three options: primary, secondary, and merge
     const showMergeOption = primaryValue && secondaryValue;
 
     return (
@@ -236,7 +236,16 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
             {primaryValue ? (primaryValue.length > 100 ? primaryValue.slice(0, 100) + '...' : primaryValue) : '(empty)'}
           </div>
         </div>
-        {showMergeOption ? (
+        <div
+          className={`${styles.fieldOption} ${resolution === 'secondary' ? styles.fieldOptionSelected : ''}`}
+          onClick={() => handleFieldResolutionChange('notes', 'secondary')}
+        >
+          <div className={styles.fieldOptionLabel}>Secondary Contact</div>
+          <div className={secondaryValue ? styles.fieldOptionValue : styles.fieldOptionEmpty}>
+            {secondaryValue ? (secondaryValue.length > 100 ? secondaryValue.slice(0, 100) + '...' : secondaryValue) : '(empty)'}
+          </div>
+        </div>
+        {showMergeOption && (
           <div
             className={`${styles.fieldOption} ${resolution === 'merge' ? styles.fieldOptionSelected : ''}`}
             onClick={() => handleFieldResolutionChange('notes', 'merge')}
@@ -244,16 +253,6 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
             <div className={styles.fieldOptionLabel}>Merge Both</div>
             <div className={styles.fieldOptionValue}>
               Combine notes from both contacts
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`${styles.fieldOption} ${resolution === 'secondary' ? styles.fieldOptionSelected : ''}`}
-            onClick={() => handleFieldResolutionChange('notes', 'secondary')}
-          >
-            <div className={styles.fieldOptionLabel}>Secondary Contact</div>
-            <div className={secondaryValue ? styles.fieldOptionValue : styles.fieldOptionEmpty}>
-              {secondaryValue ? (secondaryValue.length > 100 ? secondaryValue.slice(0, 100) + '...' : secondaryValue) : '(empty)'}
             </div>
           </div>
         )}

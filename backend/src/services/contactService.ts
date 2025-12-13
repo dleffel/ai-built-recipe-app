@@ -674,22 +674,110 @@ export class ContactService extends BaseService {
     const mergedTagNames = [...new Set([...primaryTagNames, ...(mergeTags ? secondaryTagNames : [])])];
     tagsMerged = mergedTagNames.filter(t => !primaryTagNames.includes(t)).length;
 
-    // Update the primary contact with merged data
-    const updatedContact = await this.updateContact(primaryContactId, userId, {
-      firstName: mergedFirstName,
-      lastName: mergedLastName,
-      company: mergedCompany,
-      title: mergedTitle,
-      notes: mergedNotes,
-      linkedInUrl: mergedLinkedInUrl,
-      birthday: mergedBirthday ? mergedBirthday.toISOString() : null,
-      emails: mergedEmails,
-      phones: mergedPhones,
-      tags: mergedTagNames,
-    });
+    // Wrap both update and delete in a transaction to ensure atomicity
+    // If either operation fails, both will be rolled back
+    const updatedContact = await this.prisma.$transaction(async (tx) => {
+      // Get current state of primary contact for versioning
+      const existingContact = await tx.contact.findUnique({
+        where: { id: primaryContactId },
+        include: contactInclude,
+      });
 
-    // Soft delete the secondary contact
-    await this.deleteContact(secondaryContactId, userId);
+      if (!existingContact) {
+        throw new Error('Primary contact not found');
+      }
+
+      // Create snapshot of current state before update
+      const previousSnapshot = this.createSnapshot(existingContact as ContactWithRelations);
+
+      // Find or create tags if needed
+      let tagIds: string[] = [];
+      if (mergedTagNames.length > 0) {
+        const tags = await TagService.findOrCreateTags(userId, mergedTagNames);
+        tagIds = tags.map(t => t.id);
+      }
+
+      // Handle emails update - delete all and recreate
+      await tx.contactEmail.deleteMany({ where: { contactId: primaryContactId } });
+      if (mergedEmails.length > 0) {
+        await tx.contactEmail.createMany({
+          data: mergedEmails.map((e, index) => ({
+            contactId: primaryContactId,
+            email: e.email,
+            label: e.label,
+            isPrimary: e.isPrimary ?? index === 0,
+          })),
+        });
+      }
+
+      // Handle phones update - delete all and recreate
+      await tx.contactPhone.deleteMany({ where: { contactId: primaryContactId } });
+      if (mergedPhones.length > 0) {
+        await tx.contactPhone.createMany({
+          data: mergedPhones.map((p, index) => ({
+            contactId: primaryContactId,
+            phone: p.phone,
+            label: p.label,
+            isPrimary: p.isPrimary ?? index === 0,
+          })),
+        });
+      }
+
+      // Handle tags update - delete all and recreate
+      await tx.contactTag.deleteMany({ where: { contactId: primaryContactId } });
+      if (tagIds.length > 0) {
+        await tx.contactTag.createMany({
+          data: tagIds.map(tagId => ({
+            contactId: primaryContactId,
+            tagId,
+          })),
+        });
+      }
+
+      // Update the primary contact
+      const contact = await tx.contact.update({
+        where: { id: primaryContactId },
+        data: {
+          firstName: mergedFirstName,
+          lastName: mergedLastName,
+          company: mergedCompany,
+          title: mergedTitle,
+          notes: mergedNotes,
+          linkedInUrl: mergedLinkedInUrl,
+          birthday: mergedBirthday ? mergedBirthday : null,
+        },
+        include: contactInclude,
+      });
+
+      // Create new version for the update
+      const newSnapshot = this.createSnapshot(contact);
+      const changes = this.computeChanges(previousSnapshot, newSnapshot);
+
+      // Get the latest version number
+      const latestVersion = await tx.contactVersion.findFirst({
+        where: { contactId: primaryContactId },
+        orderBy: { version: 'desc' },
+      });
+
+      const newVersionNumber = (latestVersion?.version ?? 0) + 1;
+
+      await tx.contactVersion.create({
+        data: {
+          contactId: primaryContactId,
+          version: newVersionNumber,
+          snapshot: newSnapshot as unknown as Prisma.JsonObject,
+          changes: changes as unknown as Prisma.JsonObject,
+        },
+      });
+
+      // Soft delete the secondary contact within the same transaction
+      await tx.contact.update({
+        where: { id: secondaryContactId },
+        data: { isDeleted: true },
+      });
+
+      return contact;
+    });
 
     return {
       mergedContact: {
