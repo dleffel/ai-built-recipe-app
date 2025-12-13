@@ -243,8 +243,8 @@ All API endpoints are prefixed with `/api`.
 ### Authentication
 - `GET /api/auth/google` - Initiate Google OAuth flow
 - `GET /api/auth/google/callback` - Google OAuth callback
-- `GET /api/auth/me` - Get current authenticated user
-- `POST /api/auth/logout` - Log out current user
+- `GET /api/auth/current-user` - Get current authenticated user
+- `GET /api/auth/logout` - Log out current user
 
 ### Health Check
 - `GET /api/health` - Health check endpoint
