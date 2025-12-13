@@ -11,12 +11,23 @@ jest.mock('../lib/prisma', () => ({
     task: {
       findMany: jest.fn(),
     },
+    hiddenFeedContact: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    contact: {
+      findFirst: jest.fn(),
+    },
   },
 }));
 
 // Use any type for mocks to avoid TypeScript errors in tests
 const mockPrismaContactVersion = prisma.contactVersion as any;
 const mockPrismaTask = prisma.task as any;
+const mockPrismaHiddenFeedContact = prisma.hiddenFeedContact as any;
+const mockPrismaContact = prisma.contact as any;
 
 describe('ActivityService Unit Tests', () => {
   const userId = 'test-user-id';
@@ -57,6 +68,8 @@ describe('ActivityService Unit Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     ActivityService.resetPrisma();
+    // Default: no hidden contacts
+    mockPrismaHiddenFeedContact.findMany.mockResolvedValue([]);
   });
 
   afterEach(() => {
